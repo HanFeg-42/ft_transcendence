@@ -12,6 +12,10 @@ datasource db {
   provider = "postgresql"
 }
 
+/**
+This is not yet “a user.”
+It is the definition of what every user record should look like.
+*/
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
