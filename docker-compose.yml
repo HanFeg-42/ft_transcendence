@@ -1,0 +1,81 @@
+services:
+  gateway:
+    build: ./api-gateway
+    ports:
+      - "443:443"        # only container exposed to the host
+    depends_on:
+      - auth
+      - chat
+      - game
+      - user
+      - frontend
+    networks:
+      - pacova
+
+  frontend:
+    build: ./frontend
+    networks:
+      - pacova
+
+  auth:
+    build: ./services/auth
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pacova
+
+  chat:
+    build: ./services/chat
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pacova
+
+  game:
+    build: ./services/game
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pacova
+
+  user:
+    build: ./services/user
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pacova
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - pacova
+
+networks:
+  pacova:
+
+volumes:
+  postgres_data:
