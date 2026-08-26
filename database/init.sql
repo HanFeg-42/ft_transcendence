@@ -1,8 +1,7 @@
--- Placeholder to verify the init mechanism works.
--- Each service owner should add their own CREATE TABLE statements here
+--SQL file Postgres automatically runs the first time its container starts.
+--init.sql just creates the empty databases; each service creates its own tables inside its own database when it starts.
 
-CREATE TABLE IF NOT EXISTS _init_check (
-    id SERIAL PRIMARY KEY,
-    note TEXT DEFAULT 'init.sql ran successfully',
-    created_at TIMESTAMP DEFAULT NOW()
-);
+CREATE DATABASE auth_db;
+CREATE DATABASE chat_db;
+CREATE DATABASE game_db;
+CREATE DATABASE profile_db;
