@@ -1,4 +1,5 @@
 import express from "express";
+import bcrypt from "bcryptjs";
 
 const app = express();
 
@@ -8,7 +9,7 @@ app.get("/", (_req, res) => {
   res.json({ message: "Auth service is running" });
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -35,10 +36,13 @@ app.post("/register", (req, res) => {
     });
   }
 
+  const passwordHash = await bcrypt.hash(password, 10);
+
   return res.status(200).json({
-    message: "Registration data is valid",
+    message: "Password hashed successfully",
     username,
     email,
+    passwordHash,
   });
 });
 
