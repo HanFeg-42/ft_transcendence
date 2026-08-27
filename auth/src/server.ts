@@ -17,8 +17,26 @@ app.post("/register", (req, res) => {
     });
   }
 
+  if (username.length < 3) {
+    return res.status(400).json({
+      error: "username must be at least 3 characters long",
+    });
+  }
+
+  if (!email.includes("@")) {
+    return res.status(400).json({
+      error: "email is invalid",
+    });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({
+      error: "password must be at least 8 characters long",
+    });
+  }
+
   return res.status(200).json({
-    message: "Registration data received",
+    message: "Registration data is valid",
     username,
     email,
   });
