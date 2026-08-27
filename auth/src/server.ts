@@ -11,12 +11,29 @@ app.get("/", (_req, res) => {
 app.post("/register", (req, res) => {
   const { username, email, password } = req.body;
 
-  res.status(200).json({
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      error: "username, email and password are required",
+    });
+  }
+
+  return res.status(200).json({
+    message: "Registration data received",
     username,
     email,
-    password,
   });
 });
+
+/**
+ * valid test
+  curl -X POST http://localhost:3001/register \
+    -H "Content-Type: application/json" \
+    -d '{
+      "username": "hanane",
+      "email": "hanane@example.com",
+      "password": "hello123"
+    }'
+ */
 
 app.listen(3001, () => {
   console.log("Auth service listening on port http://localhost:3001");
