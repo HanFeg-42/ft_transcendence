@@ -6,5 +6,6 @@ RUN npm ci
 
 COPY . .
 
-EXPOSE 3000
+# Adjust port EXPOSE per service (3001 for auth, 3002 for game)
+EXPOSE 3002
 CMD ["npm", "start"]
