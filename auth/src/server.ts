@@ -1,61 +1,17 @@
 import express from "express";
-import bcrypt from "bcryptjs";
+import { register } from "./registerController";
 
 const app = express();
 
 app.use(express.json());
 
 app.get("/", (_req, res) => {
-  res.json({ message: "Auth service is running" });
-});
-
-app.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
-
-  if (!username || !email || !password) {
-    return res.status(400).json({
-      error: "username, email and password are required",
-    });
-  }
-
-  if (username.length < 3) {
-    return res.status(400).json({
-      error: "username must be at least 3 characters long",
-    });
-  }
-
-  if (!email.includes("@")) {
-    return res.status(400).json({
-      error: "email is invalid",
-    });
-  }
-
-  if (password.length < 8) {
-    return res.status(400).json({
-      error: "password must be at least 8 characters long",
-    });
-  }
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  return res.status(200).json({
-    message: "Password hashed successfully",
-    username,
-    email,
-    passwordHash,
+  res.json({
+    message: "Auth service is running",
   });
 });
 
-/**
- * valid test
-  curl -X POST http://localhost:3001/register \
-    -H "Content-Type: application/json" \
-    -d '{
-      "username": "hanane",
-      "email": "hanane@example.com",
-      "password": "hello123"
-    }'
- */
+app.post("/register", register);
 
 app.listen(3001, () => {
   console.log("Auth service listening on port http://localhost:3001");
