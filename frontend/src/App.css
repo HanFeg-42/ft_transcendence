@@ -182,3 +182,9 @@
     border-right-color: var(--border);
   }
 }
+
+form > div {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
