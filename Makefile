@@ -33,12 +33,14 @@ clean: down
 
 # Full cleanup: Wipe Docker images/cache and local node_modules (KEEPS package-lock.json!)
 fclean: clean
-	@echo "Cleaning up local node_modules and Docker cache..."
-	@for dir in $(SERVICES); do \
-		rm -rf $$dir/node_modules; \
-	done
 	docker system prune -af --volumes
 	@echo "Full cleanup complete."
+
+# 	@echo "Cleaning up local node_modules and Docker cache..."
+# 	@for dir in $(SERVICES); do \
+# 		rm -rf $$dir/node_modules; \
+	done
+
 
 re: fclean up
 

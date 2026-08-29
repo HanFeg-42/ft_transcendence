@@ -5,7 +5,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+# RUN npx prisma generate <-- commented out until auth/prisma/schema.prisma exists
 
-# Adjust port EXPOSE per service (3001 for auth, 3002 for game)
+
 EXPOSE 3001
 CMD ["npm", "start"]
