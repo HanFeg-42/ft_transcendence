@@ -3,7 +3,7 @@ DOCKER_COMPOSE = docker compose
 SERVICES = frontend api-gateway auth game
 
 
-all: build up
+all: build up migrate
 
 # Build Docker images
 build:
@@ -12,6 +12,11 @@ build:
 # Start containers in detached mode
 up:
 	$(DOCKER_COMPOSE) up -d
+
+
+# Apply Prisma migrations
+migrate:
+	$(DOCKER_COMPOSE) exec auth npx prisma migrate deploy
 
 # Stop running containers
 down:
@@ -33,8 +38,7 @@ clean: down
 
 # Full cleanup: Wipe Docker images/cache and local node_modules (KEEPS package-lock.json!)
 fclean: clean
-	docker system prune -af --volumes
-	@echo "Full cleanup complete."
+	$(DOCKER_COMPOSE) down -v --rmi all --remove-orphans
 
 # 	@echo "Cleaning up local node_modules and Docker cache..."
 # 	@for dir in $(SERVICES); do \
@@ -42,6 +46,6 @@ fclean: clean
 	done
 
 
-re: fclean up
+re: fclean build up migrate
 
-.PHONY: all build up down restart status logs clean fclean
+.PHONY: all build up down restart status logs clean fclean migrate

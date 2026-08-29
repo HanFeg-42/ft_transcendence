@@ -12,3 +12,6 @@ dist/
 # OS garbage files
 .DS_Store
 Thumbs.db
+
+
+/generated/prisma
