@@ -32,6 +32,10 @@ function App() {
       if (response.ok) {
         setMessage(data.message)
         setError('')
+
+        setUsername('')
+        setEmail('')
+        setPassword('')
       } else {
         setError(data.error)
         setMessage('')
