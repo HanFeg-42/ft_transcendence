@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Vite build output
+dist/
+
+# Local Environment secrets
+.env
+
+# OS garbage files
+.DS_Store
+Thumbs.db
+
+
+/generated/prisma

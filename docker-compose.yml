@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - pacova
+
+  auth:
+    build: ./auth
+    container_name: auth
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pacova
+
+  game:
+    build: ./game
+    container_name: game
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pacova
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    env_file:
+      - .env
+    depends_on:
+      - auth
+      - game
+    networks:
+      - pacova
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "443:443"
+    depends_on:
+      - api-gateway
+    networks:
+      - pacova
+
+networks:
+  pacova:
+    name: pacova
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: postgres_data
