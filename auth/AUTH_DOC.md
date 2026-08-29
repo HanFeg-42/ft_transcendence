@@ -335,7 +335,7 @@ src/prisma.ts
 The connection flow is:
 
 ```text
-DATABASE_URL
+AUTH_DATABASE_URL
      |
      v
 PrismaPg adapter

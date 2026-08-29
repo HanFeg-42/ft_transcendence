@@ -3,7 +3,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client";
 
-const connectionString = `${process.env.DATABASE_URL}`;
+const connectionString = `${process.env.AUTH_DATABASE_URL}`;
 
 // Use PostgreSQL, and here is how to reach it.
 const adapter = new PrismaPg({ connectionString });
