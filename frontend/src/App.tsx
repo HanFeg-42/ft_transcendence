@@ -7,9 +7,12 @@ function App() {
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    setLoading(true)
 
     try {
       const response = await fetch('http://localhost:3001/register', {
@@ -36,6 +39,8 @@ function App() {
     } catch (error) {
       setError('Unable to connect to the server')
       setMessage('')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -71,7 +76,9 @@ function App() {
           />
         </div>
 
-        <button type="submit">Register</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
+        </button>
       </form>
       {message && <p>{message}</p>}
       {error && <p>{error}</p>}
