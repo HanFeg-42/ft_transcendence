@@ -48,4 +48,4 @@ fclean: clean
 
 re: fclean build up migrate
 
-.PHONY: all build up down restart status logs clean fclean migrate
+.PHONY: all build up down restart status logs clean fclean migrate re
