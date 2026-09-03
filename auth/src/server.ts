@@ -1,12 +1,13 @@
 import express from "express";
 import { register } from "./registerController";
-import cors from 'cors'
+import { login } from "./loginController";
+import cors from "cors";
 
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
-}))
+  origin: "http://localhost:5173",
+}));
 
 app.use(express.json());
 
@@ -17,6 +18,7 @@ app.get("/", (_req, res) => {
 });
 
 app.post("/register", register);
+app.post("/login", login);
 
 app.listen(3001, () => {
   console.log("Auth service listening on port http://localhost:3001");
