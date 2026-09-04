@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import jwt from "jsonwebtoken";
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
@@ -30,12 +31,36 @@ export async function login(req: Request, res: Response) {
     });
   }
 
+  //read JWT_SECRET
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    console.error("JWT_SECRET is not configured");
+
+    return res.status(500).json({
+      error: "Something went wrong",
+    });
+  }
+
+  // create jwt
+  const token = jwt.sign(
+    {
+      userId: user.id,
+    },
+    jwtSecret,
+    {
+      expiresIn: "1h",
+    },
+  );
+
+  //return token with res
   return res.status(200).json({
-  message: "Login successful",
-  user: {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-  },
-});
+    message: "Login successful",
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    },
+  });
 }
