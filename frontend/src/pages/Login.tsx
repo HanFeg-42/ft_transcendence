@@ -85,22 +85,9 @@ export default function Login() {
         method: "POST",
 
         headers: {
-          // Tell the backend that we are sending JSON
           "Content-Type": "application/json",
         },
 
-        /*
-         * fetch cannot send a JavaScript object directly.
-         *
-         * JSON.stringify converts:
-         *
-         * {
-         *   email: "...",
-         *   password: "..."
-         * }
-         *
-         * into JSON text.
-         */
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -142,36 +129,26 @@ export default function Login() {
        */
       const loginData: LoginResponse = data;
 
-      /*
-       * For now, we only print these values.
-       *
-       * We are NOT deciding where to permanently store
-       * the JWT yet.
-       *
-       * First we only want to prove that:
-       *
-       * frontend -> backend -> JWT response
-       *
-       * works correctly.
-       */
-      console.log("Logged in user:", loginData.user);
-      console.log("JWT received:", loginData.token);
+      const meResponse = await fetch("/api/auth/me", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${loginData.token}`,
+        },
+      });
+
+      const meData = await meResponse.json();
+
+      if (!meResponse.ok) {
+        setError(meData.error || "Authentication failed");
+        return;
+      }
+
+      console.log("Authenticated user:", meData.user);
     } catch {
-      /*
-       * This catch is mainly for network-level problems.
-       *
-       * Example:
-       * - backend unavailable
-       * - connection failed
-       * - request could not reach the server
-       */
       setError("Unable to connect to the server");
     } finally {
       /*
-       * finally always runs:
-       *
-       * success OR error
-       *
+       * finally always runs: success OR error
        * so loading must become false again.
        */
       setLoading(false);
