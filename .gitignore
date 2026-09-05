@@ -14,4 +14,4 @@ dist/
 Thumbs.db
 
 
-/generated/prisma
+generated/
