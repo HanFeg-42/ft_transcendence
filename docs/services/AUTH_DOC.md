@@ -18,14 +18,11 @@ Client
    v
 Express
    |
-   v
-Registration Controller
+   +--> Registration Controller
    |
-   v
-Input Validation
+   +--> Login Controller
    |
-   v
-bcrypt
+   +--> JWT Authentication Middleware
    |
    v
 Prisma Client
@@ -44,25 +41,19 @@ PostgreSQL stores the actual user data.
 
 Express provides the HTTP server and API endpoints.
 
-The registration controller contains the registration logic.
-
-`bcryptjs` is used to hash passwords before they are persisted.
+`bcryptjs` is used to hash passwords during registration and verify passwords during login.
 
 Prisma acts as the ORM layer between the Node.js authentication service and PostgreSQL.
+
+`jsonwebtoken` is used to issue and verify JWT access tokens.
 
 ---
 
 ## 2. PostgreSQL Setup
 
-A PostgreSQL service was added to `docker-compose.yml`.
+A PostgreSQL service is configured through Docker Compose.
 
-The PostgreSQL data directory is backed by the Docker named volume:
-
-```text
-db-data
-```
-
-This allows database data to persist independently of the lifecycle of the PostgreSQL container.
+The PostgreSQL data directory is backed by a Docker named volume so database data persists independently of the PostgreSQL container lifecycle.
 
 The initialization script is located at:
 
@@ -70,59 +61,33 @@ The initialization script is located at:
 postgres-db/init.sql
 ```
 
-It currently creates the authentication database:
-
-```sql
-CREATE DATABASE auth_db;
-```
-
-The script is mounted into:
-
-```text
-/docker-entrypoint-initdb.d/
-```
-
-inside the PostgreSQL container.
-
-The official PostgreSQL Docker image executes initialization scripts from this directory when the database data directory is initialized for the first time.
-
-The resulting PostgreSQL instance currently contains the logical database:
+It creates the logical databases required by the application, including:
 
 ```text
 auth_db
+game_db
 ```
 
-This database is owned by the authentication domain.
+The Auth service owns the `auth_db` database.
 
 ---
 
 ## 3. Environment Configuration
 
-Database credentials and connection information must not be hardcoded directly into source files.
-
-Environment variables are therefore used for configuration.
+Database credentials and authentication secrets must not be hardcoded in source files.
 
 The real `.env` file contains local configuration and credentials and must remain ignored by Git.
 
-An `.env.example` file is committed to document which environment variables developers are expected to provide.
+The committed `.env.example` file documents which environment variables developers are expected to provide.
 
-The authentication database connection follows the PostgreSQL URL structure:
+The current authentication-related environment variables include:
 
-```text
-postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+```env
+AUTH_DATABASE_URL=postgresql://your_postgres_user:your_postgres_password@postgres:5432/auth_db
+JWT_SECRET=replace_with_a_secure_random_secret
 ```
 
-During local development, the authentication service can connect through:
-
-```text
-localhost:5432
-```
-
-because PostgreSQL port `5432` is published from the Docker container to the host.
-
-When the authentication service itself runs inside Docker, `localhost` must not be used to reach PostgreSQL.
-
-Containers communicate using the Docker service name over the Docker network.
+The real `JWT_SECRET` value must never be committed.
 
 ---
 
@@ -130,15 +95,13 @@ Containers communicate using the Docker service name over the Docker network.
 
 Prisma is the ORM used by the authentication service.
 
-An ORM (Object-Relational Mapper) provides an abstraction between application code and a relational database.
-
 The current flow is:
 
 ```text
 Express application
         |
         v
-Registration Controller
+Controllers / Protected Routes
         |
         v
 Prisma Client
@@ -147,15 +110,7 @@ Prisma Client
 PostgreSQL
 ```
 
-Prisma was initialized inside the `auth` service because the authentication service owns its database schema.
-
-Prisma Client is generated from `schema.prisma` and used by the application to communicate with PostgreSQL.
-
-The PostgreSQL driver adapter is provided through:
-
-```text
-@prisma/adapter-pg
-```
+Prisma was initialized inside the `auth` service because the authentication service owns its own database schema.
 
 The relevant structure is currently:
 
@@ -168,7 +123,11 @@ auth/
 ├── src/
 │   ├── server.ts
 │   ├── registerController.ts
+│   ├── loginController.ts
+│   ├── authMiddleware.ts
 │   ├── prisma.ts
+│   ├── types/
+│   │   └── auth.ts
 │   └── generated/
 │       └── prisma/
 ├── package.json
@@ -177,21 +136,7 @@ auth/
 
 ---
 
-## 5. `prisma.config.ts`
-
-With the Prisma version used by this project, database connection configuration is separated from the Prisma schema.
-
-`prisma.config.ts` provides Prisma CLI configuration, including access to the database connection URL through an environment variable.
-
-The database URL is therefore not hardcoded inside `schema.prisma`.
-
-This keeps connection configuration separate from the description of the database models.
-
----
-
-## 6. `schema.prisma`
-
-The Prisma schema describes the structure of the data owned by the authentication service.
+## 5. Prisma Schema
 
 The first model implemented is:
 
@@ -199,7 +144,7 @@ The first model implemented is:
 User
 ```
 
-The initial User model contains:
+The current User model contains:
 
 ```text
 User
@@ -212,31 +157,21 @@ User
 
 ### `id`
 
-The `id` is the primary key of the User model.
-
-It uniquely identifies each user.
-
-It uses an auto-incrementing integer, meaning PostgreSQL automatically generates the next identifier when a user is created.
+The `id` is the primary key of the User model and is generated automatically.
 
 ### `username`
 
-The username identifies the player publicly.
-
-It has a unique constraint, meaning PostgreSQL does not allow two User records with the same username.
+The username is unique at the database level.
 
 ### `email`
 
-The email also has a unique constraint.
-
-This prevents multiple accounts from being stored with the same email address at the database level.
+The email is also unique at the database level.
 
 ### `passwordHash`
 
-Plaintext passwords are never persisted in the database.
+Plaintext passwords are never stored.
 
-During registration, the password received from the client is hashed using `bcryptjs` before the user is inserted into PostgreSQL.
-
-The current password flow is:
+During registration:
 
 ```text
 Plaintext password
@@ -248,175 +183,51 @@ bcrypt.hash()
 passwordHash
         |
         v
-Prisma Client
+Prisma
         |
         v
 PostgreSQL
 ```
 
-Only `passwordHash` is passed to Prisma and stored in the `User` table.
-
-The plaintext password is never stored in PostgreSQL.
-
-The registration API response also does not expose the plaintext password or the stored `passwordHash`.
+Only the hash is persisted.
 
 ### `createdAt`
 
-`createdAt` records when the user account was created.
-
-Prisma configures this field to automatically use the current timestamp when a User record is inserted.
+`createdAt` records when the user account was created and is generated automatically.
 
 ---
 
-## 7. Prisma Migration
+## 6. Prisma Migrations and Client Generation
 
-Defining a Prisma model does not directly create a PostgreSQL table.
-
-PostgreSQL understands SQL, while `schema.prisma` uses Prisma's schema language.
-
-A Prisma migration bridges the two.
-
-The initial migration was created using:
+The initial migration was created with:
 
 ```bash
 npx prisma migrate dev --name init_auth
 ```
 
-The process is conceptually:
-
-```text
-schema.prisma
-     |
-     v
-   Prisma
-     |
-     v
-migration.sql
-     |
-     v
- PostgreSQL
-     |
-     v
-real database tables
-```
-
-Prisma generated a migration under:
-
-```text
-prisma/migrations/
-```
-
-and applied it to `auth_db`.
-
-The migration history is committed to Git so that other developers can reproduce the same database structure.
-
----
-
-## 8. Prisma Client
-
-Prisma Client is generated using:
-
-```bash
-npx prisma generate
-```
-
-The generated client is located under:
-
-```text
-src/generated/prisma/
-```
-
-The application initializes Prisma in:
-
-```text
-src/prisma.ts
-```
-
-The connection flow is:
-
-```text
-AUTH_DATABASE_URL
-     |
-     v
-PrismaPg adapter
-     |
-     v
-PrismaClient
-     |
-     v
-PostgreSQL
-```
-
-A single exported Prisma instance can then be imported by application code that needs database access.
-
-For example, the registration controller uses Prisma to create users through:
-
-```text
-prisma.user.create(...)
-```
-
----
-
-## 9. Schema and Database Verification
-
-The Prisma schema can be checked with:
+The Prisma schema can be validated with:
 
 ```bash
 npx prisma validate
 ```
 
-Validation checks whether the Prisma schema configuration and model definitions are valid.
-
-Validation should not be confused with migration:
-
-```text
-prisma validate
-      |
-      +--> Is the Prisma schema valid?
-
-prisma migrate dev
-      |
-      +--> Generate and apply database schema changes.
-
-prisma generate
-      |
-      +--> Generate Prisma Client for application code.
-```
-
-The PostgreSQL database can also be accessed directly for development and debugging:
+Prisma Client is generated with:
 
 ```bash
-docker exec -it postgres-db psql -U postgres -d auth_db
+npx prisma generate
 ```
 
-Inside `psql`, tables can be listed with:
+Committed migrations can be applied in the containerized environment with:
 
-```text
-\dt
+```bash
+npx prisma migrate deploy
 ```
-
-The User table structure can be inspected with:
-
-```text
-\d "User"
-```
-
-Stored users can be inspected with:
-
-```sql
-SELECT id, username, email, "passwordHash", "createdAt"
-FROM "User";
-```
-
-This allows the database to be verified independently of the Express API and Prisma.
 
 ---
 
-## 10. Express Authentication Server
+## 7. Express Authentication Server
 
-The authentication service now contains a basic Express HTTP server.
-
-The server is initialized in:
+The authentication service HTTP server is initialized in:
 
 ```text
 src/server.ts
@@ -424,54 +235,31 @@ src/server.ts
 
 Express JSON middleware is enabled using:
 
-```text
-app.use(express.json())
+```ts
+app.use(express.json());
 ```
 
-This allows Express to parse incoming JSON request bodies and make their contents available through:
-
-```text
-req.body
-```
-
-The server currently provides a health/test route and the registration endpoint.
-
-The registration endpoint is:
+The Auth service currently exposes:
 
 ```http
 POST /register
+POST /login
+GET /me
 ```
 
-The route delegates the registration logic to the registration controller.
-
-Conceptually:
-
-```text
-POST /register
-      |
-      v
-Express
-      |
-      v
-register()
-      |
-      v
-registerController.ts
-```
-
-This keeps the HTTP server setup separate from the registration logic.
+`GET /me` is protected by JWT authentication middleware.
 
 ---
 
-## 11. User Registration
+## 8. User Registration
 
-The authentication service currently provides:
+The authentication service provides:
 
 ```http
 POST /register
 ```
 
-A registration request contains JSON in the following form:
+A registration request contains:
 
 ```json
 {
@@ -481,414 +269,401 @@ A registration request contains JSON in the following form:
 }
 ```
 
-The backend performs the following operations:
+The backend currently:
 
-1. Reads `username`, `email`, and `password` from the request body.
-2. Verifies that all required fields are present.
-3. Validates the basic username, email, and password constraints.
+1. Reads `username`, `email`, and `password`.
+2. Checks that all required fields are present.
+3. Performs basic backend validation.
 4. Hashes the plaintext password using `bcryptjs`.
-5. Creates the user through Prisma Client.
-6. Stores the resulting user in PostgreSQL.
-7. Returns a safe representation of the created user.
+5. Creates the user through Prisma.
+6. Handles unique username/email conflicts.
+7. Returns a safe user object.
 
-The complete flow is:
+A successful registration returns `201 Created`.
 
-```text
-Client
-   |
-   v
-POST /register
-   |
-   v
-Express
-   |
-   v
-registerController
-   |
-   v
-Input validation
-   |
-   v
-bcrypt.hash()
-   |
-   v
-passwordHash
-   |
-   v
-prisma.user.create(...)
-   |
-   v
-PostgreSQL auth_db
-   |
-   v
-User record
-```
-
----
-
-## 12. Registration Validation
-
-The registration endpoint currently performs basic backend validation.
-
-The current rules include:
-
-* `username`, `email`, and `password` are required.
-* Username must contain at least 3 characters.
-* Email must pass the current basic email check.
-* Password must contain at least 8 characters.
-
-Invalid registration data returns:
-
-```text
-400 Bad Request
-```
-
-Backend validation is required even when frontend validation is later implemented.
-
-The backend must not assume that data received from a client is valid.
-
----
-
-## 13. Password Hashing
-
-Passwords are hashed using:
-
-```text
-bcryptjs
-```
-
-Before creating the user, the registration controller performs password hashing.
-
-Conceptually:
+The response never exposes:
 
 ```text
 password
-   |
-   v
+passwordHash
+```
+
+---
+
+## 9. Registration Validation
+
+The current backend rules are:
+
+- `username`, `email`, and `password` are required.
+- Username must contain at least 3 characters.
+- Email must pass the current basic email check.
+- Password must contain at least 8 characters.
+
+Invalid registration data returns `400 Bad Request`.
+
+Duplicate username/email conflicts return `409 Conflict`.
+
+---
+
+## 10. Password Hashing
+
+Passwords are hashed with `bcryptjs`.
+
+The controller uses:
+
+```ts
 bcrypt.hash(password, 10)
-   |
-   v
-passwordHash
 ```
 
-The resulting hash is stored in the `passwordHash` database field.
-
-The original plaintext password is not passed to Prisma and is not persisted in PostgreSQL.
-
-Password hashes will later be used during login to verify passwords without storing the original passwords.
+The original plaintext password is not stored in PostgreSQL and is not returned by the API.
 
 ---
 
-## 14. User Creation with Prisma
+## 11. User Login
 
-After validation and password hashing, the registration controller creates the user through Prisma Client.
+The authentication service provides:
+
+```http
+POST /login
+```
+
+A login request contains:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "user-password"
+}
+```
+
+The login controller performs the following steps:
+
+1. Verifies that `email` and `password` were provided.
+2. Searches for the user by email using Prisma.
+3. Compares the provided password with the stored bcrypt hash.
+4. Rejects invalid credentials with a generic error.
+5. Generates a signed JWT when authentication succeeds.
+6. Returns the JWT together with safe user information.
+
+The same error is used for an unknown email and an incorrect password:
+
+```json
+{
+  "error": "Invalid email or password"
+}
+```
+
+This avoids revealing whether a specific email address exists.
+
+---
+
+## 12. JWT Authentication
+
+After a successful login, the Auth service issues a JSON Web Token.
+
+A JWT contains three logical parts:
+
+```text
+header.payload.signature
+```
+
+The payload currently contains only the authenticated user's identifier:
+
+```json
+{
+  "userId": 1
+}
+```
+
+Sensitive information such as passwords, password hashes, or the JWT secret must never be placed in the JWT payload.
+
+The token is created using `jsonwebtoken`:
+
+```ts
+jwt.sign(
+  {
+    userId: user.id,
+  },
+  jwtSecret,
+  {
+    expiresIn: "1h",
+    algorithm: "HS256",
+  },
+);
+```
+
+The token expires after one hour.
+
+---
+
+## 13. JWT Secret Configuration
+
+JWT signatures depend on a server-side secret stored in:
+
+```text
+JWT_SECRET
+```
+
+The real secret belongs in the local `.env` file and must never be committed to Git.
+
+A secure random development secret can be generated using:
+
+```bash
+openssl rand -hex 32
+```
+
+Example:
+
+```env
+JWT_SECRET=<generated-secret>
+```
+
+The generated value must never appear in documentation, source code, commits, logs, or `.env.example`.
+
+The committed `.env.example` should contain only a placeholder:
+
+```env
+JWT_SECRET=replace_with_a_secure_random_secret
+```
+
+Important distinction: `openssl rand -hex 32` generates the secret used to sign JWTs. It does **not** generate a JWT itself. The JWT is generated by the application using `jwt.sign()`.
+
+---
+
+## 14. JWT Verification Middleware
+
+Protected endpoints use authentication middleware before executing their route handler.
+
+The client sends the token using the HTTP Authorization header:
+
+```http
+Authorization: Bearer <JWT>
+```
+
+JWTs must not be sent through URL query parameters.
+
+The middleware verifies the token with:
+
+```ts
+jwt.verify(authToken, jwtSecret, {
+  algorithms: ["HS256"],
+});
+```
+
+The middleware checks:
+
+- the Authorization header exists,
+- the Bearer format is valid,
+- `JWT_SECRET` is configured,
+- the JWT signature is valid,
+- the token is not expired,
+- the accepted algorithm is `HS256`,
+- the decoded payload contains a numeric `userId`.
+
+If verification succeeds, the middleware attaches the verified `userId` to the request and calls `next()`.
+
+Invalid or expired tokens return `401 Unauthorized`.
+
+---
+
+## 15. Authenticated Request Type
+
+Express' default `Request` type does not contain a custom `userId` property.
+
+A reusable request type is therefore defined in:
+
+```text
+src/types/auth.ts
+```
 
 Conceptually:
 
-```text
-username
-email
-passwordHash
-     |
-     v
-prisma.user.create(...)
-     |
-     v
-PostgreSQL
-     |
-     v
-User row
-```
+```ts
+import type { Request } from "express";
 
-The `id` does not need to be supplied manually because it is automatically generated.
-
-The `createdAt` value also does not need to be supplied manually because it defaults to the current timestamp.
-
-A successful registration returns:
-
-```text
-201 Created
-```
-
-The response contains safe user information such as:
-
-```text
-id
-username
-email
-createdAt
-```
-
-It does not return:
-
-```text
-password
-passwordHash
+export interface AuthenticatedRequest extends Request {
+  userId: number;
+}
 ```
 
 ---
 
-## 15. Duplicate User Handling
+## 16. Protected User Endpoint
 
-Both `username` and `email` have database-level unique constraints.
+The Auth service provides:
 
-If an attempt is made to create a user whose username or email conflicts with an existing record, PostgreSQL rejects the insertion.
-
-Prisma reports a unique-constraint violation using the known error code:
-
-```text
-P2002
+```http
+GET /me
 ```
 
-The registration controller catches this error and converts it into:
+The endpoint requires:
 
-```text
-409 Conflict
+```http
+Authorization: Bearer <JWT>
 ```
 
-The API currently returns an error indicating that the username or email already exists.
+After the authentication middleware verifies the token, the authenticated `userId` is used to retrieve the current user through Prisma.
 
-Unexpected database errors are handled separately and return:
+The response contains safe profile fields:
 
-```text
-500 Internal Server Error
+```json
+{
+  "user": {
+    "id": 1,
+    "username": "example",
+    "email": "example@email.com",
+    "createdAt": "..."
+  }
+}
 ```
 
-The database unique constraints remain the final protection against duplicate usernames and emails.
+The response never exposes `password`, `passwordHash`, or `JWT_SECRET`.
 
 ---
 
-## 16. Registration Security Verification
+## 17. Authentication Security Tests
 
-The registration implementation was manually verified.
+The login and JWT flow was manually tested through the application routing path.
 
-### Plaintext Password Storage
+### Successful login
 
-The PostgreSQL User table was inspected directly after registration.
+A correct email/password pair returns `200 OK` and includes a JWT.
 
-The `passwordHash` column contained a bcrypt hash rather than the plaintext password.
+### Wrong password
 
-The intended security flow is therefore:
+An incorrect password returns `401 Unauthorized`.
 
-```text
-Client password
-      |
-      v
-Express request
-      |
-      v
-bcrypt
-      |
-      v
-passwordHash
-      |
-      v
-PostgreSQL
-```
+### Unknown email
 
-### API Response
+A nonexistent email also returns `401 Unauthorized` using the same generic error.
 
-The successful registration response was also verified.
+### Missing token
 
-The response exposes:
+A request to `/me` without an Authorization header returns `401 Unauthorized`.
 
-```text
-id
-username
-email
-createdAt
-```
+### Fake token
 
-but does not expose:
+A fabricated or malformed token is rejected with `401 Unauthorized`.
 
-```text
-password
-passwordHash
-```
+### Modified token
 
-This prevents sensitive authentication information from unnecessarily leaving the authentication service.
+Changing a character in a valid JWT invalidates its signature and the request is rejected.
+
+### Valid token
+
+A correctly signed, unexpired JWT allows access to `/me`.
 
 ---
 
-## 17. Current Status
+## 18. Database Verification
 
-Completed:
+For routine development and debugging, user records can be inspected without selecting authentication hashes:
 
-* PostgreSQL container configured for development.
-* Persistent PostgreSQL Docker volume configured.
-* `auth_db` initialization added.
-* Environment-based database configuration established.
-* Prisma initialized inside the authentication service.
-* Initial `User` model defined.
-* Unique username constraint defined.
-* Unique email constraint defined.
-* Initial Prisma migration generated and applied.
-* Prisma schema validated.
-* Prisma Client generated.
-* PostgreSQL Prisma adapter configured.
-* Express authentication server created.
-* `POST /register` implemented.
-* Registration request validation implemented.
-* Password hashing implemented with `bcryptjs`.
-* User creation implemented with Prisma Client.
-* Duplicate username/email conflicts handled.
-* Successful registration returns `201 Created`.
-* Invalid registration data returns `400 Bad Request`.
-* Duplicate registration conflicts return `409 Conflict`.
-* Plaintext passwords verified as not being stored.
-* Registration API verified as not exposing `password` or `passwordHash`.
+```sql
+SELECT id, username, email, "createdAt"
+FROM "User";
+```
+
+Password hashes should not be part of normal-purpose debugging output.
 
 ---
 
-## 18. What Has NOT Been Implemented Yet
+## 19. Current Authentication Status
 
-The existence of the User model and registration endpoint does **not** mean authentication is complete.
+Implemented:
 
-The following functionality still needs to be implemented:
-
-* Login.
-* Password verification.
-* JWT/session handling.
-* Protected endpoints.
-* Authorization.
-* OAuth integration, if required by the selected modules.
-* 2FA, if required by the selected modules.
-* Frontend registration integration.
-
-These features should be implemented incrementally on top of the current registration foundation.
-
----
-
-## 19. Important Concepts to Remember
-
-### Express
-
-The Node.js web framework currently used to expose the authentication HTTP API.
-
-### `express.json()`
-
-Express middleware that parses incoming JSON request bodies and makes the parsed data available through `req.body`.
-
-### Controller
-
-A function responsible for handling an incoming request and producing the appropriate response.
-
-The current registration logic is implemented in `registerController.ts`.
-
-### Prisma Schema
-
-The blueprint describing the application's database models.
-
-### Prisma Migration
-
-A recorded database-structure change generated from changes to the Prisma schema.
-
-### Prisma Client
-
-The generated API used by application code to communicate with the database.
-
-### Prisma PostgreSQL Adapter
-
-The adapter connecting Prisma Client to the PostgreSQL driver.
-
-### PostgreSQL
-
-The actual relational database system storing the data.
-
-### `auth_db`
-
-The logical PostgreSQL database owned by the authentication service.
-
-### `User`
-
-The first database model/table belonging to the authentication domain.
-
-### bcrypt
-
-The password-hashing mechanism used before passwords are persisted.
-
-### `.env`
-
-Local configuration containing real environment-specific values and credentials. It must not be committed.
-
-### `.env.example`
-
-A safe template documenting which environment variables developers need to configure.
-
-### HTTP `201 Created`
-
-Returned when a new user is successfully created.
-
-### HTTP `400 Bad Request`
-
-Returned when registration input is invalid.
-
-### HTTP `409 Conflict`
-
-Returned when a registration conflicts with an existing unique username or email.
-
-### HTTP `500 Internal Server Error`
-
-Returned when an unexpected server or database error occurs.
+- PostgreSQL authentication database.
+- Prisma User schema and migrations.
+- User registration.
+- Backend registration validation.
+- bcrypt password hashing.
+- Duplicate username/email handling.
+- User login.
+- Password verification with `bcrypt.compare()`.
+- JWT generation after successful login.
+- One-hour JWT expiration.
+- Explicit HS256 signing and verification.
+- JWT authentication middleware.
+- Runtime validation of the JWT `userId`.
+- Reusable authenticated request type.
+- Protected `GET /me` endpoint.
+- Authenticated user lookup through Prisma.
+- Safe API responses that do not expose password hashes.
+- Environment-based `JWT_SECRET` configuration.
+- Manual testing of valid, missing, fake, and modified tokens.
 
 ---
 
-## 20. Current Mental Model
+## 20. Not Implemented Yet
 
-The database structure is defined by:
+The following authentication-related work remains for future sprints:
 
-```text
-schema.prisma
-      |
-      | describes
-      v
-Database structure
-```
+- 42 OAuth.
+- Two-factor authentication.
+- Refresh-token/session strategy.
+- Role/permission authorization.
+- Login rate limiting / brute-force protection.
+- Full frontend login integration.
+- Additional production hardening.
 
-Database changes are applied through:
+---
 
-```text
-migration.sql
-      |
-      | changes
-      v
-PostgreSQL database
-```
+## 21. Security Rules to Keep
 
-Application database operations use:
+- Never store plaintext passwords.
+- Never return passwords or password hashes in API responses.
+- Never commit `JWT_SECRET`.
+- Never log JWTs unnecessarily.
+- Keep the JWT payload minimal.
+- Always verify tokens before trusting their payload.
+- Keep token expiration enabled.
+- Restrict accepted JWT algorithms explicitly.
+- Send access tokens through the Authorization header rather than URL query parameters.
+- Keep real secrets in `.env` and placeholders only in `.env.example`.
 
-```text
-Prisma Client
-      |
-      | reads/writes
-      v
-PostgreSQL
-```
+---
 
-The current registration feature combines these components:
+## 22. Current End-to-End Authentication Flow
 
 ```text
-HTTP Request
-     |
-     v
-Express
-     |
-     v
-Registration Controller
-     |
-     v
-Validation
-     |
-     v
-Password Hashing
-     |
-     v
-Prisma Client
-     |
-     v
-PostgreSQL
+REGISTER
+   |
+   v
+Validate input
+   |
+   v
+Hash password with bcrypt
+   |
+   v
+Store user in PostgreSQL
+   |
+   v
+LOGIN
+   |
+   v
+Find user by email
+   |
+   v
+Verify password with bcrypt.compare()
+   |
+   v
+Issue signed JWT
+   |
+   v
+Client sends Authorization: Bearer <JWT>
+   |
+   v
+JWT middleware verifies token
+   |
+   v
+Extract verified userId
+   |
+   v
+Protected /me route
+   |
+   v
+Fetch authenticated user through Prisma
+   |
+   v
+Return safe profile data
 ```
-
-The authentication service now contains both the **database foundation** and its first functional **application-layer vertical slice: user registration**.
-
-Future authentication features can be built incrementally on top of this foundation.
