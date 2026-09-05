@@ -1,7 +1,12 @@
 import { useState } from 'react'
+import Background from '../components/ui/Background'
+import NeonFrame from '../components/ui/NeonFrame'
+import Input from '../components/ui/Input'
+import Button from '../components/ui/Button'
+import type { SignUpFormData } from '../types/auth'
 
 export default function SignUp() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SignUpFormData>({
     username: '',
     email: '',
     password: '',
@@ -14,61 +19,66 @@ export default function SignUp() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // on branchera la validation + l'appel API ici, aux étapes suivantes
     console.log(formData)
+    // validation + appel API : prochaines étapes
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-sm flex flex-col gap-4"
-      >
-        <h1 className="text-2xl font-bold text-white text-center mb-2">Create Account</h1>
+    <Background>
+      <NeonFrame variant="pink" size="md">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <h1 className="font-display text-neon-pink text-center text-sm tracking-widest">
+            • • • CREATE ACCOUNT • • •
+          </h1>
 
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          className="bg-gray-700 text-white rounded px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          <Input
+            label="Username"
+            type="text"
+            name="username"
+            placeholder="Enter your username..."
+            value={formData.username}
+            onChange={handleChange}
+          />
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="bg-gray-700 text-white rounded px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          <Input
+            label="Email"
+            type="email"
+            name="email"
+            placeholder="Enter your email..."
+            value={formData.email}
+            onChange={handleChange}
+          />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="bg-gray-700 text-white rounded px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          <Input
+            label="Password"
+            type="password"
+            name="password"
+            placeholder="Enter your password..."
+            value={formData.password}
+            onChange={handleChange}
+          />
 
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          className="bg-gray-700 text-white rounded px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          <Input
+            label="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm your password..."
+            value={formData.confirmPassword}
+            onChange={handleChange}
+          />
 
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 mt-2 font-semibold transition-colors"
-        >
-          Create Account
-        </button>
-      </form>
-    </div>
+          <Button type="submit" variant="green" styleType="filled">
+            CREATE ACCOUNT
+          </Button>
+
+          <p className="text-center text-neon-pink/70 text-xs font-body">
+            Already have an account?{' '}
+            <a href="/login" className="text-neon-green underline">
+              Login
+            </a>
+          </p>
+        </form>
+      </NeonFrame>
+    </Background>
   )
 }

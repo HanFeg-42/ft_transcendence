@@ -1,1 +1,13 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=VT323&family=Inter:wght@400;600&display=swap');
+
+@theme {
+  --color-neon-pink: #F32077;
+  --color-neon-green: #8ED603;
+  --color-neon-purple: #510950;
+  --color-deep-space: #01060D;
+
+  --font-display: "Pixelify Sans", monospace;   /* titres type "LEVEL UP" */
+  --font-retro: "VT323", monospace;              /* texte rétro secondaire */
+  --font-body: "Inter", sans-serif;              /* labels, paragraphes */
+}
