@@ -6,7 +6,6 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-
 # Stage 2: Serve static assets via NGINX
 FROM nginx:alpine AS runner
 # Install OpenSSL to generate self-signed certs for local HTTPS
