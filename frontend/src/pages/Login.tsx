@@ -1,183 +1,131 @@
-import { useState } from "react";
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
-// Reusable UI components created in the frontend structure
-import Background from "../components/ui/Background";
-import NeonFrame from "../components/ui/NeonFrame";
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import Background from '../components/ui/Background'
+import NeonFrame from '../components/ui/NeonFrame'
+import Input from '../components/ui/Input'
+import Button from '../components/ui/Button'
 
-// Types that describe the shape of our login form and API response
-import type { LoginFormData, LoginResponse } from "../types/auth";
-
-import { Link } from "react-router-dom";
+import type { LoginFormData, LoginResponse } from '../types/auth'
 
 export default function Login() {
-  // formData stores the values typed by the user
-  // Example:
-  // {
-  //   email: "user@email.com",
-  //   password: "123456"
-  // }
+  // Stores the email and password entered by the user
   const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  });
+    email: '',
+    password: '',
+  })
 
-  // Stores an error message that we can show in the UI
-  const [error, setError] = useState("");
+  // Message displayed when login fails
+  const [error, setError] = useState('')
 
-  // Tells us if the login request is currently running
-  // We use it to disable/change the button while waiting
-  const [loading, setLoading] = useState(false);
+  // Message displayed when login succeeds
+  const [success, setSuccess] = useState('')
+
+  // True while we are waiting for the backend response
+  const [loading, setLoading] = useState(false)
 
   /*
-   * This function runs every time the user types
-   * inside one of the inputs.
+   * Called whenever the user types in an input.
    *
-   * e.target.name tells us WHICH field changed:
-   *   "email"
-   *   "password"
-   *
-   * e.target.value contains the new value.
+   * e.target.name  -> "email" or "password"
+   * e.target.value -> what the user typed
    */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
-      // Keep all the old values
       ...formData,
-
-      // Replace only the field that changed
       [e.target.name]: e.target.value,
-    });
-  };
+    })
+  }
 
   /*
-   * This function runs when the user submits the form.
+   * Called when the user submits the login form.
    *
-   * It will:
-   *
-   * 1. Stop the browser from refreshing the page
-   * 2. Send email + password to our backend
-   * 3. Wait for the backend response
-   * 4. Handle success or error
+   * Flow:
+   * Login form
+   *    ↓
+   * POST /api/auth/login
+   *    ↓
+   * Backend verifies email + password
+   *    ↓
+   * Backend returns JWT if credentials are valid
    */
-  const handleSubmit = async (e: React.FormEvent) => {
-    // By default, submitting an HTML form reloads the page.
-    // React applications usually prevent that.
-    e.preventDefault();
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault()
 
-    // Remove any old error before starting a new request
-    setError("");
-
-    // Tell the UI that a request is running
-    setLoading(true);
+    // Clear messages from the previous attempt
+    setError('')
+    setSuccess('')
+    setLoading(true)
 
     try {
-      /*
-       * Send a POST request to the login endpoint.
-       *
-       * The browser sends:
-       *
-       * POST /api/auth/login
-       *
-       * Nginx -> API Gateway -> Auth service
-       */
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
 
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
 
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
         }),
-      });
+      })
+
+      // Convert the JSON response into a JavaScript object
+      const data = await response.json()
 
       /*
-       * The backend response arrives as HTTP data.
-       *
-       * response.json() converts the JSON response
-       * into a JavaScript object.
-       */
-      const data = await response.json();
-
-      /*
-       * response.ok is true for successful HTTP status codes:
-       * 200-299
-       *
-       * Example failures:
-       * 400 -> bad input
-       * 401 -> invalid email/password
+       * response.ok is false for errors such as:
+       * 400 Bad Request
+       * 401 Unauthorized
        */
       if (!response.ok) {
-        setError(data.error || "Login failed");
-        return;
+        setError(data.error || 'Login failed')
+        return
       }
+
+      // Login succeeded
+      const loginData: LoginResponse = data
+
+      setSuccess('Logged in successfully')
 
       /*
-       * At this point login succeeded.
+       * We receive the JWT here.
        *
-       * We tell TypeScript that the response should have
-       * the LoginResponse structure:
-       *
-       * {
-       *   message: string,
-       *   token: string,
-       *   user: {...}
-       * }
+       * We already tested that this token works with /api/auth/me.
+       * Permanent token storage/auth state will be handled separately.
        */
-      const loginData: LoginResponse = data;
+      console.log('Logged in user:', loginData.user)
+    } catch (error) {
+      console.error('Login request failed:', error)
 
-      const meResponse = await fetch("/api/auth/me", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${loginData.token}`,
-        },
-      });
-
-      const meData = await meResponse.json();
-
-      if (!meResponse.ok) {
-        setError(meData.error || "Authentication failed");
-        return;
-      }
-
-      console.log("Authenticated user:", meData.user);
-    } catch {
-      setError("Unable to connect to the server");
+      setError('Unable to connect to the server')
     } finally {
-      /*
-       * finally always runs: success OR error
-       * so loading must become false again.
-       */
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Background>
-      {/* Reuse the same visual frame used by the signup page */}
       <NeonFrame variant="pink" size="md">
-        {/* When this form is submitted, handleSubmit runs */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-5"
+          noValidate
+        >
           <h1 className="font-display text-neon-pink text-center text-sm tracking-widest">
             • • • LOGIN • • •
           </h1>
 
-          {/* Email input */}
           <Input
             label="Email"
             type="email"
             name="email"
             placeholder="Enter your email..."
-            // Current value comes from React state
             value={formData.email}
-            // Update state whenever the user types
             onChange={handleChange}
           />
 
-          {/* Password input */}
           <Input
             label="Password"
             type="password"
@@ -187,33 +135,40 @@ export default function Login() {
             onChange={handleChange}
           />
 
-          {/*
-           * While waiting for the backend:
-           *
-           * loading = true
-           * button shows "LOGGING IN..."
-           *
-           * Otherwise:
-           *
-           * loading = false
-           * button shows "LOGIN"
-           */}
-          <Button type="submit" variant="green" styleType="filled">
-            {loading ? "LOGGING IN..." : "LOGIN"}
+          {/* Backend/login error */}
+          {error && (
+            <p className="text-center text-red-500 text-xs">
+              {error}
+            </p>
+          )}
+
+          {/* Successful login */}
+          {success && (
+            <p className="text-center text-neon-green text-xs">
+              {success}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            variant="green"
+            styleType="filled"
+            disabled={loading}
+          >
+            {loading ? 'LOGGING IN...' : 'LOGIN'}
           </Button>
 
-          {/* Show the backend/frontend error only when one exists */}
-          {error && <p className="text-center text-red-500 text-xs">{error}</p>}
-
-          {/* Link back to the signup page */}
           <p className="text-center text-neon-pink/70 text-xs font-body">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-neon-green underline">
+            Don't have an account?{' '}
+            <Link
+              to="/signup"
+              className="text-neon-green underline"
+            >
               Create account
             </Link>
           </p>
         </form>
       </NeonFrame>
     </Background>
-  );
+  )
 }
