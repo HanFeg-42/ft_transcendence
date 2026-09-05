@@ -2,6 +2,7 @@ import express from "express";
 import { register } from "./registerController";
 import { login } from "./loginController";
 import cors from "cors";
+import { authenticateToken } from "./authMiddleware";
 
 const app = express();
 
@@ -19,6 +20,12 @@ app.get("/", (_req, res) => {
 
 app.post("/register", register);
 app.post("/login", login);
+
+app.get("/me", authenticateToken, (_req, res) => {
+  res.status(200).json({
+    message: "You are authenticated",
+  });
+});
 
 app.listen(3001, () => {
   console.log("Auth service listening on port http://localhost:3001");
