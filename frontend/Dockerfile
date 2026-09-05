@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+RUN npm run build #bundles src files into plain files
 
 
 # Stage 2: Serve static assets via NGINX
