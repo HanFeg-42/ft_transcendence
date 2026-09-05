@@ -50,6 +50,7 @@ export async function login(req: Request, res: Response) {
     jwtSecret,
     {
       expiresIn: "1h",
+      algorithm: "HS256",
     },
   );
 

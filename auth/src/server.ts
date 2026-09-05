@@ -8,9 +8,11 @@ import { prisma } from "./prisma";
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:5173",
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  }),
+);
 
 app.use(express.json());
 
@@ -33,8 +35,8 @@ app.get("/me", authenticateToken, async (req, res) => {
   });
 
   if (!user) {
-    return res.status(404).json({
-      error: "User not found",
+    return res.status(401).json({
+      error: "Authentication invalid",
     });
   }
 
