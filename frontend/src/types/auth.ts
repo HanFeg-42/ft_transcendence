@@ -20,3 +20,19 @@ export interface User {
   email: string
   createdAt: string
 }
+
+export interface LoginFormData {
+  email: string
+  password: string
+}
+
+export interface LoginPayload {
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  message: string
+  token: string
+  user: User
+}

@@ -1,11 +1,12 @@
 import { Routes, Route } from 'react-router-dom'
 import SignUp from './pages/SignUp'
+import Login from './pages/Login'
 
 function App() {
   return (
     <Routes>
       <Route path="/signup" element={<SignUp />} />
-      {/* les autres routes (login, home...) seront ajoutées par vos coéquipiers */}
+      <Route path="/login" element={<Login />} />
     </Routes>
   )
 }
