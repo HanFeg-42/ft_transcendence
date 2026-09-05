@@ -3,6 +3,8 @@ import { register } from "./registerController";
 import { login } from "./loginController";
 import cors from "cors";
 import { authenticateToken } from "./authMiddleware";
+import type { AuthenticatedRequest } from "./types/auth";
+import { prisma } from "./prisma";
 
 const app = express();
 
@@ -21,9 +23,28 @@ app.get("/", (_req, res) => {
 app.post("/register", register);
 app.post("/login", login);
 
-app.get("/me", authenticateToken, (_req, res) => {
-  res.status(200).json({
-    message: "You are authenticated",
+app.get("/me", authenticateToken, async (req, res) => {
+  const userId = (req as AuthenticatedRequest).userId;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    return res.status(404).json({
+      error: "User not found",
+    });
+  }
+
+  return res.status(200).json({
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      createdAt: user.createdAt,
+    },
   });
 });
 

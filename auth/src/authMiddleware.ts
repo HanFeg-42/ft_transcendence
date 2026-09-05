@@ -1,5 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import type { AuthenticatedRequest } from "./types/auth";
+
+// define a typescript type for the payload
+type JwtPayload = {
+  userId: number;
+};
 
 export function authenticateToken(
   req: Request,
@@ -32,10 +38,9 @@ export function authenticateToken(
   }
 
   try {
-    const decoded = jwt.verify(authToken, jwtSecret);
+    const decoded = jwt.verify(authToken, jwtSecret) as JwtPayload;
 
-    console.log(decoded);
-
+    (req as AuthenticatedRequest).userId = decoded.userId;
     next();
   } catch {
     return res.status(401).json({
