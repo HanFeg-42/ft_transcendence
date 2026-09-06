@@ -14,4 +14,4 @@ dist/
 Thumbs.db
 
 
-/generated/prismadocker-compose.override.yml
+generated/

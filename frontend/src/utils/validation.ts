@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 export function validateSignUp(data: { username: string; email: string; password: string; confirmPassword: string }) {    
     const errors: Record<string, string> = {}
+=======
+export function validateSignUp(data: { username: string; email: string; password: string; confirmPassword: string }) {    const errors: Record<string, string> = {}
+>>>>>>> dev
 
     if (!data.username.trim()) 
     {
@@ -11,7 +15,12 @@ export function validateSignUp(data: { username: string; email: string; password
     }
     if (!data.password) {
     errors.password = 'Password is required'
+<<<<<<< HEAD
     } else if (data.password.length < 8) {
+=======
+    } 
+    else if (data.password.length < 8) {
+>>>>>>> dev
     errors.password = 'Password must be at least 8 characters'
     }
     if (data.confirmPassword !== data.password) {

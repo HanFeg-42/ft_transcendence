@@ -10,12 +10,6 @@ Technical documentation describing the system architecture and the responsibilit
 
 - [Technical Architecture Specification](architecture/ARCHITECTURE.md)
 
-## Planning
-
-Project planning, roadmap, and execution strategy.
-
-- [ft_transcendence Execution Plan](planning/EXECUTION_PLAN.md)
-
 ## Services
 
 Documentation specific to individual application services.
