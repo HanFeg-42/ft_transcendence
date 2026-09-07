@@ -2,16 +2,10 @@ import { useState } from 'react'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
-<<<<<<< HEAD
-}
-
-export default function Input({ label, type, className = '', ...props }: InputProps) {
-=======
   error?: string
 }
 
 export default function Input({ label, type, error, className = '', ...props }: InputProps) {  
->>>>>>> dev
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === 'password'
 
@@ -37,10 +31,7 @@ export default function Input({ label, type, error, className = '', ...props }: 
             {/* {showPassword ? '🙈' : '👁️'} */}
           </button>
         )}
-<<<<<<< HEAD
-=======
         {error && <span className="text-red-400 text-xs font-body">{error}</span>}
->>>>>>> dev
       </div>
     </div>
   )

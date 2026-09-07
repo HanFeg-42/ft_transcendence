@@ -115,15 +115,11 @@ export default function SignUp() {
   return (
     <Background>
       <NeonFrame variant="pink" size="md">
-<<<<<<< HEAD
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
-=======
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-5"
           noValidate
         >
->>>>>>> dev
           <h1 className="font-display text-neon-pink text-center text-sm tracking-widest">
             • • • CREATE ACCOUNT • • •
           </h1>
@@ -135,11 +131,8 @@ export default function SignUp() {
             placeholder="Enter your username..."
             value={formData.username}
             onChange={handleChange}
-<<<<<<< HEAD
-=======
             error={errors.username}
 
->>>>>>> dev
           />
 
           <Input
@@ -149,10 +142,7 @@ export default function SignUp() {
             placeholder="Enter your email..."
             value={formData.email}
             onChange={handleChange}
-<<<<<<< HEAD
-=======
             error={errors.email}
->>>>>>> dev
           />
 
           <Input
@@ -162,10 +152,7 @@ export default function SignUp() {
             placeholder="Enter your password..."
             value={formData.password}
             onChange={handleChange}
-<<<<<<< HEAD
-=======
             error={errors.password}
->>>>>>> dev
           />
 
           <Input
@@ -175,12 +162,6 @@ export default function SignUp() {
             placeholder="Confirm your password..."
             value={formData.confirmPassword}
             onChange={handleChange}
-<<<<<<< HEAD
-          />
-
-          <Button type="submit" variant="green" styleType="filled">
-            CREATE ACCOUNT
-=======
             error={errors.confirmPassword}
           />
 
@@ -197,23 +178,16 @@ export default function SignUp() {
             disabled={loading}
           >
             {loading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
->>>>>>> dev
           </Button>
 
           <p className="text-center text-neon-pink/70 text-xs font-body">
             Already have an account?{' '}
-<<<<<<< HEAD
-            <a href="/login" className="text-neon-green underline">
-              Login
-            </a>
-=======
             <Link
               to="/login"
               className="text-neon-green underline"
             >
               Login
             </Link>
->>>>>>> dev
           </p>
         </form>
       </NeonFrame>
