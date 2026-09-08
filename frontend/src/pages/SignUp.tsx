@@ -5,7 +5,6 @@ import Background from '../components/ui/Background'
 import NeonFrame from '../components/ui/NeonFrame'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
-
 import { validateSignUp } from '../utils/validation'
 import type { SignUpFormData } from '../types/auth'
 
