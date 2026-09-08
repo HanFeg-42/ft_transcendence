@@ -5,9 +5,12 @@ import Background from '../components/ui/Background'
 import NeonFrame from '../components/ui/NeonFrame'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
-
 import { validateSignUp } from '../utils/validation'
 import type { SignUpFormData } from '../types/auth'
+
+
+
+
 
 export default function SignUp() {
   const [formData, setFormData] = useState<SignUpFormData>({
@@ -18,7 +21,7 @@ export default function SignUp() {
   })
 
   // Validation errors for individual form fields
-  const [, setErrors] = useState<Record<string, string>>({})
+  const [errors , setErrors] = useState<Record<string, string>>({})
 
   // General error coming from the backend
   const [apiError, setApiError] = useState('')
@@ -128,6 +131,8 @@ export default function SignUp() {
             placeholder="Enter your username..."
             value={formData.username}
             onChange={handleChange}
+            error={errors.username}
+
           />
 
           <Input
@@ -137,6 +142,7 @@ export default function SignUp() {
             placeholder="Enter your email..."
             value={formData.email}
             onChange={handleChange}
+            error={errors.email}
           />
 
           <Input
@@ -146,6 +152,7 @@ export default function SignUp() {
             placeholder="Enter your password..."
             value={formData.password}
             onChange={handleChange}
+            error={errors.password}
           />
 
           <Input
@@ -155,6 +162,7 @@ export default function SignUp() {
             placeholder="Confirm your password..."
             value={formData.confirmPassword}
             onChange={handleChange}
+            error={errors.confirmPassword}
           />
 
           {apiError && (
