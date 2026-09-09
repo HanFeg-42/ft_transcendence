@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 import Background from "../components/ui/Background";
 import NeonFrame from "../components/ui/NeonFrame";
 import Input from "../components/ui/Input";
@@ -27,7 +26,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
-
+  const navigate = useNavigate();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -69,8 +68,8 @@ export default function Login() {
       const loginData: LoginResponse = data;
 
       login(loginData.user, loginData.token);
-
       setSuccess("Logged in successfully");
+      navigate("/home");
       console.log("Logged in user:", loginData.user);
     } catch (error) {
       console.error("Login request failed:", error);
