@@ -3,6 +3,7 @@ import http from 'http';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
+import { authenticateToken } from './middleware/authenticateToken.js'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -47,6 +48,7 @@ app.use(
 
 app.use(
   '/game',
+  authenticateToken,
   createProxyMiddleware({
     target: process.env.GAME_SERVICE_URL || 'http://game:3002',
     changeOrigin: true,
