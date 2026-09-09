@@ -1,38 +1,62 @@
-import { useState } from 'react'
+import React from 'react';
 
+// Ici on définit les "options" (Props) que notre Input peut recevoir
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string
-  error?: string
+  label?: string; // Un texte au-dessus du champ (ex: "EMAIL")
+  error?: string; // Un message d'erreur si la saisie est incorrecte
 }
 
-export default function Input({ label, type, error, className = '', ...props }: InputProps) {  
-  const [showPassword, setShowPassword] = useState(false)
-  const isPassword = type === 'password'
-
+export const Input: React.FC<InputProps> = ({
+  label,
+  error,
+  className = '',
+  ...props // Récupère automatiquement les options HTML classiques (type, placeholder, etc.)
+}) => {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="font-body text-neon-pink text-xs uppercase tracking-wide">
-        {label}
-      </label>
-
-      <div className="relative">
+    <div className="flex flex-col gap-1.5 w-full">
+      {/* 1. Affichage du label s'il existe */}
+      {label && (
+        <label className="font-pixelify text-pacova-pink text-lg uppercase tracking-wide">
+          {label}
+        </label>
+      )}
+      
+      {/* 2. Le Champ de texte avec nos styles pixelisés */}
+      <div className="relative drop-shadow-glow-pink">
         <input
-          type={isPassword && showPassword ? 'text' : type}
-          className={`w-full bg-transparent border border-neon-pink rounded px-3 py-2 text-white placeholder-neon-pink/40 outline-none focus:shadow-[0_0_8px_#F32077] ${className}`}
+          className={`
+            w-full
+            bg-pacova-surface
+            text-white
+            font-vt323
+            text-2xl
+            px-4
+            py-2
+            border-2
+            border-pacova-pink
+            pixel-corners-3step
+            outline-none
+            transition-all
+            placeholder:text-gray-600
+            focus:shadow-neon-pink
+            disabled:opacity-40
+            ${error ? 'border-red-500' : ''}
+            ${className}
+          `}
           {...props}
         />
-
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-neon-pink/70 hover:text-neon-pink"
-          >
-            {/* {showPassword ? '🙈' : '👁️'} */}
-          </button>
-        )}
-        {error && <span className="text-red-400 text-xs font-body">{error}</span>}
+        {/* Overlay pour l'effet de balayage écran rétro (CRT) */}
+        <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
       </div>
+
+      {/* 3. Affichage du message d'erreur s'il existe */}
+      {error && (
+        <span className="font-vt323 text-red-500 text-lg">
+          {error}
+        </span>
+      )}
     </div>
-  )
-}
+  );
+};
+
+export default Input;

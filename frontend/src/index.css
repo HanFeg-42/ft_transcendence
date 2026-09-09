@@ -1,13 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pixelify+Sans:wght@400..700&family=Press+Start+2P&family=VT323&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=VT323&family=Inter:wght@400;600&display=swap');
+
 
 @theme {
-  --color-neon-pink: #F32077;
-  --color-neon-green: #8ED603;
-  --color-neon-purple: #510950;
-  --color-deep-space: #01060D;
+  /* --- COULEURS PACCOVA --- */
+  --color-pacova-pink: #F32077;
+  --color-pacova-pink-dark: #8A1353;
+  --color-pacova-gray: #464446;
+  --color-pacova-green: #8ED603;
+  --color-pacova-green-dark: #333A0E;
+  --color-pacova-purple: #510950;
+  --color-pacova-bg: #0D0914;
+  --color-pacova-surface: #130718;
 
-  --font-display: "Pixelify Sans", monospace;   /* titres type "LEVEL UP" */
-  --font-retro: "VT323", monospace;              /* texte rétro secondaire */
-  --font-body: "Inter", sans-serif;              /* labels, paragraphes */
+  /* --- TYPOGRAPHIES --- */
+  --font-press-start: 'Press Start 2P', cursive;
+  --font-pixelify: 'Pixelify Sans', sans-serif;
+  --font-vt323: 'VT323', monospace;
+  --font-inter: 'Inter', sans-serif;
+
+  /* --- OMBRES / GLOW NEON --- */
+  --shadow-neon-pink: 0 0 12px rgba(243, 32, 119, 0.8), inset 0 0 10px rgba(243, 32, 119, 0.5);
+  --shadow-neon-green: 0 0 12px rgba(142, 214, 3, 0.8), inset 0 0 10px rgba(142, 214, 3, 0.5);
+  --shadow-neon-purple: 0 0 10px rgba(81, 9, 80, 0.8);
+
+  /* --- NOMS D'OMBRES DE RECUL / GLOW (Drop Shadow) --- */
+    --drop-shadow-glow-pink: 0 0 10px #F32077;
+    --drop-shadow-glow-green: 0 0 10px #8ED603;
+    --drop-shadow-glow-red: 0 0 10px #EF4444;
+    --drop-shadow-glow-yellow: 0 0 10px #F59E0B;
+
+  /* --- NOMS D'OMBRES INTERNES (Box Shadow) --- */
+  --shadow-neon-pink: inset 0 0 10px #F32077, 0 0 10px #F32077;
+  --shadow-neon-green: inset 0 0 10px #8ED603, 0 0 10px #8ED603;
+
+  /* --- SPACING & BORDERS --- */
+  --spacing-pixel: 4px;
+  --radius-pixel-sm: 2px;
+  --radius-pixel-md: 4px;
+  --radius-pixel-lg: 8px;
 }
+@layer utilities {
+  /* Exact 3-step pixel cutout from your Figma board */
+  .pixel-corners-3step {
+    clip-path: polygon(
+      0px 12px, 4px 12px, 4px 8px, 8px 8px, 8px 4px, 12px 4px, 12px 0px,
+      calc(100% - 12px) 0px, calc(100% - 12px) 4px, calc(100% - 8px) 4px, calc(100% - 8px) 8px, calc(100% - 4px) 8px, calc(100% - 4px) 12px, 100% 12px,
+      100% calc(100% - 12px), calc(100% - 4px) calc(100% - 12px), calc(100% - 4px) calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) calc(100% - 4px), calc(100% - 12px) calc(100% - 4px), calc(100% - 12px) 100%,
+      12px 100%, 12px calc(100% - 4px), 8px calc(100% - 4px), 8px calc(100% - 8px), 4px calc(100% - 8px), 4px calc(100% - 12px), 0px calc(100% - 12px)
+    );
+  }
+
+  /* CRT Horizontal Scanlines */
+  .pixel-scanlines {
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.08) 20%,
+      rgba(0, 0, 0, 0.25) 10%,
+      rgba(0, 0, 0, 0.25) 100%
+    );
+    background-size: 100% 4px;
+  }
+}
+/* Animated Grid Scrolling */
+@keyframes gridMove {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 40px;
+  }
+}
+
+.grid-animation {
+  animation: gridMove 1.2s linear infinite;
+}
+
+
+
+/* BUTTONS -------------------- */
+
+/* outline-magenta: Dark surface with a glowing pink neon border.
+
+filled-magenta: Dark pink/purple gradient background with pink glow.
+
+solid-pink: Solid bright pink fill (#F32077).
+
+filled-green: Dark green background with bright green neon glow.
+
+olive-yellow: Muted olive green base.
+
+danger-red: Dark red background with a red warning glow.
+
+warning-yellow: Dark amber background with a golden glow. 
+
+USE EXAMPLE
+
+<PixelButton variant="danger-red" size="sm" disabled>
+  LOCKED
+</PixelButton>
+
+<PixelButton variant="solid-pink" size="md" onClick={() => console.log('Clicked!')}>
+      PLAY NOW
+</PixelButton> */
+
+
+
+/* --- RETRO PIXEL STARFIELD (SKY ONLY) --- */
+
+/* 1. Small 1px Star Field */
+.pixel-stars-small {
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  box-shadow: 
+    12vw 8vh #fff, 32vw 18vh #f32077, 72vw 12vh #fff, 88vw 28vh #8ed603,
+    18vw 38vh #fff, 58vw 42vh #f32077, 42vw 8vh #fff, 92vw 6vh #fff,
+    5vw 22vh #fff, 68vw 15vh #8ed603, 82vw 36vh #fff;
+  animation: starTwinkle 3s ease-in-out infinite alternate;
+}
+
+/* 2. Medium 2px Star Field */
+.pixel-stars-medium {
+  width: 2px;
+  height: 2px;
+  background: transparent;
+  box-shadow: 
+    8vw 25vh #fff, 48vw 8vh #fff, 78vw 32vh #f32077, 28vw 44vh #8ed603,
+    62vw 16vh #fff, 22vw 12vh #fff, 94vw 40vh #fff;
+  animation: starTwinkle 4s ease-in-out 1s infinite alternate;
+}
+
+/* 3. Retro 4-Point Pixel Stars (Cross Shape) */
+.pixel-cross-stars {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #ffffff;
+  box-shadow: 
+    0 -3px 0 #fff, 0 3px 0 #fff, -3px 0 0 #fff, 3px 0 0 #fff,
+    250px 40px 0 #f32077, 250px 37px 0 #f32077, 250px 43px 0 #f32077, 247px 40px 0 #f32077, 253px 40px 0 #f32077,
+    500px 100px 0 #8ed603, 500px 97px 0 #8ed603, 500px 103px 0 #8ed603, 497px 100px 0 #8ed603, 503px 100px 0 #8ed603;
+  top: 15%;
+  left: 15%;
+  animation: starTwinkle 2.5s ease-in-out 0.5s infinite alternate;
+}
+
+@keyframes starTwinkle {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+
+
