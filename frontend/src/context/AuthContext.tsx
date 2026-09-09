@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (user: User, token: string) => void;
   // void login(User user, char *token); in C
   logout: () => void;
+  verifyUser: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +30,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
     setToken(null);
   };
-  
+
+  const verifyUser = async () => {
+    if (!token) {
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        logout();
+        return false;
+      }
+
+      const data = await response.json();
+
+      setUser(data.user);
+      return true;
+    } catch (error) {
+      console.error("Failed to verify current user:", error);
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -37,6 +65,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         token,
         login,
         logout,
+        verifyUser,
       }}
     >
       {children}
@@ -45,11 +74,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
 
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
 
-  return context
+  return context;
 }
