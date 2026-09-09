@@ -24,7 +24,7 @@ export async function register(req: Request, res: Response) {
     });
   }
 
-  if (password.length < 4) {
+  if (password.length < 8) {
     return res.status(400).json({
       error: "password must be at least 8 characters long",
     });
