@@ -1,9 +1,11 @@
 # Stage 1: Build static assets
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
-COPY . .
+COPY shared/chat-types.ts ./shared/chat-types.ts
+COPY shared/game-types.ts ./shared/game-types.ts
+COPY frontend/ .
 RUN npm run build
 
 # Stage 2: Serve static assets via NGINX
@@ -19,7 +21,7 @@ RUN apk add --no-cache openssl && \
 
 # Copy built frontend assets and NGINX config
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY frontend/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 443
 CMD ["nginx", "-g", "daemon off;"]

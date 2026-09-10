@@ -27,7 +27,9 @@ services:
       - pacova
 
   game:
-    build: ./game
+    build:
+      context: .
+      dockerfile: game/Dockerfile
     container_name: game
     env_file:
       - .env
@@ -49,7 +51,9 @@ services:
       - pacova
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     container_name: frontend
     ports:
       - "443:443"
