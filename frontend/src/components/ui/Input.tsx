@@ -22,7 +22,8 @@ export const Input: React.FC<InputProps> = ({
       )}
       
       {/* 2. Le Champ de texte avec nos styles pixelisés */}
-      <div className="relative drop-shadow-glow-pink">
+      {/* <div className="relative drop-shadow-glow-gray"> */}
+      <div className="relative">
         <input
           className={`
             w-full
@@ -34,7 +35,6 @@ export const Input: React.FC<InputProps> = ({
             py-2
             border-2
             border-pacova-pink
-            pixel-corners-3step
             outline-none
             transition-all
             placeholder:text-gray-600
@@ -60,3 +60,6 @@ export const Input: React.FC<InputProps> = ({
 };
 
 export default Input;
+
+            // pixel-corners-3step
+// after 9

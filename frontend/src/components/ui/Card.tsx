@@ -14,7 +14,7 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   // Sélection des styles selon la variante choisie
   const borderStyle = 
-    variant === 'pink' ? 'border-pacova-pink' : 
+    variant === 'pink' ? 'border-pacova-pink/40' : 
     variant === 'green' ? 'border-pacova-green' : 'border-pacova-gray';
 
   const glowStyle = 
@@ -25,7 +25,7 @@ export const Card: React.FC<CardProps> = ({
     <div className={`
       relative
       bg-pacova-surface
-      border-2
+      border-0
       ${borderStyle}
       ${glowStyle}
       p-6

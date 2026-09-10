@@ -21,12 +21,13 @@
 
   /* --- OMBRES / GLOW NEON --- */
   --shadow-neon-pink: 0 0 12px rgba(243, 32, 119, 0.8), inset 0 0 10px rgba(243, 32, 119, 0.5);
-  --shadow-neon-green: 0 0 12px rgba(142, 214, 3, 0.8), inset 0 0 10px rgba(142, 214, 3, 0.5);
+  --shadow-neon-green: 0 0 12px rgba(142, 214, 3, 0.8), inset 0 0 10px rgba(142, 214, 3, 0.5a);
   --shadow-neon-purple: 0 0 10px rgba(81, 9, 80, 0.8);
 
   /* --- NOMS D'OMBRES DE RECUL / GLOW (Drop Shadow) --- */
     --drop-shadow-glow-pink: 0 0 10px #F32077;
     --drop-shadow-glow-green: 0 0 10px #8ED603;
+    --drop-shadow-glow-gray: 0 0 10px #464446;
     --drop-shadow-glow-red: 0 0 10px #EF4444;
     --drop-shadow-glow-yellow: 0 0 10px #F59E0B;
 

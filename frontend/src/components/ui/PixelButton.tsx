@@ -19,13 +19,15 @@ interface PixelButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 const variantStyles: Record<
   PixelButtonVariant,
-  { bg: string; glow: string; dropShadow: string; borderColor: string }
+  { bg: string; glow: string; dropShadow: string; borderColor: string, textColor?: string; fontFamily?: string}
 > = {
   'outline-magenta': {
     bg: 'bg-pacova-surface',
     glow: 'shadow-neon-pink',
     borderColor: 'border-pacova-pink',
     dropShadow: 'drop-shadow-glow-pink',
+    // textColor: 'text-pink-100',
+    textColor: 'text-pacova-pink',
   },
   'filled-green': {
     bg: 'bg-pacova-green-dark',
@@ -44,12 +46,14 @@ const variantStyles: Record<
     glow: 'shadow-neon-pink',
     borderColor: 'border-pacova-pink',
     dropShadow: 'drop-shadow-glow-pink',
+
   },
   'solid-pink': {
     bg: 'bg-pacova-pink',
     glow: 'shadow-neon-pink',
     borderColor: 'border-white/60',
     dropShadow: 'drop-shadow-glow-pink',
+    // fontFamily: '',
   },
   'danger-red': {
     bg: 'bg-red-950',
@@ -89,7 +93,7 @@ export const PixelButton: React.FC<PixelButtonProps> = ({
           relative
           font-vt323
           uppercase
-          text-white
+          pixel-corners-3step
           cursor-pointer
           select-none
           transition-all
@@ -98,6 +102,8 @@ export const PixelButton: React.FC<PixelButtonProps> = ({
           disabled:opacity-20
           disabled:cursor-not-allowed
           disabled:shadow-none
+          ${currentVariant.textColor || 'text-white'}   {/* 👈 Dynamic color or fallback */}
+          ${currentVariant.fontFamily || ''}             {/* 👈 Dynamic font fallback */}
           ${currentVariant.bg}
           ${currentVariant.glow}
           ${sizeStyles[size]}
