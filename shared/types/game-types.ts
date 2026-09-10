@@ -1,4 +1,4 @@
-// shared/game-types.ts
+// shared/types/game-types.ts
 // Contract between: frontend (game UI) <-> game-service
 // Field names/values below are PLACEHOLDERS - adjust to match
 // however Pac-Man game logic.

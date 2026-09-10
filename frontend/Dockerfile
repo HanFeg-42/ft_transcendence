@@ -3,8 +3,8 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
-COPY shared/chat-types.ts ./shared/chat-types.ts
-COPY shared/game-types.ts ./shared/game-types.ts
+COPY shared/types/chat-types.ts ./shared/types/chat-types.ts
+COPY shared/types/game-types.ts ./shared/types/game-types.ts
 COPY frontend/ .
 RUN npm run build
 

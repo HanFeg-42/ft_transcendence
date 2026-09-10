@@ -1,4 +1,4 @@
-// shared/chat-types.ts
+// shared/types/chat-types.ts
 // Contract between: frontend (chat UI) <-> chat-service
 // Edit here whenever the chat WS shape changes, both sides rebuild.
 
