@@ -3,6 +3,7 @@ import React from 'react';
 export type PixelButtonVariant =
   | 'outline-magenta'
   | 'filled-green'
+  | 'filled-pink'
   | 'olive-yellow'
   | 'filled-magenta'
   | 'solid-pink'
@@ -19,54 +20,16 @@ interface PixelButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 const variantStyles: Record<
   PixelButtonVariant,
-  { bg: string; glow: string; dropShadow: string; borderColor: string, textColor?: string; fontFamily?: string}
+  { bg: string; glow: string; dropShadow: string; borderColor: string; textColor?: string; fontFamily?: string }
 > = {
-  'outline-magenta': {
-    bg: 'bg-pacova-surface',
-    glow: 'shadow-neon-pink',
-    borderColor: 'border-pacova-pink',
-    dropShadow: 'drop-shadow-glow-pink',
-    // textColor: 'text-pink-100',
-    textColor: 'text-pacova-pink',
-  },
-  'filled-green': {
-    bg: 'bg-pacova-green-dark',
-    glow: 'shadow-neon-green',
-    borderColor: 'border-pacova-green',
-    dropShadow: 'drop-shadow-glow-green',
-  },
-  'olive-yellow': {
-    bg: 'bg-pacova-green-dark/60',
-    glow: 'shadow-neon-green/40',
-    borderColor: 'border-pacova-green/50',
-    dropShadow: 'drop-shadow-glow-green',
-  },
-  'filled-magenta': {
-    bg: 'bg-pacova-pink-dark',
-    glow: 'shadow-neon-pink',
-    borderColor: 'border-pacova-pink',
-    dropShadow: 'drop-shadow-glow-pink',
-
-  },
-  'solid-pink': {
-    bg: 'bg-pacova-pink',
-    glow: 'shadow-neon-pink',
-    borderColor: 'border-white/60',
-    dropShadow: 'drop-shadow-glow-pink',
-    // fontFamily: '',
-  },
-  'danger-red': {
-    bg: 'bg-red-950',
-    glow: 'shadow-[inset_0_0_15px_rgba(239,68,68,0.6)]',
-    borderColor: 'border-red-500',
-    dropShadow: 'drop-shadow-glow-red',
-  },
-  'warning-yellow': {
-    bg: 'bg-amber-950',
-    glow: 'shadow-[inset_0_0_12px_rgba(245,158,11,0.6)]',
-    borderColor: 'border-amber-400',
-    dropShadow: 'drop-shadow-glow-yellow',
-  },
+  'outline-magenta': { bg: 'bg-pacova-surface', glow: 'shadow-neon-pink', borderColor: 'border-pacova-pink', dropShadow: 'drop-shadow-glow-pink', textColor: 'text-pacova-pink' },
+  'filled-green': { bg: 'bg-pacova-green-dark', glow: 'shadow-neon-green', borderColor: 'border-pacova-green', dropShadow: 'drop-shadow-glow-green' },
+  'olive-yellow': { bg: 'bg-pacova-green-dark/60', glow: 'shadow-neon-green/40', borderColor: 'border-pacova-green/50', dropShadow: 'drop-shadow-glow-green' },
+  'filled-magenta': { bg: 'bg-pacova-pink-dark', glow: 'shadow-neon-pink', borderColor: 'border-pacova-pink', dropShadow: 'drop-shadow-glow-pink' },
+  'filled-pink': { bg: 'bg-pacova-pink-dark', glow: 'shadow-neon-pink', borderColor: 'border-pacova-pink', dropShadow: 'drop-shadow-glow-pink' },
+  'solid-pink': { bg: 'bg-pacova-pink', glow: 'shadow-neon-pink', borderColor: 'border-white/60', dropShadow: 'drop-shadow-glow-pink' },
+  'danger-red': { bg: 'bg-red-950', glow: 'shadow-[inset_0_0_15px_rgba(239,68,68,0.6)]', borderColor: 'border-red-500', dropShadow: 'drop-shadow-glow-red' },
+  'warning-yellow': { bg: 'bg-amber-950', glow: 'shadow-[inset_0_0_12px_rgba(245,158,11,0.6)]', borderColor: 'border-amber-400', dropShadow: 'drop-shadow-glow-yellow' },
 };
 
 const sizeStyles: Record<PixelButtonSize, string> = {
