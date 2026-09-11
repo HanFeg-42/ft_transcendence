@@ -44,21 +44,10 @@ export default function SignUp() {
     // Clear the previous backend error
     setApiError('')
 
-    /*
-     * First validate the form on the frontend.
-     * Example:
-     * - empty fields
-     * - invalid email
-     * - passwords do not match
-     */
     const validationErrors = validateSignUp(formData)
 
     setErrors(validationErrors)
 
-    /*
-     * If validationErrors contains at least one error,
-     * we stop here and do NOT send the request.
-     */
     if (Object.keys(validationErrors).length > 0) {
       return
     }
@@ -66,12 +55,6 @@ export default function SignUp() {
     setLoading(true)
 
     try {
-      /*
-       * Send only the values required by the backend.
-       *
-       * confirmPassword is only used by the frontend
-       * to verify that both passwords match.
-       */
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -86,22 +69,11 @@ export default function SignUp() {
 
       const data = await response.json()
 
-      /*
-       * response.ok is false for responses such as:
-       * 400 Bad Request
-       * 409 Conflict
-       * 500 Internal Server Error
-       */
       if (!response.ok) {
         setApiError(data.error || 'Registration failed')
         return
       }
 
-      /*
-       * Registration succeeded.
-       * The user can now log in with the account
-       * that was just created.
-       */
       navigate('/login')
     } catch (error) {
       console.error('Registration request failed:', error)
