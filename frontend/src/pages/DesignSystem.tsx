@@ -33,7 +33,6 @@
 
 // ...
 
-import React from 'react';
 import PixelButton from '../components/ui/PixelButton';
 
 export default function App() {

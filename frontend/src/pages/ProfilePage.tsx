@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import Background from '../components/ui/Background';
 import Navbar from '../components/ui/Navbar';
 import ProfileCard from '../components/ui/ProfileCard';

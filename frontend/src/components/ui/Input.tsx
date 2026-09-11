@@ -34,6 +34,7 @@ export const Input: React.FC<InputProps> = ({
             px-4
             py-2
             border-2
+            rounded-md
             border-pacova-pink
             outline-none
             transition-all

@@ -18,9 +18,8 @@ export const Card: React.FC<CardProps> = ({
     variant === 'green' ? 'border-pacova-green' : 'border-pacova-gray';
 
   const glowStyle = 
-    variant === 'pink' ? 'shadow-neon-pink' : 
-    variant === 'green' ? 'shadow-neon-green' : 'shadow-none'; // ou votre classe d'ombre pour gris
-
+variant === 'pink' ? 'drop-shadow-[0_0_12px_rgba(243,32,119,0.5)]' : 
+  variant === 'green' ? 'drop-shadow-[0_0_12px_rgba(142,214,3,0.5)]' : '';
   return (
     <div className={`
       relative
@@ -30,6 +29,8 @@ export const Card: React.FC<CardProps> = ({
       ${glowStyle}
       p-6
       text-white
+      rounded-xl
+      overflow-hidden
       ${className}
     `}>
       {/* Effet d'écran rétro */}

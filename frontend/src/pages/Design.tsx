@@ -170,94 +170,103 @@
 
 
 
-import React, { useState } from 'react';
-import Background from '../components/ui/Background';
-import Navbar from '../components/ui/Navbar';
-import Card from '../components/ui/Card';
-import PixelButton from '../components/ui/PixelButton';
-import Avatar from '../components/ui/Avatar';
-import Toast from '../components/ui/Toast';
-import GameUI, { type MatchRecord } from '../components/ui/GameUI';
-import Badge from '../components/ui/Badge';
 
-export default function DesignSystem() {
-  // État pour gérer la visibilité du Toast
-  const [showToast, setShowToast] = useState(true);
-  const [activeTab, setActiveTab] = useState('HOME');
 
-  // Données de démonstration pour le tableau de matchs
-  const mockMatches: MatchRecord[] = [
-    { id: '1', result: 'WIN', playerIcon: 'pacman', score: '8 - 3', opponent: 'ANON99', timeAgo: '2m ago' },
-    { id: '2', result: 'LOSS', playerIcon: 'ghost-red', score: '5 - 8', opponent: 'LUNA', timeAgo: '1h ago' },
-    { id: '3', result: 'WIN', playerIcon: 'ghost-cyan', score: '8 - 1', opponent: 'SLAYER', timeAgo: '2d ago' },
-  ];
 
-  return (
-    <Background>
-      {/* 1. COMPOSANT NAVBAR */}
-      <Navbar activeTab={activeTab} onSelectTab={(tab) => setActiveTab(tab)} />
 
-      <main className="max-w-6xl mx-auto p-8 w-full flex flex-col gap-8">
-        <header className="text-center mb-4">
-          <h1 className="font-press-start text-2xl text-pacova-pink drop-shadow-glow-pink">
-            PACOVA COMPONENT SHOWCASE
-          </h1>
-          <p className="font-vt323 text-xl text-gray-400 mt-2">
-            Aperçu visuel des 10+ composants réutilisables du Design System
-          </p>
-        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+
+// import  { useState } from 'react';
+// import Background from '../components/ui/Background';
+// import Navbar from '../components/ui/Navbar';
+// import Card from '../components/ui/Card';
+// import PixelButton from '../components/ui/PixelButton';
+// import Avatar from '../components/ui/Avatar';
+// import Toast from '../components/ui/Toast';
+// import GameUI, { type MatchRecord } from '../components/ui/GameUI';
+// import Badge from '../components/ui/Badge';
+// // import { ICONS, type IconName } from '../utils/icons';
+
+
+// export default function DesignSystem() {
+//   // État pour gérer la visibilité du Toast
+//   const [showToast, setShowToast] = useState(true);
+//   const [activeTab, setActiveTab] = useState('HOME');
+
+//   // Données de démonstration pour le tableau de matchs
+//   const mockMatches: MatchRecord[] = [
+//     { id: '1', result: 'WIN', playerIcon: 'pacman', score: '8 - 3', opponent: 'ANON99', timeAgo: '2m ago' },
+//     { id: '2', result: 'LOSS', playerIcon: 'ghost-red', score: '5 - 8', opponent: 'LUNA', timeAgo: '1h ago' },
+//     { id: '3', result: 'WIN', playerIcon: 'ghost-cyan', score: '8 - 1', opponent: 'SLAYER', timeAgo: '2d ago' },
+//   ];
+
+//   return (
+//     <Background>
+//       {/* 1. COMPOSANT NAVBAR */}
+//       <Navbar activeTab={activeTab} onSelectTab={(tab) => setActiveTab(tab)} />
+
+//       <main className="max-w-6xl mx-auto p-8 w-full flex flex-col gap-8">
+//         <header className="text-center mb-4">
+//           <h1 className="font-press-start text-2xl text-pacova-pink drop-shadow-glow-pink">
+//             PACOVA COMPONENT SHOWCASE
+//           </h1>
+//           <p className="font-vt323 text-xl text-gray-400 mt-2">
+//             Aperçu visuel des 10+ composants réutilisables du Design System
+//           </p>
+//         </header>
+
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
-          {/* 2. COMPOSANT AVATARS & BADGES */}
-          <Card variant="pink" className="flex flex-col gap-4">
-            <h2 className="font-pixelify text-xl text-pacova-pink border-b border-pacova-pink/30 pb-2">
-              01. AVATARS & STATUS
-            </h2>
-            <div className="flex items-center justify-around py-4">
-              <Avatar iconName="pacman" size="lg" status="online" />
-              <Avatar iconName="ghost-pink" size="md" status="busy" />
-              <Avatar iconName="ghost-cyan" size="sm" status="offline" />
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center pt-2">
-              <Badge variant="pink">LEVEL 24</Badge>
-              <Badge variant="green">VIP PLAYER</Badge>
-              <Badge variant="yellow">RANK #1</Badge>
-            </div>
-          </Card>
+//           {/* 2. COMPOSANT AVATARS & BADGES */}
+//           <Card variant="pink" className="flex flex-col gap-4">
+//             <h2 className="font-pixelify text-xl text-pacova-pink border-b border-pacova-pink/30 pb-2">
+//               01. AVATARS & STATUS
+//             </h2>
+//             <div className="flex items-center justify-around py-4">
+//               <Avatar iconName="pacman" size="lg" status="online" />
+//               <Avatar iconName="ghost-pink" size="md" status="busy" />
+//               <Avatar iconName="ghost-cyan" size="sm" status="offline" />
+//             </div>
+//             <div className="flex flex-wrap gap-2 justify-center pt-2">
+//               <Badge variant="pink">LEVEL 24</Badge>
+//               <Badge variant="green">VIP PLAYER</Badge>
+//               <Badge variant="yellow">RANK #1</Badge>
+//             </div>
+//           </Card>
 
-          {/* 3. COMPOSANT GAME UI (MATCH HISTORY) */}
-          <GameUI matches={mockMatches} />
+//           {/* 3. COMPOSANT GAME UI (MATCH HISTORY) */}
+//           <GameUI matches={mockMatches} />
 
-        </div>
+//         </div>
 
-        {/* 4. CONTROLES D'INTERACTION TOAST */}
-        <Card variant="green" className="flex flex-col gap-4 items-start">
-          <h2 className="font-pixelify text-xl text-pacova-green border-b border-pacova-green/30 pb-2 w-full">
-            03. NOTIFICATIONS (TOAST)
-          </h2>
-          <p className="font-vt323 text-lg text-gray-300">
-            Cliquez ci-dessous pour déclencher à nouveau la notification d'alerte.
-          </p>
-          <PixelButton 
-            variant="filled-green" 
-            size="sm" 
-            onClick={() => setShowToast(true)}
-          >
-            TRIGGER TOAST
-          </PixelButton>
-        </Card>
+//         {/* 4. CONTROLES D'INTERACTION TOAST */}
+//         <Card variant="green" className="flex flex-col gap-4 items-start">
+//           <h2 className="font-pixelify text-xl text-pacova-green border-b border-pacova-green/30 pb-2 w-full">
+//             03. NOTIFICATIONS (TOAST)
+//           </h2>
+//           <p className="font-vt323 text-lg text-gray-300">
+//             Cliquez ci-dessous pour déclencher à nouveau la notification d'alerte.
+//           </p>
+//           <PixelButton 
+//             variant="filled-green" 
+//             size="sm" 
+//             onClick={() => setShowToast(true)}
+//           >
+//             TRIGGER TOAST
+//           </PixelButton>
+//         </Card>
 
-      </main>
+//       </main>
 
-      {/* RENDER DU COMPOSANT TOAST (Si actif) */}
-      {showToast && (
-        <Toast 
-          message="SYSTEM ALERT: MATCH READY!" 
-          type="info" 
-          onClose={() => setShowToast(false)} 
-        />
-      )}
-    </Background>
-  );
-}
+//       {/* RENDER DU COMPOSANT TOAST (Si actif) */}
+//       {showToast && (
+//         <Toast 
+//           message="SYSTEM ALERT: MATCH READY!" 
+//           type="info" 
+//           onClose={() => setShowToast(false)} 
+//         />
+//       )}
+//     </Background>
+//   );
+// }

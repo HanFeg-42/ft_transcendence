@@ -1,22 +1,23 @@
 import React from 'react';
 import Card from './Card';
+import { ICONS, type IconName } from '../../utils/icons';
 
 export interface Achievement {
   id: string;
   title: string;
   description: string;
-  icon: string; // Emoji temporaire
+  iconName: IconName; // Uses your exact IconName union type
   borderColor: string;
   textColor: string;
 }
 
 const defaultBadges: Achievement[] = [
-  { id: '1', title: 'CHAMPION', description: 'Win 100 matches', icon: '🏆', borderColor: 'border-amber-400', textColor: 'text-amber-400' },
-  { id: '2', title: 'GHOST HUNTER', description: 'Defeat 50 ghosts', icon: '👻', borderColor: 'border-pink-500', textColor: 'text-pink-500' },
-  { id: '3', title: 'CHERRY COLLECTOR', description: 'Collect 200 cherries', icon: '🍒', borderColor: 'border-red-500', textColor: 'text-red-500' },
-  { id: '4', title: 'SPEEDSTER', description: 'Win 10 matches in a row', icon: '⚡', borderColor: 'border-yellow-400', textColor: 'text-yellow-400' },
-  { id: '5', title: 'PAC-MANIAC', description: 'Play 500 matches', icon: '🟡', borderColor: 'border-cyan-400', textColor: 'text-cyan-400' },
-  { id: '6', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', icon: '🔮', borderColor: 'border-purple-500', textColor: 'text-purple-500' },
+  { id: '1', title: 'CHAMPION', description: 'Win 100 matches', iconName: 'champion', borderColor: 'border-amber-400', textColor: 'text-amber-400' },
+  { id: '2', title: 'GHOST HUNTER', description: 'Defeat 50 ghosts', iconName: 'gost-pink-3d', borderColor: 'border-pink-500', textColor: 'text-pink-500' },
+  { id: '3', title: 'CHERRY COLLECTOR', description: 'Collect 200 cherries', iconName: 'cherry3d', borderColor: 'border-red-500', textColor: 'text-red-500' },
+  { id: '4', title: 'SPEEDSTER', description: 'Win 10 matches in a row', iconName: 'speed3d', borderColor: 'border-yellow-400', textColor: 'text-yellow-400' },
+  { id: '5', title: 'PAC-MANIAC', description: 'Play 500 matches', iconName: 'packman-blue-3d', borderColor: 'border-cyan-400', textColor: 'text-cyan-400' },
+  { id: '6', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', iconName: 'start-3d', borderColor: 'border-purple-500', textColor: 'text-purple-500' },
 ];
 
 export const Achievements: React.FC = () => {
@@ -28,7 +29,15 @@ export const Achievements: React.FC = () => {
             key={badge.id}
             className={`flex flex-col items-center justify-between p-3 bg-black/60 border ${badge.borderColor} pixel-corners-3step text-center h-36`}
           >
-            <span className="text-3xl my-1 select-none">{badge.icon}</span>
+            {/* Asset Icon Image Rendering */}
+            <div className="w-10 h-10 my-1 flex items-center justify-center">
+              <img
+                src={ICONS[badge.iconName]}
+                alt={badge.title}
+                className="w-full h-full object-contain image-rendering-pixelated"
+              />
+            </div>
+
             <div>
               <h4 className={`font-pixelify text-xs ${badge.textColor} leading-tight`}>
                 {badge.title}

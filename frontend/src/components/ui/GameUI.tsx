@@ -8,6 +8,7 @@ export interface MatchRecord {
   score: string;
   opponent: string;
   timeAgo: string;
+  // playerIcon?: string; // Add this line
 }
 
 interface MatchHistoryProps {

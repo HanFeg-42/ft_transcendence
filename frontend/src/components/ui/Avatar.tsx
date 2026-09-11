@@ -1,8 +1,9 @@
 import React from 'react';
-import PixelIcon, { type PixelIconName } from './PixelIcon';
+// import { ICONS, type IconName } from '../utils/icons';
+import { ICONS, type IconName } from '../../utils/icons';
 
 interface AvatarProps {
-  iconName?: PixelIconName;
+  iconName?: IconName;
   size?: 'sm' | 'md' | 'lg';
   status?: 'online' | 'offline' | 'busy';
   className?: string;
@@ -14,8 +15,14 @@ const sizeClasses = {
   lg: 'w-24 h-24',
 };
 
+const iconSizes = {
+  sm: 'w-6 h-6',
+  md: 'w-10 h-10',
+  lg: 'w-16 h-16',
+};
+
 export const Avatar: React.FC<AvatarProps> = ({
-  iconName = 'pacman',
+  iconName = 'packmann',
   size = 'md',
   status = 'online',
   className = '',
@@ -39,10 +46,15 @@ export const Avatar: React.FC<AvatarProps> = ({
         flex items-center justify-center 
         overflow-hidden
       `}>
-        <PixelIcon name={iconName} size={size === 'lg' ? 48 : size === 'md' ? 32 : 20} />
+        {/* Render icon image from ICONS map */}
+        <img
+          src={ICONS[iconName]}
+          alt={iconName}
+          className={`${iconSizes[size]} object-contain image-rendering-pixelated`}
+        />
       </div>
 
-      {/* Status Dot */}
+      {/* Status Indicator */}
       {status && (
         <span className={`
           absolute -bottom-1 -right-1 
