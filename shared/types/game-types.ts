@@ -4,6 +4,7 @@
 // however Pac-Man game logic.
 
 // --- Event names -----------------------------------------------------
+//A central list of every action that can happen over the WebSocket pipe
 export const GameEvents = {
   JOIN_GAME: "joinGame",         // client -> server: join a match
   GAME_START: "gameStart",       // server -> client: match found, starting
