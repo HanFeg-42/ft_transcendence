@@ -42,7 +42,7 @@ app.get("/health", (_req, res) => {
  */
 app.post("/register", register);
 app.post("/login", login);
-app.use('/api/auth', authRoutes);
+app.use('/42', authRoutes); // express va comparer le rest de l URL avec les racine indique dans authRoutes()
 
 /*
  * Protected user route

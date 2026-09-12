@@ -3,6 +3,9 @@ import SignUp from './pages/SignUp'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+// import DesignSystem from './pages/DesignSystem'
+// import Design from './pages/Design'
+// import Profile from './pages/ProfilePage'
 
 function App() {
   return (
@@ -13,6 +16,9 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
       </Route>
+      {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
+      {/* <Route path="/Design" element={<Design />} /> */}
+      {/* <Route path="/ProfilePage" element={<Profile />} /> */}
     </Routes>
   )
 }

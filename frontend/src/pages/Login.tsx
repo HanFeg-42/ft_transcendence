@@ -5,28 +5,23 @@ import NeonFrame from "../components/ui/NeonFrame";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 
-import type { LoginFormData, LoginResponse } from "../types/auth";
+import Background from '../components/ui/Background'
+import Card from '../components/ui/Card'
+import Input from '../components/ui/Input'
+import PixelButton from '../components/ui/PixelButton'
 
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  // Stores the email and password entered by the user
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
 
-  // Message displayed when login fails
-  const [error, setError] = useState("");
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  // Message displayed when login succeeds
-  const [success, setSuccess] = useState("");
-
-  // True while we are waiting for the backend response
-  const [loading, setLoading] = useState(false);
-
-  const { login } = useAuth();
-  const navigate = useNavigate();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -37,44 +32,35 @@ export default function Login() {
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
-    // Clear messages from the previous attempt
-    setError("");
-    setSuccess("");
-    setLoading(true);
+    setError('')
+    setSuccess('')
+    setLoading(true)
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
         }),
       });
 
-      // Convert the JSON response into a JavaScript object
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
         setError(data.error || "Login failed");
         return;
       }
 
-      // Login succeeded
-      const loginData: LoginResponse = data;
-
-      login(loginData.user, loginData.token);
-      setSuccess("Logged in successfully");
-      navigate("/home");
-      console.log("Logged in user:", loginData.user);
+      const loginData: LoginResponse = data
+      setSuccess('Logged in successfully')
+      console.log('Logged in user:', loginData.user)
     } catch (error) {
-      console.error("Login request failed:", error);
-
-      setError("Unable to connect to the server");
+      console.error('Login request failed:', error)
+      setError('Unable to connect to the server')
     } finally {
       setLoading(false);
     }
@@ -82,59 +68,77 @@ export default function Login() {
 
   return (
     <Background>
-      <NeonFrame variant="pink" size="md">
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-5"
-          noValidate
-        >
-          <h1 className="font-display text-neon-pink text-center text-sm tracking-widest">
-            • • • LOGIN • • •
-          </h1>
-
-          <Input
-            label="Email"
-            type="email"
-            name="email"
-            placeholder="Enter your email..."
-            value={formData.email}
-            onChange={handleChange}
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            placeholder="Enter your password..."
-            value={formData.password}
-            onChange={handleChange}
-          />
-
-          {/* Backend/login error */}
-          {error && <p className="text-center text-red-500 text-xs">{error}</p>}
-
-          {/* Successful login */}
-          {success && (
-            <p className="text-center text-neon-green text-xs">{success}</p>
-          )}
-
-          <Button
-            type="submit"
-            variant="green"
-            styleType="filled"
-            disabled={loading}
+      <div className="flex-1 flex items-center justify-center p-4">
+        {/* Pink variant Card styled wider to match the SignUp form layout */}
+        <Card variant="pink" className="max-w-xl w-full p-6">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-6"
+            noValidate
           >
-            {loading ? "LOGGING IN..." : "LOGIN"}
-          </Button>
+            {/* Header */}
+            <div className="text-center mb-2">
+              <h1 className="font-pixelify text-pacova-pink text-2xl tracking-wider uppercase">
+                ▼ ▼ LOGIN ▼ ▼
+              </h1>
+            </div>
 
-          <p className="text-center text-neon-pink/70 text-xs font-body">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-neon-green underline">
-              Create account
-            </Link>
-          </p>
-        </form>
-      </NeonFrame>
+            {/* Inputs */}
+            <Input
+              label="EMAIL"
+              type="email"
+              name="email"
+              placeholder="Enter your email..."
+              value={formData.email}
+              onChange={handleChange}
+            />
+
+            <Input
+              label="PASSWORD"
+              type="password"
+              name="password"
+              placeholder="Enter your password..."
+              value={formData.password}
+              onChange={handleChange}
+            />
+
+            {/* Feedback Messages */}
+            {error && (
+              <p className="text-center font-vt323 text-red-500 text-lg uppercase tracking-wide">
+                ⚠️ {error}
+              </p>
+            )}
+
+            {success && (
+              <p className="text-center font-vt323 text-pacova-green text-lg uppercase tracking-wide">
+                ✓ {success}
+              </p>
+            )}
+
+            {/* Action Button */}
+            <PixelButton
+              type="submit"
+              variant="filled-pink"
+              size="md"
+              disabled={loading}
+              className="w-full mt-6"
+            >
+              {loading ? 'LOGGING IN...' : 'LOGIN'}
+            </PixelButton>
+
+            {/* Navigation Link */}
+            <div className="text-center border-t border-pacova-pink/30 pt-4 mt-2 font-vt323 text-lg">
+              <span className="text-gray-400">DON'T HAVE AN ACCOUNT? </span>
+              <Link
+                to="/signup"
+                className="text-pacova-green hover:underline uppercase tracking-wide"
+              >
+                CREATE ACCOUNT
+              </Link>
+            </div>
+          </form>
+        </Card>
+      </div>
     </Background>
   );
 }

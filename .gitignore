@@ -13,6 +13,7 @@ dist/
 .DS_Store
 Thumbs.db
 
+docker-compose.override.yml
 
 generated/
 
