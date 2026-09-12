@@ -1,6 +1,7 @@
 import { useState } from "react";
-import Button from "./ui/Button";
+import PixelButton from "./ui/PixelButton";
 import Input from "./ui/Input";
+import Card from "./ui/Card";
 import { useAuth } from "../context/AuthContext";
 
 export default function TwoFactorSetup() {
@@ -39,9 +40,7 @@ export default function TwoFactorSetup() {
     }
   };
 
-  const handleConfirm = async (
-    e: React.FormEvent<HTMLFormElement>,
-  ) => {
+  const handleConfirm = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setError("");
@@ -60,9 +59,7 @@ export default function TwoFactorSetup() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          code,
-        }),
+        body: JSON.stringify({ code }),
       });
 
       const data = await response.json();
@@ -72,7 +69,6 @@ export default function TwoFactorSetup() {
         return;
       }
 
-      // Refresh the current user so twoFactorEnabled becomes true.
       await verifyUser();
 
       setQrCode("");
@@ -86,23 +82,21 @@ export default function TwoFactorSetup() {
   };
 
   return (
-    <div className="flex flex-col gap-5 border border-neon-green/50 p-5">
-      <div className="flex items-center justify-between">
+    <Card variant="green" className="p-5">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="font-display text-neon-green text-sm tracking-widest">
-            ACCOUNT SECURITY
+          <h2 className="font-pixelify text-pacova-green text-lg uppercase tracking-widest">
+            Account Security
           </h2>
 
-          <p className="text-xs text-white/60 mt-2">
+          <p className="font-vt323 text-gray-400 text-lg mt-1">
             Protect your Pacova account with an authenticator app.
           </p>
         </div>
 
         <span
-          className={`text-xs font-display ${
-            user?.twoFactorEnabled
-              ? "text-neon-green"
-              : "text-yellow-400"
+          className={`font-vt323 text-lg uppercase ${
+            user?.twoFactorEnabled ? "text-pacova-green" : "text-yellow-400"
           }`}
         >
           {user?.twoFactorEnabled ? "● PROTECTED" : "● NOT PROTECTED"}
@@ -110,44 +104,42 @@ export default function TwoFactorSetup() {
       </div>
 
       {user?.twoFactorEnabled ? (
-        <div className="border border-neon-green/30 p-4">
-          <p className="text-neon-green text-center font-display text-sm">
-            ✓ TWO-FACTOR AUTHENTICATION ENABLED
+        <div className="border border-pacova-green/30 p-4 rounded">
+          <p className="text-pacova-green text-center font-pixelify text-sm uppercase">
+            ✓ Two-Factor Authentication Enabled
           </p>
 
-          <p className="text-white/60 text-center text-xs mt-2">
+          <p className="font-vt323 text-gray-400 text-center text-lg mt-2">
             Your account requires an authenticator code when you sign in.
           </p>
         </div>
       ) : !qrCode ? (
         <>
-          <div className="text-xs text-white/70 leading-6">
+          <div className="font-vt323 text-gray-300 text-lg leading-6 mb-4">
             <p>1. Click Enable 2FA.</p>
             <p>2. Scan the QR code with your authenticator app.</p>
             <p>3. Enter the generated 6-digit code.</p>
           </div>
 
-          <Button
+          <PixelButton
             type="button"
-            variant="green"
-            styleType="filled"
+            variant="filled-green"
+            size="md"
             disabled={loading}
             onClick={handleSetup}
+            className="w-full"
           >
             {loading ? "GENERATING..." : "ENABLE 2FA"}
-          </Button>
+          </PixelButton>
         </>
       ) : (
-        <form
-          onSubmit={handleConfirm}
-          className="flex flex-col gap-5"
-        >
-          <div className="text-center">
-            <p className="font-display text-neon-pink text-xs">
-              STEP 1 — SCAN QR CODE
+        <form onSubmit={handleConfirm} className="flex flex-col gap-5">
+          <div className="text-center font-vt323">
+            <p className="text-pacova-pink text-lg uppercase">
+              Step 1 — Scan QR Code
             </p>
 
-            <p className="text-white/60 text-xs mt-2">
+            <p className="text-gray-400 text-lg mt-2">
               Open Google Authenticator, Microsoft Authenticator,
               or another TOTP application.
             </p>
@@ -163,18 +155,18 @@ export default function TwoFactorSetup() {
             </div>
           </div>
 
-          <div className="text-center">
-            <p className="font-display text-neon-pink text-xs">
-              STEP 2 — VERIFY
+          <div className="text-center font-vt323">
+            <p className="text-pacova-pink text-lg uppercase">
+              Step 2 — Verify
             </p>
 
-            <p className="text-white/60 text-xs mt-2">
+            <p className="text-gray-400 text-lg mt-2">
               Enter the 6-digit code generated by your authenticator.
             </p>
           </div>
 
           <Input
-            label="Authentication Code"
+            label="AUTHENTICATION CODE"
             type="text"
             name="twoFactorCode"
             placeholder="000000"
@@ -186,19 +178,20 @@ export default function TwoFactorSetup() {
           />
 
           {error && (
-            <p className="text-red-500 text-xs text-center">
-              {error}
+            <p className="font-vt323 text-red-500 text-lg text-center uppercase">
+              ⚠️ {error}
             </p>
           )}
 
-          <Button
+          <PixelButton
             type="submit"
-            variant="green"
-            styleType="filled"
+            variant="filled-green"
+            size="md"
             disabled={loading || code.length !== 6}
+            className="w-full"
           >
             {loading ? "VERIFYING..." : "CONFIRM & ENABLE"}
-          </Button>
+          </PixelButton>
 
           <button
             type="button"
@@ -207,7 +200,7 @@ export default function TwoFactorSetup() {
               setCode("");
               setError("");
             }}
-            className="text-xs text-white/50 underline text-center"
+            className="font-vt323 text-gray-400 text-lg underline text-center"
           >
             Cancel setup
           </button>
@@ -215,10 +208,10 @@ export default function TwoFactorSetup() {
       )}
 
       {error && !qrCode && (
-        <p className="text-red-500 text-xs text-center">
-          {error}
+        <p className="font-vt323 text-red-500 text-lg text-center uppercase">
+          ⚠️ {error}
         </p>
       )}
-    </div>
+    </Card>
   );
 }
