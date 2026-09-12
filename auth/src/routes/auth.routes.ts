@@ -1,5 +1,5 @@
 import express from 'express';
-import { redirectTo42, handle42Callback } from '../controllers/auth.controller.js';
+import { redirectTo42, handle42Callback } from '../controllers/42oauth.controller.js';
 
 const router = express.Router();
 

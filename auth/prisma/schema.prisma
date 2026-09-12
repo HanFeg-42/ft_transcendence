@@ -20,6 +20,8 @@ model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
   email        String   @unique
-  passwordHash String
+  passwordHash String?
+  fortyTwoId   Int?     @unique // Champ optionnel pour l'ID 42
+  avatar       String?  // Champ optionnel pour l'URL de l'image
   createdAt    DateTime @default(now())
 }

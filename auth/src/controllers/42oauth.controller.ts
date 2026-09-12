@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import prisma from '../prisma'
 
 // 1. On crée une interface TypeScript pour typer proprement les données que 42 nous renverra plus tard
 interface FortyTwoUser {
@@ -127,10 +129,22 @@ export const handle42Callback = async (req: Request, res: Response): Promise<voi
     }
 
 
+// E) GÉNÉRATION DU JWT & REDIRECTION
+    // On génère notre propre jeton pour le frontend
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET || 'secret_key',
+      { expiresIn: '24h' }
+    );
 
+    // On envoie le JWT dans un cookie sécurisé et on redirige l'utilisateur
+    res.cookie('jwt', token, { httpOnly: true, secure: false });
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
     
   } catch (err: any) {
     console.error('Erreur OAuth 42:', err.message);
     res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
   }
 };
+
+
