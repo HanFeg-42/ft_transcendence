@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import Background from "../components/ui/Background";
 import Navbar from "../components/ui/Navbar";
 import TwoFactorSetup from "../components/TwoFactorSetup";
+import PixelButton from "../components/ui/PixelButton";
 
 const routeMap: Record<string, string> = {
   HOME: "/home",
@@ -43,6 +44,15 @@ export default function Home() {
 
         <TwoFactorSetup />
 
+        <PixelButton
+          variant="filled-pink"
+          size="lg"
+          onClick={() => navigate("/game")}
+          className="self-start"
+        >
+          PLAY NOW
+        </PixelButton>
+        
         <button
           onClick={handleLogout}
           className="font-vt323 text-pacova-pink text-lg underline self-start uppercase"

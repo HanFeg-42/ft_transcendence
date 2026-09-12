@@ -7,6 +7,7 @@ import ProfilePage from './pages/ProfilePage'
 import Chat from './pages/Chat'
 import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
+import Game from './pages/Game'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/chat" element={<Chat />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/game" element={<Game />} />
       </Route>
     </Routes>
   )
