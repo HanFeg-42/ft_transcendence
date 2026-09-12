@@ -29,8 +29,15 @@ function handleMessage(ws: WebSocket, rawData: RawData) {
   console.log(`[GAME-SERVICE] Player sent message`);
   // Convert incoming binary buffer into a plain text string
   const rawText = rawData.toString();
+  
   // Parse text string into a usable JavaScript object
-  const packet = JSON.parse(rawText);
+  let packet;
+  try {
+    packet = JSON.parse(rawText);
+  } catch (err) {
+    console.warn('[GAME-SERVICE] Invalid JSON received, ignoring:', rawText);
+    return; // drop the bad message, keep the connection and service alive
+  }
 
   // Check if incoming packet matches the player movement event
   if (packet.event === GameEvents.PLAYER_INPUT) {
