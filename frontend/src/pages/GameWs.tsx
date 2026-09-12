@@ -7,6 +7,7 @@ export default function GameWs() {
   const { isConnected, sendPlayerInput } = useGameSocket(
         `wss://localhost/api/game/ws?token=${TEST_TOKEN}`);
 
+  // Rendered UI
   return (
     <div style={{ padding: 20 }}>
       <p>Connected: {isConnected ? 'yes' : 'no'}</p>

@@ -3,6 +3,14 @@
 // Field names/values below are PLACEHOLDERS - adjust to match
 // however Pac-Man game logic.
 
+// Every message sent across the WebSocket pipe uses a standard Envelope format:
+// {
+  // "event": "<WHAT_HAPPENED>",//
+  // "data":  { "<THE_PAYLOAD_DETAILS>" }
+// }
+
+
+
 // --- Event names -----------------------------------------------------
 //A central list of every action that can happen over the WebSocket pipe
 export const GameEvents = {
@@ -14,6 +22,9 @@ export const GameEvents = {
 } as const;
 
 export type GameEvent = typeof GameEvents[keyof typeof GameEvents];
+
+
+
 
 // --- Payload shapes ----------------------------------------------------
 //1.Data sent by the client when joining a match

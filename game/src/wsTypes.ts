@@ -1,8 +1,30 @@
 import http from 'http';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
-
 // Import shared WebSocket contract rules (event names and payload shapes)
-import { GameEvents, PlayerInputPayload } from '../../shared/types/game-types';
+import { GameEvents, PlayerInputPayload, GameStatePayload, JoinGamePayload } from '../../shared/types/game-types';
+
+
+
+// --- Room registry ---------------------------------------------------
+// Tracks which sockets belong to which match. Lives at module scope so
+// it persists across all connections, not reset per-client.
+const gameRooms = new Map<string, Set<WebSocket>>();
+
+// Send a message to every socket currently in a given room
+function broadcast(gameId: string, data: unknown) {
+  const sockets = gameRooms.get(gameId);
+  if (!sockets) return;
+
+  const message = JSON.stringify(data);
+  for (const client of sockets) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  }
+}
+
+
+
 
 // Handle a new connection
 function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
@@ -24,6 +46,7 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   });
 }
 
+
 // Handle messages from the frontend
 function handleMessage(ws: WebSocket, rawData: RawData) {
   console.log(`[GAME-SERVICE] Player sent message`);
@@ -39,23 +62,51 @@ function handleMessage(ws: WebSocket, rawData: RawData) {
     return; // drop the bad message, keep the connection and service alive
   }
 
+
+  // --- Join a room ---
+  if (packet.event === GameEvents.JOIN_GAME) {
+    const { gameId }: JoinGamePayload = packet.data;
+
+    if (!gameRooms.has(gameId)) {
+      gameRooms.set(gameId, new Set());
+    }
+    gameRooms.get(gameId)!.add(ws);
+
+    console.log(`[GAME-SERVICE] Client joined room ${gameId}`);
+    return;
+  }
+
+
   // Check if incoming packet matches the player movement event
   if (packet.event === GameEvents.PLAYER_INPUT) {
     // Type-cast the payload to enforce shared interface rules
     const input: PlayerInputPayload = packet.data;
- 
     console.log('[GAME-SERVICE] Player input:', input);
 
     // Calculate new position...
     // ...
 
+    if (!gameRooms.has(input.gameId)) {
+      console.warn(`[GAME-SERVICE] PLAYER_INPUT for unknown room ${input.gameId}, ignoring`);
+      return;
+    }
+
+    //Game engine calculates new position, pellets eaten, tick count...
+    const updatedState: GameStatePayload = {
+      players: [{ id: 'p1', username: 'playerAA', x: 10, y: 12, score: 100 }],
+      pellets: [{ x: 5, y: 5 }],
+      tick: 42
+    };
+
     // Convert response object into text string and send back down the pipe
-    ws.send(
-      JSON.stringify({
-        event: GameEvents.GAME_STATE,
-        data: { players: [], pellets: [], tick: 0 }
-      })
-    );
+    // ws.send(
+    //   JSON.stringify({
+    //     event: GameEvents.GAME_STATE,
+    //     data: updatedState
+    //   })
+    // );
+
+    broadcast(input.gameId, updatedState);
   }
 }
 
@@ -64,6 +115,12 @@ function handleClose(ws: WebSocket, code: number) {
   console.log(`[GAME-SERVICE] Player left the game (Code: ${code})`);
 
   // Cleanup active game session...
+
+    for (const [gameId, sockets] of gameRooms) {
+    if (sockets.delete(ws) && sockets.size === 0) {
+      gameRooms.delete(gameId);
+    }
+  }
 }
 
 // Handle socket errors
