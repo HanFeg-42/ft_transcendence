@@ -1,16 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Background from "../components/ui/Background";
-import NeonFrame from "../components/ui/NeonFrame";
 import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
-
-import Background from '../components/ui/Background'
-import Card from '../components/ui/Card'
-import Input from '../components/ui/Input'
-import PixelButton from '../components/ui/PixelButton'
-
-import { useAuth } from "../context/AuthContext";
+import Card from '../components/ui/Card';
+import PixelButton from '../components/ui/PixelButton';
+// import  ICONS  from '../assets/icons/packman-blue-3d.png';
+import type { LoginFormData, LoginResponse } from '../types/auth';
 
 export default function Login() {
   const [formData, setFormData] = useState<LoginFormData>({
@@ -18,9 +13,9 @@ export default function Login() {
     password: "",
   });
 
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -32,9 +27,9 @@ export default function Login() {
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
-    setError('')
-    setSuccess('')
-    setLoading(true)
+    setError('');
+    setSuccess('');
+    setLoading(true);
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -48,32 +43,36 @@ export default function Login() {
         }),
       });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
         setError(data.error || "Login failed");
         return;
       }
 
-      const loginData: LoginResponse = data
-      setSuccess('Logged in successfully')
-      console.log('Logged in user:', loginData.user)
+      const loginData: LoginResponse = data;
+      setSuccess('Logged in successfully');
+      console.log('Logged in user:', loginData.user);
     } catch (error) {
-      console.error('Login request failed:', error)
-      setError('Unable to connect to the server')
+      console.error('Login request failed:', error);
+      setError('Unable to connect to the server');
     } finally {
       setLoading(false);
     }
   };
 
+  const handle42Login = () => {
+    // Redirects to your backend 42 OAuth Endpoint
+    window.location.href = 'https://localhost:443/api/auth/42/login'; 
+};
+
   return (
     <Background>
       <div className="flex-1 flex items-center justify-center p-4">
-        {/* Pink variant Card styled wider to match the SignUp form layout */}
         <Card variant="pink" className="max-w-xl w-full p-6">
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-5"
             noValidate
           >
             {/* Header */}
@@ -121,9 +120,28 @@ export default function Login() {
               variant="filled-pink"
               size="md"
               disabled={loading}
-              className="w-full mt-6"
+              className="w-full mt-4"
             >
               {loading ? 'LOGGING IN...' : 'LOGIN'}
+            </PixelButton>
+
+            {/* Divider */}
+            <div className="flex items-center my-1">
+              <div className="flex-1 border-t border-pacova-pink/30"></div>
+              <span className="px-3 font-vt323 text-gray-400 text-base">OR</span>
+              <div className="flex-1 border-t border-pacova-pink/30"></div>
+            </div>
+            {/* 42 OAuth Button */}
+            <PixelButton
+              type="button"
+              variant="olive-yellow"
+              // variant="outline-magenta"
+              size="md"
+              onClick={handle42Login}
+              className="w-full flex items-center justify-center gap-3"
+            >
+
+              <span>CONTINUE WITH 42</span>
             </PixelButton>
 
             {/* Navigation Link */}

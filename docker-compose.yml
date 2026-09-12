@@ -52,7 +52,7 @@ services:
     build: ./frontend
     container_name: frontend
     ports:
-      - "8443:443"
+      - "443:443"
     depends_on:
       - api-gateway
     networks:
