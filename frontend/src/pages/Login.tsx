@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Background from "../components/ui/Background";
-import NeonFrame from "../components/ui/NeonFrame";
+import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import PixelButton from "../components/ui/PixelButton";
 
 import type { LoginFormData, LoginResponse } from "../types/auth";
 
@@ -83,9 +83,9 @@ export default function Login() {
     }
   };
 
-  const handleTwoFactorSubmit: React.FormEventHandler<
-    HTMLFormElement
-  > = async (e) => {
+  const handleTwoFactorSubmit: React.FormEventHandler<HTMLFormElement> = async (
+    e,
+  ) => {
     e.preventDefault();
 
     setError("");
@@ -140,138 +140,135 @@ export default function Login() {
 
   return (
     <Background>
-      <NeonFrame variant="pink" size="md">
-        {!requiresTwoFactor ? (
-          /*
-           * STEP 1:
-           * Normal email/password login.
-           */
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-5"
-            noValidate
-          >
-            <h1 className="font-display text-neon-pink text-center text-sm tracking-widest">
-              • • • LOGIN • • •
-            </h1>
-
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              placeholder="Enter your email..."
-              value={formData.email}
-              onChange={handleChange}
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              placeholder="Enter your password..."
-              value={formData.password}
-              onChange={handleChange}
-            />
-
-            {error && (
-              <p className="text-center text-red-500 text-xs">
-                {error}
-              </p>
-            )}
-
-            {success && (
-              <p className="text-center text-neon-green text-xs">
-                {success}
-              </p>
-            )}
-
-            <Button
-              type="submit"
-              variant="green"
-              styleType="filled"
-              disabled={loading}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card variant="pink" className="max-w-xl w-full p-6">
+          {!requiresTwoFactor ? (
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-6"
+              noValidate
             >
-              {loading ? "LOGGING IN..." : "LOGIN"}
-            </Button>
+              <div className="text-center mb-2">
+                <h1 className="font-pixelify text-pacova-pink text-2xl tracking-wider uppercase">
+                  ▼ ▼ LOGIN ▼ ▼
+                </h1>
+              </div>
 
-            <p className="text-center text-neon-pink/70 text-xs font-body">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="text-neon-green underline"
+              <Input
+                label="EMAIL"
+                type="email"
+                name="email"
+                placeholder="Enter your email..."
+                value={formData.email}
+                onChange={handleChange}
+              />
+
+              <Input
+                label="PASSWORD"
+                type="password"
+                name="password"
+                placeholder="Enter your password..."
+                value={formData.password}
+                onChange={handleChange}
+              />
+
+              {error && (
+                <p className="text-center font-vt323 text-red-500 text-lg uppercase tracking-wide">
+                  ⚠️ {error}
+                </p>
+              )}
+
+              {success && (
+                <p className="text-center font-vt323 text-pacova-green text-lg uppercase tracking-wide">
+                  ✓ {success}
+                </p>
+              )}
+
+              <PixelButton
+                type="submit"
+                variant="filled-pink"
+                size="md"
+                disabled={loading}
+                className="w-full mt-6"
               >
-                Create account
-              </Link>
-            </p>
-          </form>
-        ) : (
-          /*
-           * STEP 2:
-           * Password has already been verified.
-           * The user must now prove possession of their authenticator.
-           */
-          <form
-            onSubmit={handleTwoFactorSubmit}
-            className="flex flex-col gap-5"
-            noValidate
-          >
-            <h1 className="font-display text-neon-pink text-center text-sm tracking-widest">
-              • • • SECURITY CHECK • • •
-            </h1>
+                {loading ? "LOGGING IN..." : "LOGIN"}
+              </PixelButton>
 
-            <div className="text-center flex flex-col gap-2">
-              <p className="text-neon-green text-xs font-display">
-                ✓ PASSWORD VERIFIED
-              </p>
-
-              <p className="text-white/70 text-xs font-body">
-                Two-factor authentication is enabled for this account.
-              </p>
-
-              <p className="text-white/70 text-xs font-body">
-                Enter the 6-digit code from your authenticator app to continue.
-              </p>
-            </div>
-
-            <Input
-              label="Two-Factor Code"
-              type="text"
-              name="twoFactorCode"
-              placeholder="000000"
-              value={twoFactorCode}
-              onChange={(e) => {
-                // Only allow numbers and limit the value to 6 digits.
-                const value = e.target.value.replace(/\D/g, "");
-                setTwoFactorCode(value.slice(0, 6));
-              }}
-            />
-
-            {error && (
-              <p className="text-center text-red-500 text-xs">
-                {error}
-              </p>
-            )}
-
-            <Button
-              type="submit"
-              variant="green"
-              styleType="filled"
-              disabled={loading || twoFactorCode.length !== 6}
+              <div className="text-center border-t border-pacova-pink/30 pt-4 mt-2 font-vt323 text-lg">
+                <span className="text-gray-400">DON'T HAVE AN ACCOUNT? </span>
+                <Link
+                  to="/signup"
+                  className="text-pacova-green hover:underline uppercase tracking-wide"
+                >
+                  CREATE ACCOUNT
+                </Link>
+              </div>
+            </form>
+          ) : (
+            <form
+              onSubmit={handleTwoFactorSubmit}
+              className="flex flex-col gap-6"
+              noValidate
             >
-              {loading ? "VERIFYING..." : "VERIFY & LOGIN"}
-            </Button>
+              <div className="text-center mb-2">
+                <h1 className="font-pixelify text-pacova-pink text-2xl tracking-wider uppercase">
+                  ▼ ▼ SECURITY CHECK ▼ ▼
+                </h1>
+              </div>
 
-            <button
-              type="button"
-              className="text-neon-pink/70 text-xs underline text-center"
-              onClick={handleBackToLogin}
-              disabled={loading}
-            >
-              Back to login
-            </button>
-          </form>
-        )}
-      </NeonFrame>
+              <div className="text-center flex flex-col gap-2 font-vt323">
+                <p className="text-pacova-green text-lg uppercase">
+                  ✓ Password verified
+                </p>
+                <p className="text-gray-400 text-lg">
+                  Two-factor authentication is enabled for this account.
+                </p>
+                <p className="text-gray-400 text-lg">
+                  Enter the 6-digit code from your authenticator app to
+                  continue.
+                </p>
+              </div>
+
+              <Input
+                label="TWO-FACTOR CODE"
+                type="text"
+                name="twoFactorCode"
+                placeholder="000000"
+                value={twoFactorCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setTwoFactorCode(value.slice(0, 6));
+                }}
+              />
+
+              {error && (
+                <p className="text-center font-vt323 text-red-500 text-lg uppercase tracking-wide">
+                  ⚠️ {error}
+                </p>
+              )}
+
+              <PixelButton
+                type="submit"
+                variant="filled-pink"
+                size="md"
+                disabled={loading || twoFactorCode.length !== 6}
+                className="w-full mt-6"
+              >
+                {loading ? "VERIFYING..." : "VERIFY & LOGIN"}
+              </PixelButton>
+
+              <button
+                type="button"
+                className="text-pacova-pink/70 text-lg underline text-center font-vt323"
+                onClick={handleBackToLogin}
+                disabled={loading}
+              >
+                Back to login
+              </button>
+            </form>
+          )}
+        </Card>
+      </div>
     </Background>
   );
 }
