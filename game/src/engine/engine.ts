@@ -1,0 +1,130 @@
+import type { GameState, Player, Chaser, Tile, Direction } from "./types";
+import {
+  findChaserSpawns,
+  findSpawn,
+  parsePellets,
+  isWall,
+  MAZE,
+} from "./maze";
+import { stepPlayer, stepChaser, ahead } from "./movement";
+
+const CENTER_OFFSET = 4;
+const TICKS_PER_SECOND = 30;
+
+export const createGame = (playerIds: number[], timeLimit: number = 360): GameState => {
+  const center: Tile = findSpawn();
+  const playersSpawns: Tile[] =
+    playerIds.length === 1
+      ? [center]
+      : [
+          { x: center.x - CENTER_OFFSET, y: center.y },
+          { x: center.x + CENTER_OFFSET, y: center.y },
+        ];
+  const players: Player[] = playerIds.map((playerId, index) => {
+    return {
+      id: playerId,
+      spawn: playersSpawns[index],
+      tile: playersSpawns[index],
+      dir: null,
+      nextDir: null,
+      step: 0,
+      lives: 3,
+      score: 0,
+    };
+  });
+  const chasers: Chaser[] = findChaserSpawns().map((tile, index) => {
+    return {
+      id: index,
+      tile,
+      dir: null,
+      step: 0,
+    };
+  });
+  return {
+    tick: 0,
+    status: "playing",
+    players,
+    chasers,
+    pellets: parsePellets(),
+    timeRemaining: timeLimit,
+  };
+};
+
+export const applyInput = (
+  state: GameState,
+  playerId: number,
+  dir: Direction,
+) => {
+  const player = state.players.find((p) => p.id === playerId);
+  if (player) player.nextDir = dir;
+};
+
+export const pickChaserDirection = (chaser: Chaser, state: GameState) => {
+  let bestDistance = Infinity;
+  let bestDir = null;
+  const directions: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
+  const validDirections = directions.filter((dir: Direction) => {
+    const next = ahead(chaser.tile, dir);
+    if (isWall(next)) return false;
+    return !state.chasers.some((other) => {
+      const otherTarget = other.dir ? ahead(other.tile, other.dir) : other.tile;
+      return next.x === otherTarget.x && next.y === otherTarget.y;
+    });
+  });
+
+  for (const player of state.players) {
+    for (const dir of validDirections) {
+      const target = ahead(chaser.tile, dir);
+      const distance =
+        Math.abs(player.tile.x - target.x) + Math.abs(player.tile.y - target.y);
+      if (distance < bestDistance) {
+        bestDir = dir;
+        bestDistance = distance;
+      }
+    }
+  }
+  chaser.dir = bestDir;
+};
+
+export const respawnPlayer = (player: Player) => {
+      player.tile = player.spawn;
+      player.dir = null;
+      player.nextDir = null;
+      player.step = 0;
+}
+
+export const tick = (state: GameState) => {
+  state.tick++;
+
+  state.players.forEach((player) => {
+    stepPlayer(player);
+
+    if (state.pellets[player.tile.y][player.tile.x]) {
+      player.score += MAZE[player.tile.y][player.tile.x] == "o" ? 50 : 10;
+      state.pellets[player.tile.y][player.tile.x] = false;
+    }
+    if (
+      state.chasers.some(
+        (chaser) =>
+          chaser.tile.x === player.tile.x && chaser.tile.y === player.tile.y,
+      )
+    ) {
+      respawnPlayer(player);
+      player.lives--;
+    }
+  });
+  state.chasers.forEach((chaser) => {
+    if (chaser.step == 0) pickChaserDirection(chaser, state);
+    stepChaser(chaser);
+  });
+  if (!state.pellets.flat().some((hasPellet) => hasPellet))
+    state.status = "won";
+  else if (
+    state.players.every((player) => player.lives <= 0) ||
+    state.timeRemaining <= 0
+  )
+    state.status = "lost";
+  else if (state.tick % TICKS_PER_SECOND == 0) {
+    state.timeRemaining--;
+  }
+};
