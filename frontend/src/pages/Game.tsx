@@ -93,10 +93,14 @@ export default function Game() {
     };
   }, []);
   return (
-    <canvas
-      ref={canvasRef}
-      width={WIDTH * TILE_SIZE}
-      height={HEIGHT * TILE_SIZE}
-    />
+    <div className="flex-1 flex items-center justify-center">
+      <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">
+        <canvas
+          ref={canvasRef}
+          width={WIDTH * TILE_SIZE}
+          height={HEIGHT * TILE_SIZE}
+        />{" "}
+      </h1>
+    </div>
   );
 }
