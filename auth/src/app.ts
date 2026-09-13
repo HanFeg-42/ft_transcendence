@@ -7,6 +7,9 @@ import { authenticateToken } from "./authMiddleware";
 import type { AuthenticatedRequest } from "./types/auth";
 import authRoutes from './routes/auth.routes';
 import { prisma } from "./prisma";
+import { setupTwoFactor, confirmTwoFactor } from "./twoFactorController";
+import { verifyTwoFactorLogin } from "./2faLoginController";
+
 
 const app = express();
 
@@ -70,8 +73,13 @@ app.get("/me", authenticateToken, async (req, res) => {
       username: user.username,
       email: user.email,
       createdAt: user.createdAt,
+      twoFactorEnabled: user.twoFactorEnabled,
     },
   });
 });
+
+app.post("/2fa/setup", authenticateToken, setupTwoFactor);
+app.post("/2fa/confirm", authenticateToken, confirmTwoFactor);
+app.post("/2fa/verify-login", verifyTwoFactorLogin);
 
 export default app;

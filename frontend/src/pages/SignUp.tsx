@@ -1,26 +1,27 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import Background from '../components/ui/Background';
-import Card from '../components/ui/Card';
-import Input from '../components/ui/Input';
-import PixelButton from '../components/ui/PixelButton';
-import { validateSignUp } from '../utils/validation';
-import type { SignUpFormData } from '../types/auth';
+import Background from "../components/ui/Background";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import PixelButton from "../components/ui/PixelButton";
+
+import { validateSignUp } from "../utils/validation";
+import type { SignUpFormData } from "../types/auth";
 
 export default function SignUp() {
   const [formData, setFormData] = useState<SignUpFormData>({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   // Validation errors for individual form fields
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // General error coming from the backend
-  const [apiError, setApiError] = useState('');
+  const [apiError, setApiError] = useState("");
 
   // Used to disable the button while waiting for the backend response
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,7 @@ export default function SignUp() {
     e.preventDefault();
 
     // Clear the previous backend error
-    setApiError('');
+    setApiError("");
 
     const validationErrors = validateSignUp(formData);
     setErrors(validationErrors);
@@ -50,10 +51,10 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username: formData.username,
@@ -65,14 +66,14 @@ export default function SignUp() {
       const data = await response.json();
 
       if (!response.ok) {
-        setApiError(data.error || 'Registration failed');
+        setApiError(data.error || "Registration failed");
         return;
       }
 
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Registration request failed:', error);
-      setApiError('Unable to connect to the server');
+      console.error("Registration request failed:", error);
+      setApiError("Unable to connect to the server");
     } finally {
       setLoading(false);
     }
@@ -151,12 +152,15 @@ export default function SignUp() {
               disabled={loading}
               className="w-full mt-6"
             >
-              {loading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
+              {loading ? "CREATING ACCOUNT..." : "SIGN UP"}
             </PixelButton>
 
             {/* Lien Vers la Connexion */}
             <div className="text-center border-t border-pacova-green/30 pt-4 mt-2 font-vt323 text-lg">
-              <span className="text-gray-400">ALREADY HAVE AN ACCOUNT? </span>
+              <span className="text-gray-400">
+                ALREADY HAVE AN ACCOUNT?{" "}
+              </span>
+
               <Link
                 to="/login"
                 className="text-pacova-pink hover:underline uppercase tracking-wide"
