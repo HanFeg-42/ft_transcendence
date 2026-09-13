@@ -11,11 +11,17 @@ import { GameEvents, PlayerInputPayload, GameStatePayload, JoinGamePayload } fro
 const gameRooms = new Map<string, Set<WebSocket>>();
 
 // Send a message to every socket currently in a given room
-function broadcast(gameId: string, data: unknown) {
+// Send a message to every socket currently in a given room
+function broadcast(gameId: string, eventName: string, data: unknown) {
   const sockets = gameRooms.get(gameId);
   if (!sockets) return;
 
-  const message = JSON.stringify(data);
+  // Wrap the payload in the standard envelope structure
+  const message = JSON.stringify({
+    event: eventName,
+    data: data
+  });
+
   for (const client of sockets) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message);
@@ -98,15 +104,15 @@ function handleMessage(ws: WebSocket, rawData: RawData) {
       tick: 42
     };
 
-    // Convert response object into text string and send back down the pipe
+    broadcast(input.gameId, GameEvents.GAME_STATE, updatedState);
+
+       // Convert response object into text string and send back down the pipe
     // ws.send(
     //   JSON.stringify({
     //     event: GameEvents.GAME_STATE,
     //     data: updatedState
     //   })
     // );
-
-    broadcast(input.gameId, updatedState);
   }
 }
 

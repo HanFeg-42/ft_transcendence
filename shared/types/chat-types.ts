@@ -1,11 +1,9 @@
 // shared/types/chat-types.ts
 // Contract between: frontend (chat UI) <-> chat-service
-// Edit here whenever the chat WS shape changes, both sides rebuild.
 
 // --- Event names -----------------------------------------------------
-// Add one entry per distinct thing that can happen over this channel.
 export const ChatEvents = {
-  MESSAGE: "message",   // a chat message sent/received
+  MESSAGE: "message",   // send/receive a chat message
   TYPING: "typing",     // optional: "user is typing" indicator
 } as const;
 
@@ -27,7 +25,7 @@ export interface ChatMessageIncoming {
   created_at: string; // ISO string
 }
 
-// Optional: "typing" indicator payload, if you add that feature.
+// Optional: "typing" indicator payload, if that feature gets added.
 export interface ChatTypingEvent {
   sender_id: number;
   receiver_id: number;
