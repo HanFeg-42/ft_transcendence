@@ -9,6 +9,9 @@ import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
 import Game from './pages/Game'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+// import DesignSystem from './pages/DesignSystem'
+// import Design from './pages/Design'
+// import Profile from './pages/ProfilePage'
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
       </Route>
+      {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
+      {/* <Route path="/Design" element={<Design />} /> */}
+      {/* <Route path="/ProfilePage" element={<Profile />} /> */}
     </Routes>
   )
 }

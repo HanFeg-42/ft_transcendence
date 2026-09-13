@@ -5,6 +5,7 @@ import Background from "../components/ui/Background";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import PixelButton from "../components/ui/PixelButton";
+
 import { validateSignUp } from "../utils/validation";
 import type { SignUpFormData } from "../types/auth";
 
@@ -156,7 +157,10 @@ export default function SignUp() {
 
             {/* Lien Vers la Connexion */}
             <div className="text-center border-t border-pacova-green/30 pt-4 mt-2 font-vt323 text-lg">
-              <span className="text-gray-400">ALREADY HAVE AN ACCOUNT? </span>
+              <span className="text-gray-400">
+                ALREADY HAVE AN ACCOUNT?{" "}
+              </span>
+
               <Link
                 to="/login"
                 className="text-pacova-pink hover:underline uppercase tracking-wide"
