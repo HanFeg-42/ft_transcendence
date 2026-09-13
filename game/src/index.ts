@@ -1,8 +1,9 @@
 import express from "express";
 import http from "http";
 import { WebSocketServer } from "ws";
+import { setupWebSocket } from './wsTypes';
 
-const app = express();
+const app = express(); //application / request handling logic
 const PORT = process.env.PORT || 3002;
 
 // Standard HTTP routes
@@ -18,27 +19,11 @@ app.get("/whoami", (req, res) => {
   });
 });
 
-const server = http.createServer(app);
-
-// Attach WebSocket Server
-const wss = new WebSocketServer({ server });
-
-wss.on("connection", (ws, req) => {
-  console.log("[GAME-SERVICE] Client connected from:", req.url);
-
-  const userId = req.headers["x-user-id"];
-
-  console.log(`[GAME-SERVICE] User ${userId} connected`);
-  
-  ws.on("close", (code, reason) => {
-    console.log(`[GAME-SERVICE] Client disconnected (Code: ${code})`);
-  });
-
-  ws.on("error", (err) => {
-    console.error("[GAME-SERVICE] Socket error:", err.message);
-  });
-});
+//added for ws
+const server = http.createServer(app); // creates a server
+setupWebSocket(server);
 
 server.listen(PORT, () => {
   console.log(`[GAME-SERVICE] Listening on port ${PORT}`);
 });
+
