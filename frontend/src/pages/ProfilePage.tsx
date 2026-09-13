@@ -1,17 +1,32 @@
-import  { useState } from 'react';
 import Background from '../components/ui/Background';
 import Navbar from '../components/ui/Navbar';
 import ProfileCard from '../components/ui/ProfileCard';
 import GameUI from '../components/ui/GameUI';
 import Card from '../components/ui/Card';
 import Achievements from '../components/ui/Achievements';
+import { useNavigate } from 'react-router-dom';
+
+const routeMap: Record<string, string> = {
+  HOME: '/home',
+  PROFILE: '/profile',
+  CHAT: '/chat',
+  NOTIFICATION: '/notifications',
+  SETTINGS: '/settings',
+};
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState('PROFILE');
+  const navigate = useNavigate();
+
+  const handleSelectTab = (tab: string) => {
+    const path = routeMap[tab];
+    if (path) {
+      navigate(path);
+    }
+  };
 
   return (
     <Background>
-      <Navbar activeTab={activeTab} onSelectTab={(tab) => setActiveTab(tab)} />
+      <Navbar activeTab="PROFILE" onSelectTab={handleSelectTab} />
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-start justify-center gap-6">
         
