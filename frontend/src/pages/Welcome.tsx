@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import ArenaBackground from '../components/ui/ArenaBackground';
+import Background from '../components/ui/Background';
 import PixelButton from '../components/ui/PixelButton';
 
 export default function Welcome() {
   return (
-    <ArenaBackground>
+    <Background>
       <div className="flex-1 flex items-center px-6 md:px-16 py-12">
         <div className="max-w-xl w-full">
           <div className="font-vt323 text-pacova-green text-2xl mb-4">
@@ -44,6 +44,6 @@ export default function Welcome() {
           </div>
         </div>
       </div>
-    </ArenaBackground>
+    </Background>
   );
 }
