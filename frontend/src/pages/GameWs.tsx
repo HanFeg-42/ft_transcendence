@@ -1,7 +1,7 @@
 import { useGameSocket } from '../hooks/useGameSocket';
 
 
-const TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsIm5hbWUiOiJNYWxpa2EiLCJpYXQiOjE3ODkyMTIzNjl9.aiTKHwKAA1wzWwKuWmHtuhMHUe94__ebepFH9ZO5bZI";
+const TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEyMywiaWF0IjoxNzg5Mzk1Nzk3fQ.tuYnM8If0DW7liaz5qH-h6v0FOEOqEwLok46wJtt8-Y";
 
 export default function GameWs() {
   const { isConnected, sendPlayerInput } = useGameSocket(

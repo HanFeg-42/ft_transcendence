@@ -34,16 +34,24 @@ function broadcast(gameId: string, eventName: string, data: unknown) {
 
 // Handle a new connection
 function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
-  console.log('[GAME-SERVICE] Client connected from:', req.url);
+  const userId = req.headers['x-user-id'] as string | undefined;
+
+  if (!userId) {
+    console.warn('[GAME-SERVICE] Connection missing x-user-id, rejecting');
+    ws.close(1008, 'Missing identity');
+    return;
+  }
+
+  console.log('[GAME-SERVICE] Client connected:', userId, 'from:', req.url);
 
   // Listen for incoming data packets from the client
   ws.on('message', (rawData: RawData) => {
-    handleMessage(ws, rawData);
+    handleMessage(ws, rawData, userId);
   });
 
   // Listen for client disconnects (tab closed, lost connection)
   ws.on('close', (code) => {
-    handleClose(ws, code);
+    handleClose(ws, code, userId);
   });
 
   // Listen for low-level socket errors
@@ -54,8 +62,8 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 
 
 // Handle messages from the frontend
-function handleMessage(ws: WebSocket, rawData: RawData) {
-  console.log(`[GAME-SERVICE] Player sent message`);
+function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
+  console.log(`[GAME-SERVICE] Player ${userId} sent message`);
   // Convert incoming binary buffer into a plain text string
   const rawText = rawData.toString();
   
@@ -78,7 +86,7 @@ function handleMessage(ws: WebSocket, rawData: RawData) {
     }
     gameRooms.get(gameId)!.add(ws);
 
-    console.log(`[GAME-SERVICE] Client joined room ${gameId}`);
+    console.log(`[GAME-SERVICE] Client ${userId} joined room ${gameId}`);
     return;
   }
 
@@ -87,7 +95,7 @@ function handleMessage(ws: WebSocket, rawData: RawData) {
   if (packet.event === GameEvents.PLAYER_INPUT) {
     // Type-cast the payload to enforce shared interface rules
     const input: PlayerInputPayload = packet.data;
-    console.log('[GAME-SERVICE] Player input:', input);
+    console.log(`[GAME-SERVICE] Player ${userId} input:`, input);
 
     // Calculate new position...
     // ...
@@ -117,8 +125,8 @@ function handleMessage(ws: WebSocket, rawData: RawData) {
 }
 
 // Handle disconnection
-function handleClose(ws: WebSocket, code: number) {
-  console.log(`[GAME-SERVICE] Player left the game (Code: ${code})`);
+function handleClose(ws: WebSocket, code: number, userId: string) {
+  console.log(`[GAME-SERVICE] Player left the game: ${userId} (Code: ${code})`);
 
   // Cleanup active game session...
 
