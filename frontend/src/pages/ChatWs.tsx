@@ -1,6 +1,6 @@
 import { useChatSocket } from '../hooks/useChatSocket';
 
-const TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsIm5hbWUiOiJNYWxpa2EiLCJpYXQiOjE3ODkyMTIzNjl9.aiTKHwKAA1wzWwKuWmHtuhMHUe94__ebepFH9ZO5bZI"; // matches x-user-id shape: { userId: <number> }
+const TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEyMywiaWF0IjoxNzg5Mzk1Nzk3fQ.tuYnM8If0DW7liaz5qH-h6v0FOEOqEwLok46wJtt8-Y"; // matches x-user-id shape: { userId: <number> }
 
 export default function ChatWs() {
   const { isConnected, sendMessage } = useChatSocket(
