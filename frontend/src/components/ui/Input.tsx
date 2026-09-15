@@ -16,7 +16,7 @@ export const Input: React.FC<InputProps> = ({
     <div className="flex flex-col gap-1.5 w-full">
       {/* 1. Affichage du label s'il existe */}
       {label && (
-        <label className="font-pixelify text-pacova-pink text-lg uppercase tracking-wide">
+        <label className="font-pixelify text-pacova-pink text-l uppercase tracking-wide">
           {label}
         </label>
       )}
@@ -26,23 +26,18 @@ export const Input: React.FC<InputProps> = ({
       <div className="relative">
         <input
           className={`
-            w-full
-            bg-pacova-surface
-            text-white
-            font-vt323
-            text-2xl
-            px-4
-            py-2
-            border-2
-            rounded-md
-            border-pacova-pink
-            outline-none
-            transition-all
-            placeholder:text-gray-600
-            focus:shadow-neon-pink
-            disabled:opacity-40
-            ${error ? 'border-red-500' : ''}
-            ${className}
+          w-full
+          bg-black/60
+          border border-gray-700
+          focus:border-pacova-pink
+          text-white
+          font-vt323
+          text-sm sm:text-base
+          px-2.5 py-1.5 sm:px-3 sm:py-2
+          rounded-md
+          outline-none
+          transition-all
+          ${className}
           `}
           {...props}
         />
@@ -52,7 +47,7 @@ export const Input: React.FC<InputProps> = ({
 
       {/* 3. Affichage du message d'erreur s'il existe */}
       {error && (
-        <span className="font-vt323 text-red-500 text-lg">
+        <span className="font-vt323 text-red-500 text-md">
           {error}
         </span>
       )}

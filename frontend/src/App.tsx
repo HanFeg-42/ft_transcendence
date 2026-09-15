@@ -11,7 +11,7 @@ import Game from "./pages/Game";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import DesignSystem from './pages/DesignSystem'
 // import Design from './pages/Design'
-// import Profile from './pages/ProfilePage'
+import Profile from './pages/ProfilePage'
 import GameWs from "./pages/GameWs"; // TEMP
 import ChatWs from "./pages/ChatWs"; // TEMP
 
@@ -32,7 +32,7 @@ function App() {
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
       {/* <Route path="/Design" element={<Design />} /> */}
-      {/* <Route path="/ProfilePage" element={<Profile />} /> */}
+      <Route path="/ProfilePage" element={<Profile />} />
       <Route path="/ws-game" element={<GameWs />} /> {/* TEMP */}
       <Route path="/ws-chat" element={<ChatWs />} /> {/* TEMP */}
     </Routes>
