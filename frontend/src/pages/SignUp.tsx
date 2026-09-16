@@ -148,7 +148,7 @@ export default function SignUp() {
             <PixelButton
               type="submit"
               variant="filled-green"
-              size="md"
+              size="lg"
               disabled={loading}
               className="w-full max-w-[180px] sm:max-w-[220px] mx-auto mt-2" // 💡 Changed to centered layout with less top margin
             >

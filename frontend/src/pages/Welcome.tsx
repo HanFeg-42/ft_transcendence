@@ -31,13 +31,13 @@ export default function Welcome() {
 
           <div className="flex flex-wrap gap-4">
             <Link to="/login">
-              <PixelButton variant="filled-pink" size="md">
+              <PixelButton variant="filled-pink" size="lg">
                 LOGIN
               </PixelButton>
             </Link>
 
             <Link to="/signup">
-              <PixelButton variant="outline-green" size="md">
+              <PixelButton variant="olive-yellow" size="lg">
                 SIGNUP
               </PixelButton>
             </Link>

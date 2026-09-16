@@ -17,18 +17,26 @@ export const Card: React.FC<CardProps> = ({
 
   const glowStyle = 
     variant === 'pink' ? 'drop-shadow-[0_0_12px_rgba(243,32,119,0.5)]' : 
-    variant === 'green' ? 'drop-shadow-[0_0_12px_rgba(142,214,3,0.5)]' : '';
+    variant === 'green' ? 'drop-shadow-[0_0_12px_rgba(142,214,3,0.5)]' :
+    variant === 'gray' ? 'drop-shadow-[0_0_12px_#00000080]' : '';
+
+  // Applique le texte noir pour 'gray', sinon reste blanc
+  const textStyle = variant === 'gray' ? 'text-black' : 'text-white';
 
   return (
     <div className={`
       relative
       w-full
+      h-full
+      flex
+      flex-col
+      justify-between
       bg-pacova-surface
       border-1
       ${borderStyle}
       ${glowStyle}
+      ${textStyle}
       p-4 sm:p-5 md:p-6
-      text-white
       rounded-xl
       overflow-hidden
       transition-all

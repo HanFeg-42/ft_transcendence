@@ -33,7 +33,7 @@ const variantStyles: Record<
   "outline-magenta": {
     bg: "bg-pacova-surface",
     glow: "shadow-neon-pink",
-    borderColor: "border-pacova-pink",
+    borderColor: "border-pacova-pink/40",
     dropShadow: "drop-shadow-glow-pink",
     textColor: "text-pacova-pink",
   },
@@ -47,7 +47,7 @@ const variantStyles: Record<
   "filled-green": {
     bg: "bg-pacova-green-dark",
     glow: "shadow-neon-green",
-    borderColor: "border-pacova-green",
+    borderColor: "border-pacova-green/70",
     dropShadow: "drop-shadow-glow-green",
   },
   "olive-yellow": {
@@ -65,7 +65,7 @@ const variantStyles: Record<
   "filled-pink": {
     bg: "bg-pacova-pink-dark",
     glow: "shadow-neon-pink",
-    borderColor: "border-pacova-pink",
+    borderColor: "border-pacova-pink/30",
     dropShadow: "drop-shadow-glow-pink",
   },
   "solid-pink": {
@@ -91,7 +91,7 @@ const variantStyles: Record<
 const sizeStyles: Record<PixelButtonSize, string> = {
   sm: "px-3 py-1 text-s font-pixelify min-h-[32px]",
   md: "px-4 py-1.5 sm:px-5 sm:py-2 text-s sm:text-base font-pixelify min-h-[38px]", // 💡 Réduit le padding et min-h de 42px à 38px
-  lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-md sm:text-base font-pixelify min-h-[44px]",
+  lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-lg sm:text-xl font-pixelify min-h-[44px]",
 };
 
 export const PixelButton: React.FC<PixelButtonProps> = ({
