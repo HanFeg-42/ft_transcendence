@@ -8,7 +8,6 @@ import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import PixelButton from '../components/ui/PixelButton';
-import type { ChatMessageIncoming } from '../../../shared/types/chat-types';
 import type { IconName } from '../utils/icons';
 
 const MOCK_FRIENDS: { id: number; username: string; icon: IconName; status: 'online' | 'offline' | 'busy' }[] = [
@@ -28,13 +27,12 @@ const routeMap: Record<string, string> = {
 export default function Chat() {
   const { token, user } = useAuth();
   const navigate = useNavigate();
-  const { isConnected, sendMessage } = useChatSocket(
+  const { isConnected, messages, sendMessage } = useChatSocket(
     user && token ? `wss://localhost/api/chat/ws?token=${token}` : '',
     user ? Number(user.id) : 0
   );
   const [selectedFriend, setSelectedFriend] = useState(MOCK_FRIENDS[0]);
   const [draft, setDraft] = useState('');
-  const [messages, setMessages] = useState<ChatMessageIncoming[]>([]);
 
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
@@ -42,20 +40,8 @@ export default function Chat() {
   };
 
   const handleSend = () => {
-    if (!draft.trim() || !user) return;
-
-    const content = draft.trim();
-    sendMessage(selectedFriend.id, content);
-    setMessages((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        sender_id: user.id,
-        receiver_id: selectedFriend.id,
-        content,
-        created_at: new Date().toISOString(),
-      },
-    ]);
+    if (!draft.trim()) return;
+    sendMessage(selectedFriend.id, draft.trim());
     setDraft('');
   };
 
@@ -78,47 +64,75 @@ export default function Chat() {
     <Background>
       <Navbar activeTab="CHAT" onSelectTab={handleSelectTab} />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full p-6 flex gap-4">
-        <div className="w-64 flex flex-col gap-3 bg-pacova-surface/80 border-2 border-pacova-green shadow-neon-green rounded-lg p-4">
-          <h2 className="font-pixelify text-pacova-green text-lg uppercase tracking-wider mb-1">
+      <main className="flex-1 min-h-0 h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] max-w-6xl mx-auto w-full p-6 flex gap-6 overflow-hidden">
+        <div className="w-80 min-h-0 flex flex-col gap-4 bg-pacova-surface/80 border-2 border-pacova-green-dark rounded-lg p-5 overflow-hidden">
+          <h2 className="font-pixelify text-pacova-green text-lg uppercase tracking-wider mb-1 text-center">
             Friends
           </h2>
 
-          {MOCK_FRIENDS.map((friend) => {
-            const isSelected = friend.id === selectedFriend.id;
-            return (
-              <button
-                key={friend.id}
-                onClick={() => setSelectedFriend(friend)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md border-2 transition-all text-left ${
-                  isSelected
-                    ? 'border-pacova-green shadow-neon-green'
-                    : 'border-transparent hover:border-pacova-gray'
-                }`}
-              >
-                <Avatar iconName={friend.icon} size="sm" status={friend.status} />
-                <span className="font-vt323 text-white text-lg uppercase truncate">
-                  {friend.username}
-                </span>
-              </button>
-            );
-          })}
+          <div className="flex flex-col gap-3 overflow-y-auto min-h-0">
+            {MOCK_FRIENDS.map((friend) => {
+              const isSelected = friend.id === selectedFriend.id;
+              return (
+                <button
+                  key={friend.id}
+                  onClick={() => setSelectedFriend(friend)}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-md border-2 transition-all text-left ${
+                    isSelected
+                      ? friend.status === 'offline'
+                        ? 'border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.75)]'
+                        : 'border-pacova-green shadow-neon-green'
+                      : 'border-transparent hover:border-pacova-gray'
+                  }`}
+                >
+                  <Avatar iconName={friend.icon} size="sm" status={friend.status} />
+                  <span className="font-vt323 text-white text-lg uppercase truncate flex-1">
+                    {friend.username}
+                  </span>
+                  <span
+                    className={`w-3 h-3 rounded-full ${
+                      friend.status === 'online'
+                        ? 'bg-pacova-green-dark shadow-[0_0_8px_#8ED603]'
+                        : friend.status === 'busy'
+                          ? 'bg-pacova-pink-dark shadow-[0_0_8px_#F32077]'
+                          : 'bg-pacova-gray'
+                    }`}
+                    aria-label={friend.status}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          <PixelButton type="button" variant="outline-green" size="sm" className="w-full mt-auto" onClick={() => undefined}>
+            <span className="inline-flex items-center justify-center gap-2">
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden="true">
+                <path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-5.2l-2.8 3-2.8-3H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm2 4v2h2V8H6Zm5 0v2h2V8h-2Zm5 0v2h2V8h-2Z" />
+              </svg>
+              New Chat
+            </span>
+          </PixelButton>
         </div>
 
-        <div className="flex-1 flex flex-col bg-pacova-surface/80 border-2 border-pacova-green shadow-neon-green rounded-lg overflow-hidden">
+        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-pacova-surface/80 border-2 border-pacova-green-dark rounded-lg overflow-hidden">
           <div className="flex items-center justify-between gap-3 px-5 py-3 border-b-2 border-pacova-green">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <Avatar iconName={selectedFriend.icon} size="sm" status={selectedFriend.status} />
-              <span className="font-pixelify text-white text-lg uppercase">
-                {selectedFriend.username}
-              </span>
+              <div className="min-w-0">
+                <span className="font-pixelify text-white text-lg uppercase block truncate">
+                  {selectedFriend.username}
+                </span>
+                <span className="font-vt323 text-pacova-green-dark text-base uppercase tracking-wide">
+                  Online
+                </span>
+              </div>
             </div>
             <Badge variant={isConnected ? 'green' : 'red'}>
-              {isConnected ? 'Connected' : 'Disconnected'}
+              {isConnected ? 'Online' : 'Offline'}
             </Badge>
           </div>
 
-          <div className="flex-1 flex flex-col gap-3 p-4 overflow-y-auto">
+          <div className="flex-1 min-h-0 flex flex-col gap-4 p-5 overflow-y-auto overscroll-contain">
             {conversation.length === 0 && (
               <p className="font-vt323 text-gray-600 text-lg text-center mt-8">No messages yet</p>
             )}
@@ -129,13 +143,27 @@ export default function Chat() {
                   key={message.id}
                   className={`flex flex-col max-w-[70%] ${isOwn ? 'self-end items-end' : 'self-start items-start'}`}
                 >
-                  <span className="font-vt323 text-pacova-green text-sm uppercase tracking-wide mb-1">
+                  <span
+                    className={`font-vt323 text-sm uppercase tracking-wide mb-1 ${
+                      isOwn ? 'text-pacova-pink' : 'text-pacova-green'
+                    }`}
+                  >
                     {isOwn ? 'You' : selectedFriend.username}{' '}
                     <span className="text-gray-500 normal-case">
-                      {new Date(message.created_at).toLocaleTimeString()}
+                      {new Date(message.created_at).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                      })}
                     </span>
                   </span>
-                  <div className="px-4 py-2 border-2 border-pacova-green pixel-corners-3step bg-pacova-bg text-white font-vt323 text-lg">
+                  <div
+                    className={`px-4 py-2 pixel-corners-3step font-vt323 text-lg ${
+                      isOwn
+                        ? 'bg-pacova-pink-dark/40 text-white'
+                        : 'bg-pacova-green-dark/40 text-white'
+                    }`}
+                  >
                     {message.content}
                   </div>
                 </div>
@@ -144,7 +172,7 @@ export default function Chat() {
           </div>
 
           <div className="flex gap-3 p-4 border-t-2 border-pacova-green">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <Input
                 type="text"
                 placeholder="Type message..."
@@ -163,11 +191,12 @@ export default function Chat() {
               </span>
             </PixelButton>
           </div>
-        </div>
+        </section>
       </main>
     </Background>
   );
 }
+
 
 
 
