@@ -75,6 +75,19 @@ services:
     networks:
       - pacova
 
+  user:
+    build:
+      context: .
+      dockerfile: user/Dockerfile
+    container_name: user
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pacova
+
 networks:
   pacova:
     name: pacova
