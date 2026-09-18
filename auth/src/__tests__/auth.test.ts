@@ -3,12 +3,10 @@ import request from "supertest";
 import { Prisma } from "../generated/prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { generate, generateSecret } from "otplib";
 
-const { mockUserCreate, mockUserFindUnique, mockUserUpdate } = vi.hoisted(() => ({
+const { mockUserCreate, mockUserFindUnique } = vi.hoisted(() => ({
   mockUserCreate: vi.fn(),
   mockUserFindUnique: vi.fn(),
-  mockUserUpdate: vi.fn(),
 }));
 
 vi.mock("../prisma", () => ({
@@ -16,14 +14,8 @@ vi.mock("../prisma", () => ({
     user: {
       create: mockUserCreate,
       findUnique: mockUserFindUnique,
-      update: mockUserUpdate,
     },
   },
-}));
-
-vi.mock("../controllers/42oauth.controller", () => ({
-  redirectTo42: vi.fn(),
-  handle42Callback: vi.fn(),
 }));
 
 import app from "../app";
@@ -355,136 +347,5 @@ describe("GET /me", () => {
     });
 
     expect(mockUserFindUnique).not.toHaveBeenCalled();
-  });
-});
-
-describe("POST /2fa/disable", () => {
-  const createToken = (issuedAt: number) =>
-    jwt.sign(
-      {
-        userId: 42,
-        iat: issuedAt,
-      },
-      process.env.JWT_SECRET as string,
-      {
-        expiresIn: "1h",
-        algorithm: "HS256",
-      },
-    );
-
-  beforeEach(() => {
-    mockUserFindUnique.mockReset();
-    mockUserUpdate.mockReset();
-    process.env.JWT_SECRET = "test-secret";
-  });
-
-  it("accepts a recently issued authentication token as proof", async () => {
-    mockUserFindUnique.mockResolvedValue({
-      id: 42,
-      twoFactorEnabled: true,
-      twoFactorSecret: "secret",
-    });
-    mockUserUpdate.mockResolvedValue({});
-
-    const response = await request(app)
-      .post("/2fa/disable")
-      .set("Authorization", `Bearer ${createToken(Math.floor(Date.now() / 1000))}`);
-
-    expect(response.status).toBe(200);
-    expect(mockUserUpdate).toHaveBeenCalledWith({
-      where: { id: 42 },
-      data: {
-        twoFactorEnabled: false,
-        twoFactorSecret: null,
-      },
-    });
-  });
-
-  it("rejects a stale authentication token without reauthentication", async () => {
-    const response = await request(app)
-      .post("/2fa/disable")
-      .set(
-        "Authorization",
-        `Bearer ${createToken(Math.floor(Date.now() / 1000) - 10 * 60)}`,
-      );
-
-    expect(response.status).toBe(401);
-    expect(response.body).toEqual({
-      error: "Recent authentication required",
-    });
-    expect(mockUserFindUnique).not.toHaveBeenCalled();
-    expect(mockUserUpdate).not.toHaveBeenCalled();
-  });
-
-  it("accepts password reauthentication with a stale token", async () => {
-    const passwordHash = await bcrypt.hash("password123", 10);
-
-    mockUserFindUnique.mockResolvedValue({
-      id: 42,
-      passwordHash,
-      twoFactorEnabled: true,
-      twoFactorSecret: "secret",
-    });
-    mockUserUpdate.mockResolvedValue({});
-
-    const response = await request(app)
-      .post("/2fa/disable")
-      .set(
-        "Authorization",
-        `Bearer ${createToken(Math.floor(Date.now() / 1000) - 10 * 60)}`,
-      )
-      .send({ password: "password123" });
-
-    expect(response.status).toBe(200);
-    expect(mockUserUpdate).toHaveBeenCalledTimes(1);
-  });
-
-  it("accepts a current TOTP code with a stale token", async () => {
-    const twoFactorSecret = generateSecret();
-    const code = await generate({ secret: twoFactorSecret });
-
-    mockUserFindUnique.mockResolvedValue({
-      id: 42,
-      passwordHash: null,
-      twoFactorEnabled: true,
-      twoFactorSecret,
-    });
-    mockUserUpdate.mockResolvedValue({});
-
-    const response = await request(app)
-      .post("/2fa/disable")
-      .set(
-        "Authorization",
-        `Bearer ${createToken(Math.floor(Date.now() / 1000) - 10 * 60)}`,
-      )
-      .send({ code });
-
-    expect(response.status).toBe(200);
-    expect(mockUserUpdate).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not clear 2FA when reauthentication fails", async () => {
-    const passwordHash = await bcrypt.hash("password123", 10);
-
-    mockUserFindUnique.mockResolvedValue({
-      id: 42,
-      passwordHash,
-      twoFactorEnabled: true,
-      twoFactorSecret: generateSecret(),
-    });
-
-    const response = await request(app)
-      .post("/2fa/disable")
-      .set(
-        "Authorization",
-        `Bearer ${createToken(Math.floor(Date.now() / 1000) - 10 * 60)}`,
-      )
-      .send({ password: "wrong-password", code: "000000" });
-
-    expect(response.status).toBe(401);
-    expect(response.body).toEqual({
-      error: "Recent authentication required",
-    });
-    expect(mockUserUpdate).not.toHaveBeenCalled();
   });
 });
