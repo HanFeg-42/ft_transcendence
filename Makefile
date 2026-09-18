@@ -1,6 +1,6 @@
 NAME = pacova
 DOCKER_COMPOSE = docker compose
-SERVICES = frontend api-gateway auth game
+SERVICES = frontend api-gateway auth game chat user
 
 
 all: build up migrate

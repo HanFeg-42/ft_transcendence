@@ -33,7 +33,7 @@ const variantStyles: Record<
   "outline-magenta": {
     bg: "bg-pacova-surface",
     glow: "shadow-neon-pink",
-    borderColor: "border-pacova-pink",
+    borderColor: "border-pacova-pink/40",
     dropShadow: "drop-shadow-glow-pink",
     textColor: "text-pacova-pink",
   },
@@ -47,7 +47,7 @@ const variantStyles: Record<
   "filled-green": {
     bg: "bg-pacova-green-dark",
     glow: "shadow-neon-green",
-    borderColor: "border-pacova-green",
+    borderColor: "border-pacova-green/70",
     dropShadow: "drop-shadow-glow-green",
   },
   "olive-yellow": {
@@ -65,7 +65,7 @@ const variantStyles: Record<
   "filled-pink": {
     bg: "bg-pacova-pink-dark",
     glow: "shadow-neon-pink",
-    borderColor: "border-pacova-pink",
+    borderColor: "border-pacova-pink/30",
     dropShadow: "drop-shadow-glow-pink",
   },
   "solid-pink": {
@@ -89,9 +89,9 @@ const variantStyles: Record<
 };
 
 const sizeStyles: Record<PixelButtonSize, string> = {
-  sm: "px-6 py-2 text-xl tracking-wide",
-  md: "px-10 py-3.5 text-3xl tracking-wider",
-  lg: "px-14 py-5 text-3xl tracking-widest",
+  sm: "px-3 py-1 text-s font-pixelify min-h-[32px]",
+  md: "px-4 py-1.5 sm:px-5 sm:py-2 text-s sm:text-base font-pixelify min-h-[38px]", // 💡 Réduit le padding et min-h de 42px à 38px
+  lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-lg sm:text-xl font-pixelify min-h-[44px]",
 };
 
 export const PixelButton: React.FC<PixelButtonProps> = ({
@@ -103,10 +103,17 @@ export const PixelButton: React.FC<PixelButtonProps> = ({
   ...props
 }) => {
   const currentVariant = variantStyles[variant];
+  const isFullWidth = className.includes("w-full");
 
   return (
     <div
-      className={`inline-block ${currentVariant.dropShadow} transition-transform duration-100 active:scale-95`}
+      className={`
+        ${isFullWidth ? "w-full flex" : "inline-flex"}
+        ${currentVariant.dropShadow} 
+        transition-transform 
+        duration-100 
+        active:scale-95
+      `}
     >
       <button
         disabled={disabled}
@@ -123,32 +130,30 @@ export const PixelButton: React.FC<PixelButtonProps> = ({
           disabled:opacity-20
           disabled:cursor-not-allowed
           disabled:shadow-none
-          ${currentVariant.textColor || "text-white"}   {/* 👈 Dynamic color or fallback */}
-          ${currentVariant.fontFamily || ""}             {/* 👈 Dynamic font fallback */}
+          ${currentVariant.textColor || "text-white"}
+          ${currentVariant.fontFamily || ""}
           ${currentVariant.bg}
           ${currentVariant.glow}
           ${sizeStyles[size]}
           ${className}
         `}
-        {...props} //Cela t'évite d'avoir à écrire manuellement chaque attribut HTML un par un (onClick={onClick} disabled={disabled} type={type}...).
+        {...props}
       >
         {/* CRT Scanline Overlay */}
         <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
 
-        {/* Pixel Border Overlay that clips properly with pixel-corners-3step */}
+        {/* Pixel Border Overlay */}
         <span
           className={`absolute inset-0 border-2 ${currentVariant.borderColor} pixel-corners-3step pointer-events-none`}
         />
 
-        {/* Button Content */}
-        <span className="relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+        {/* Button Content with Flex Alignment */}
+        <div className="relative z-10 flex flex-row items-center justify-center gap-2 w-full h-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
           {children}
-        </span>
+        </div>
       </button>
     </div>
   );
 };
 
 export default PixelButton;
-
-// pixel-corners-3step

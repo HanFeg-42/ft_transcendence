@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Background from '../components/ui/Background';
 import PixelButton from '../components/ui/PixelButton';
 
+/** Renders the landing page and its primary authentication actions. */
 export default function Welcome() {
   return (
     <Background>
@@ -31,13 +32,13 @@ export default function Welcome() {
 
           <div className="flex flex-wrap gap-4">
             <Link to="/login">
-              <PixelButton variant="filled-pink" size="md">
+              <PixelButton variant="filled-pink" size="lg">
                 LOGIN
               </PixelButton>
             </Link>
 
             <Link to="/signup">
-              <PixelButton variant="outline-green" size="md">
+              <PixelButton variant="olive-yellow" size="lg">
                 SIGNUP
               </PixelButton>
             </Link>
