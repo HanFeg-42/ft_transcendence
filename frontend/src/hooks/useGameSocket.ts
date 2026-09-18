@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 // Import shared WebSocket contract rules (event names and payload shapes)
 import { GameEvents } from '../../../shared/types/game-types';
-import type { PlayerInputPayload } from '../../../shared/types/game-types';
+import type { PlayerInputPayload, Direction } from '../../../shared/types/game-types';
 
 
 
 
 export function useGameSocket(url: string) {
-  const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
 
   useEffect(() => {
@@ -72,7 +71,7 @@ export function useGameSocket(url: string) {
 
 
   // Send player movement input to the backend
-  function sendPlayerInput(direction: 'up' | 'down' | 'left' | 'right') {
+  function sendPlayerInput(direction: Direction) {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
       console.warn('[GAME-CLIENT] Cannot send input, socket not connected');
       return;

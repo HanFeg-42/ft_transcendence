@@ -11,7 +11,7 @@ export default function GameWs() {
   return (
     <div style={{ padding: 20 }}>
       <p>Connected: {isConnected ? 'yes' : 'no'}</p>
-      <button onClick={() => sendPlayerInput('up')}>Send Up</button>
+      <button onClick={() => sendPlayerInput('UP')}>Send Up</button>
     </div>
   );
 }

@@ -21,7 +21,6 @@ function App() {
       <Route path="/" element={<Welcome />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/game" element={<Game />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<ProfilePage />} />

@@ -1,4 +1,10 @@
-import type { GameState, Player, Chaser, Tile, Direction } from "./types";
+import type {
+  GameState,
+  Player,
+  Chaser,
+  Tile,
+  Direction,
+} from "../../../shared/types/game-types";
 import {
   findChaserSpawns,
   findSpawn,
@@ -11,30 +17,45 @@ import { stepPlayer, stepChaser, ahead } from "./movement";
 const CENTER_OFFSET = 4;
 const TICKS_PER_SECOND = 30;
 
-export const createGame = (playerIds: number[], timeLimit: number = 360): GameState => {
-  const center: Tile = findSpawn();
-  const playersSpawns: Tile[] =
-    playerIds.length === 1
-      ? [center]
-      : [
-          { x: center.x - CENTER_OFFSET, y: center.y },
-          { x: center.x + CENTER_OFFSET, y: center.y },
-        ];
-  const players: Player[] = playerIds.map((playerId, index) => {
-    return {
+export const addPlayer = (playerId: number, state: GameState) => {
+  if (state.players.length >= 2) return;
+  const spawn: Tile = findSpawn();
+  state.players[0].spawn = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
+  state.players[0].tile = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
+
+  state.players.push({
+    id: playerId,
+    spawn: { x: spawn.x + CENTER_OFFSET, y: spawn.y },
+    tile: { x: spawn.x + CENTER_OFFSET, y: spawn.y },
+    dir: null,
+    nextDir: null,
+    step: 0,
+    lives: 3,
+    score: 0,
+  });
+};
+
+export const createGame = (
+  playerId: number,
+  timeLimit: number = 360,
+): GameState => {
+  const players: Player[] = [
+    {
       id: playerId,
-      spawn: playersSpawns[index],
-      tile: playersSpawns[index],
+      spawn: findSpawn(),
+      tile: findSpawn(),
       dir: null,
       nextDir: null,
       step: 0,
       lives: 3,
       score: 0,
-    };
-  });
+    },
+  ];
+
   const chasers: Chaser[] = findChaserSpawns().map((tile, index) => {
     return {
       id: index,
+      spawn: tile,
       tile,
       dir: null,
       step: 0,
@@ -50,6 +71,10 @@ export const createGame = (playerIds: number[], timeLimit: number = 360): GameSt
   };
 };
 
+const tilesAreEqual = (a: Tile, b: Tile): boolean => {
+  return a.x == b.x && a.y == b.y;
+};
+
 export const applyInput = (
   state: GameState,
   playerId: number,
@@ -59,16 +84,18 @@ export const applyInput = (
   if (player) player.nextDir = dir;
 };
 
-export const pickChaserDirection = (chaser: Chaser, state: GameState) => {
+const pickChaserDirection = (chaser: Chaser, state: GameState) => {
   let bestDistance = Infinity;
   let bestDir = null;
+
   const directions: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
   const validDirections = directions.filter((dir: Direction) => {
     const next = ahead(chaser.tile, dir);
     if (isWall(next)) return false;
     return !state.chasers.some((other) => {
+      if (other.id == chaser.id) return false;
       const otherTarget = other.dir ? ahead(other.tile, other.dir) : other.tile;
-      return next.x === otherTarget.x && next.y === otherTarget.y;
+      return tilesAreEqual(next, otherTarget);
     });
   });
 
@@ -86,12 +113,21 @@ export const pickChaserDirection = (chaser: Chaser, state: GameState) => {
   chaser.dir = bestDir;
 };
 
-export const respawnPlayer = (player: Player) => {
-      player.tile = player.spawn;
-      player.dir = null;
-      player.nextDir = null;
-      player.step = 0;
-}
+const handlePlayerDeath = (player: Player, state: GameState) => {
+  player.lives--;
+
+  state.players.forEach((p) => {
+    p.tile = p.spawn;
+    p.dir = null;
+    p.nextDir = null;
+    p.step = 0;
+  });
+  state.chasers.forEach((c) => {
+    c.tile = c.spawn;
+    c.dir = null;
+    c.step = 0;
+  });
+};
 
 export const tick = (state: GameState) => {
   state.tick++;
@@ -106,11 +142,14 @@ export const tick = (state: GameState) => {
     if (
       state.chasers.some(
         (chaser) =>
-          chaser.tile.x === player.tile.x && chaser.tile.y === player.tile.y,
+          tilesAreEqual(player.tile, chaser.tile) ||
+          (chaser.dir &&
+            tilesAreEqual(player.tile, ahead(chaser.tile, chaser.dir))) ||
+          (player.dir &&
+            tilesAreEqual(ahead(player.tile, player.dir), chaser.tile)),
       )
     ) {
-      respawnPlayer(player);
-      player.lives--;
+      handlePlayerDeath(player, state);
     }
   });
   state.chasers.forEach((chaser) => {
