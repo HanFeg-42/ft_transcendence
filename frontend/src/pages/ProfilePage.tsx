@@ -30,6 +30,7 @@ const ACHIEVEMENTS_DATA = [
   { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', image: tournamentImg },
 ];
 
+/** Renders the responsive user profile dashboard. */
 export default function ProfilePage() {
   const navigate = useNavigate();
 

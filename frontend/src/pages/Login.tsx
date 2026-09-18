@@ -9,6 +9,7 @@ import PixelButton from "../components/ui/PixelButton";
 import type { LoginFormData, LoginResponse } from "../types/auth";
 import { useAuth } from "../context/AuthContext";
 
+/** Renders the login form and handles user authentication. */
 export default function Login() {
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",

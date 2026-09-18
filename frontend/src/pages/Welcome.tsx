@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Background from '../components/ui/Background';
 import PixelButton from '../components/ui/PixelButton';
 
+/** Renders the landing page and its primary authentication actions. */
 export default function Welcome() {
   return (
     <Background>

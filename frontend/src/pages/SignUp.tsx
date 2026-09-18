@@ -9,6 +9,7 @@ import PixelButton from "../components/ui/PixelButton";
 import { validateSignUp } from "../utils/validation";
 import type { SignUpFormData } from "../types/auth";
 
+/** Renders the account registration form and handles sign-up. */
 export default function SignUp() {
   const [formData, setFormData] = useState<SignUpFormData>({
     username: "",

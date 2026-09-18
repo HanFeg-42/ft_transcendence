@@ -15,6 +15,7 @@ import Profile from './pages/ProfilePage'
 import GameWs from "./pages/GameWs"; // TEMP
 import ChatWs from "./pages/ChatWs"; // TEMP
 
+/** Renders the application's route configuration. */
 function App() {
   return (
     <Routes>
