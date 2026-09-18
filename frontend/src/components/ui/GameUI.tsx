@@ -1,64 +1,97 @@
 import React from 'react';
-import Card from './Card';
+import Card from './Card'; // Assurez-vous que le chemin est correct
 
-export interface MatchRecord {
+// 1. IMPORTATION DE VOS ICÔNES DEPUIS LES ASSETS
+import packman3d from '../../assets/icons/packman3d.png';
+import gostRed from '../../assets/icons/gost-red.png';
+import gostBlue from '../../assets/icons/gost-blue.png';
+import gostOrange from '../../assets/icons/gost-orange.png';
+import gostPurple from '../../assets/icons/gost-purple.png';
+import gostPink from '../../assets/icons/gost-pink.png';
+
+interface Match {
   id: string;
-  result: 'WIN' | 'LOSS';
-  emoji: string; // Temporary emoji icon
+  type: 'WIN' | 'LOSS';
   score: string;
   opponent: string;
-  timeAgo: string;
-  // playerIcon?: string; // Add this line
+  time: string;
+  opponentColor?: 'red' | 'blue' | 'orange' | 'purple' | 'pink';
 }
 
-interface MatchHistoryProps {
-  matches?: MatchRecord[];
-}
+export const GameUI: React.FC = () => {
+  // Vos données d'historique basées sur la maquette Figma
+  const matches: Match[] = [
+    { id: '1', type: 'WIN', score: '8 - 3', opponent: 'VS HANANE', time: '2 min ago', opponentColor: 'orange' },
+    { id: '2', type: 'LOSS', score: '4 - 8', opponent: 'VS OMAR', time: 'Yesterday', opponentColor: 'red' },
+    { id: '3', type: 'WIN', score: '8 - 1', opponent: 'VS SARA', time: '2 days ago', opponentColor: 'pink' },
+    { id: '4', type: 'WIN', score: '7 - 2', opponent: 'VS YASSINE', time: '3 days ago', opponentColor: 'blue' },
+    { id: '5', type: 'LOSS', score: '5 - 7', opponent: 'VS ADIL', time: '5 days ago', opponentColor: 'purple' },
+  ];
 
-const defaultMatches: MatchRecord[] = [
-  { id: '1', result: 'WIN', emoji: '🟡', score: '8 - 3', opponent: 'HANANE', timeAgo: '2 min ago' },
-  { id: '2', result: 'LOSS', emoji: '🔴', score: '4 - 8', opponent: 'OMAR', timeAgo: 'Yesterday' },
-  { id: '3', result: 'WIN', emoji: '🟠', score: '8 - 1', opponent: 'SARA', timeAgo: '2 days ago' },
-  { id: '4', result: 'WIN', emoji: '🔵', score: '7 - 2', opponent: 'YASSINE', timeAgo: '3 days ago' },
-  { id: '5', result: 'LOSS', emoji: '⚪', score: '5 - 7', opponent: 'ADIL', timeAgo: '5 days ago' },
-];
+  // Fonction pour récupérer l'icône du joueur ou du fantôme adverse
+  const getMatchIcon = (match: Match) => {
+    if (match.type === 'WIN') {
+      // Si gagné, on affiche toujours le Pac-Man 3D jaune
+      return packman3d;
+    }
+    
+    // Si perdu, on affiche le fantôme de la bonne couleur
+    switch (match.opponentColor) {
+      case 'red': return gostRed;
+      case 'blue': return gostBlue;
+      case 'orange': return gostOrange;
+      case 'purple': return gostPurple;
+      case 'pink': return gostPink;
+      default: return gostRed;
+    }
+  };
 
-export const GameUI: React.FC<MatchHistoryProps> = ({ matches = defaultMatches }) => {
   return (
+    <Card variant="gray" className="w-full h-full p-5 bg-pacova-surface/60 backdrop-blur-sm flex flex-col justify-between">
+      {/* Entête du tableau */}
+      <div className="w-full mb-4">
+        <span className="font-pixelify text-xl text-pacova-green uppercase tracking-widest block pl-1">
+          ▼ MATCH HISTORY
+        </span>
+      </div>
 
- <Card variant="gray" className="w-full max-w-xl">
-      <h3 className="font-pixelify text-xl text-pacova-pink mb-4 flex items-center gap-2">
-        <span>---</span> MATCH HISTORY
-      </h3>
-
-      <div className="flex flex-col gap-2.5 font-vt323 text-xl">
+      {/* Liste des matchs (Rendu ultra-propre et espacé style Figma) */}
+      <div className="flex-1 flex flex-col justify-between font-vt323 text-xl tracking-wider text-gray-300">
         {matches.map((match) => (
-          <div
-            key={match.id}
-            className="flex items-center justify-between bg-black/50 p-3 border border-white/5 hover:border-pacova-pink/40 transition-colors"
+          <div 
+            key={match.id} 
+            className="flex items-center justify-between border-b border-white/5 pb-2.5 pt-1.5 last:border-none last:pb-0"
           >
-            {/* WIN / LOSS Indicator */}
-            <span
-              className={`font-pixelify text-sm w-12 ${
-                match.result === 'WIN' ? 'text-pacova-green' : 'text-red-500'
-              }`}
-            >
-              {match.result}
-            </span>
+            {/* Colonne Statut : WIN (Vert) ou LOSS (Rouge) */}
+            <div className="w-16 sm:w-20">
+              <span className={`font-bold uppercase ${match.type === 'WIN' ? 'text-pacova-green drop-shadow-[0_0_6px_rgba(142,214,3,0.4)]' : 'text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.4)]'}`}>
+                {match.type}
+              </span>
+            </div>
 
-            {/* Emoji Icon Placeholder */}
-            <span className="text-2xl select-none">{match.emoji}</span>
+            {/* Nouvelle colonne ICÔNE 3D (Remplace définitivement les cercles) */}
+            <div className="flex items-center justify-center w-12">
+              <img 
+                src={getMatchIcon(match)} 
+                alt={match.type === 'WIN' ? 'Pacman' : 'Ghost'} 
+                className="w-9 h-9 object-contain image-rendering-pixelated filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+              />
+            </div>
 
             {/* Score */}
-            <span className="text-white tracking-widest px-2">{match.score}</span>
+            <div className="w-20 text-center font-bold text-white text-2xl">
+              {match.score}
+            </div>
 
-            {/* Opponent */}
-            <span className="text-pacova-pink uppercase tracking-wide">
-              VS {match.opponent}
-            </span>
+            {/* Nom de l'Adversaire */}
+            <div className="w-28 sm:w-36 text-left text-gray-400 font-sans text-xs tracking-normal uppercase">
+              {match.opponent}
+            </div>
 
-            {/* Time Ago */}
-            <span className="text-gray-500 text-base">{match.timeAgo}</span>
+            {/* Date / Time */}
+            <div className="text-right text-gray-500 text-sm font-sans tracking-normal min-w-[70px]">
+              {match.time}
+            </div>
           </div>
         ))}
       </div>

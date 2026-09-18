@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import Background from "../components/ui/Background";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import PixelButton from "../components/ui/PixelButton";
 
 import type { LoginFormData, LoginResponse } from "../types/auth";
-
 import { useAuth } from "../context/AuthContext";
 
+/** Renders the login form and handles user authentication. */
 export default function Login() {
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -19,6 +20,7 @@ export default function Login() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 2FA state
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
   const [challengeToken, setChallengeToken] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
@@ -59,18 +61,18 @@ export default function Login() {
         return;
       }
 
-      // If this account uses 2FA, password verification is only step one.
-      // Do not store a normal auth token yet.
+      // If 2FA is enabled, password verification is only step one.
       if (data.requiresTwoFactor) {
         setRequiresTwoFactor(true);
         setChallengeToken(data.challengeToken);
 
         setSuccess("");
         setError("");
+
         return;
       }
 
-      // Account does not use 2FA, so login is complete.
+      // No 2FA → login is complete
       const loginData: LoginResponse = data;
 
       login(loginData.user, loginData.token);
@@ -83,6 +85,7 @@ export default function Login() {
     }
   };
 
+  // 2FA verification
   const handleTwoFactorSubmit: React.FormEventHandler<HTMLFormElement> = async (
     e,
   ) => {
@@ -117,8 +120,7 @@ export default function Login() {
         return;
       }
 
-      // Password + second factor are both verified.
-      // We can now store the normal authentication token.
+      // Password + 2FA verified
       login(data.user, data.token);
 
       navigate("/home");
@@ -138,22 +140,30 @@ export default function Login() {
     setSuccess("");
   };
 
+  // 42 OAuth
+  const handle42Login = () => {
+    window.location.href = "https://localhost:443/api/auth/42/login";
+  };
+
   return (
     <Background>
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card variant="pink" className="max-w-xl w-full p-6">
+        {/* Largeur max ajustée à 360px pour un format plus compact et moins étiré */}
+        <Card variant="pink" className="w-[92%] sm:w-full max-w-[360px] mx-auto">
           {!requiresTwoFactor ? (
             <form
               onSubmit={handleSubmit}
-              className="flex flex-col gap-6"
+              className="flex flex-col gap-3.5" // 💡 Réduit de gap-5 à gap-3.5 pour tasser la hauteur
               noValidate
             >
-              <div className="text-center mb-2">
-                <h1 className="font-pixelify text-pacova-pink text-2xl tracking-wider uppercase">
+              {/* Header */}
+              <div className="text-center mb-1">
+                <h1 className="font-pixelify text-pacova-pink text-xl tracking-wider uppercase">
                   ▼ ▼ LOGIN ▼ ▼
                 </h1>
               </div>
 
+              {/* Email */}
               <Input
                 label="EMAIL"
                 type="email"
@@ -163,6 +173,7 @@ export default function Login() {
                 onChange={handleChange}
               />
 
+              {/* Password */}
               <Input
                 label="PASSWORD"
                 type="password"
@@ -172,29 +183,52 @@ export default function Login() {
                 onChange={handleChange}
               />
 
+              {/* Error */}
               {error && (
-                <p className="text-center font-vt323 text-red-500 text-lg uppercase tracking-wide">
+                <p className="text-center font-vt323 text-red-500 text-base uppercase tracking-wide">
                   ⚠️ {error}
                 </p>
               )}
 
+              {/* Success */}
               {success && (
-                <p className="text-center font-vt323 text-pacova-green text-lg uppercase tracking-wide">
+                <p className="text-center font-vt323 text-pacova-green text-base uppercase tracking-wide">
                   ✓ {success}
                 </p>
               )}
 
+              {/* Normal Login */}
               <PixelButton
                 type="submit"
                 variant="filled-pink"
                 size="md"
                 disabled={loading}
-                className="w-full mt-6"
+                className="w-full max-w-[180px] sm:max-w-[220px] mx-auto mt-2" // 💡 mt-4 -> mt-2 et taille max réduite pour équilibrer
               >
                 {loading ? "LOGGING IN..." : "LOGIN"}
               </PixelButton>
 
-              <div className="text-center border-t border-pacova-pink/30 pt-4 mt-2 font-vt323 text-lg">
+              {/* Divider */}
+              <div className="flex items-center my-0.5"> {/* 💡 my-1 -> my-0.5 */}
+                <div className="flex-1 border-t border-pacova-pink/30"></div>
+                <span className="px-3 font-vt323 text-gray-400 text-sm">OR</span>
+                <div className="flex-1 border-t border-pacova-pink/30"></div>
+              </div>
+
+              {/* 42 OAuth */}
+              <PixelButton
+                type="button"
+                variant="olive-yellow"
+                size="md"
+                onClick={handle42Login}
+                disabled={loading}
+                className="w-full max-w-[180px] sm:max-w-[220px] mx-auto mt-0.5" // 💡 mt-4 -> mt-0.5
+              >
+                <span>CONTINUE WITH 42</span>
+              </PixelButton>
+
+              {/* Sign up */}
+              <div className="text-center border-t border-pacova-pink/30 pt-3 mt-1 font-vt323 text-sm">
                 <span className="text-gray-400">DON'T HAVE AN ACCOUNT? </span>
                 <Link
                   to="/signup"
@@ -207,64 +241,64 @@ export default function Login() {
           ) : (
             <form
               onSubmit={handleTwoFactorSubmit}
-              className="flex flex-col gap-6"
+              className="flex flex-col gap-3.5" // 💡 Même structure compacte appliquée au 2FA
               noValidate
             >
-              <div className="text-center mb-2">
-                <h1 className="font-pixelify text-pacova-pink text-2xl tracking-wider uppercase">
-                  ▼ ▼ SECURITY CHECK ▼ ▼
+              {/* 2FA Header */}
+              <div className="text-center mb-1">
+                <h1 className="font-pixelify text-pacova-pink text-xl tracking-wider uppercase">
+                  ▼ ▼ SECURITY ▼ ▼
                 </h1>
               </div>
 
-              <div className="text-center flex flex-col gap-2 font-vt323">
-                <p className="text-pacova-green text-lg uppercase">
+              <div className="text-center flex flex-col gap-1 font-vt323 leading-tight">
+                <p className="text-pacova-green text-base uppercase">
                   ✓ Password verified
                 </p>
-                <p className="text-gray-400 text-lg">
-                  Two-factor authentication is enabled for this account.
-                </p>
-                <p className="text-gray-400 text-lg">
-                  Enter the 6-digit code from your authenticator app to
-                  continue.
+                <p className="text-gray-400 text-sm">
+                  Enter the 6-digit code from your authenticator app to continue.
                 </p>
               </div>
 
+              {/* 2FA Code */}
               <Input
                 label="TWO-FACTOR CODE"
                 type="text"
                 name="twoFactorCode"
                 placeholder="000000"
                 value={twoFactorCode}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "");
-                  setTwoFactorCode(value.slice(0, 6));
-                }}
+                onChange={(e) => setTwoFactorCode(e.target.value)}
+                maxLength={6}
               />
 
+              {/* Error */}
               {error && (
-                <p className="text-center font-vt323 text-red-500 text-lg uppercase tracking-wide">
+                <p className="text-center font-vt323 text-red-500 text-base uppercase tracking-wide">
                   ⚠️ {error}
                 </p>
               )}
 
+              {/* Verify Button */}
               <PixelButton
                 type="submit"
                 variant="filled-pink"
                 size="md"
-                disabled={loading || twoFactorCode.length !== 6}
-                className="w-full mt-6"
+                disabled={loading}
+                className="w-full max-w-[180px] sm:max-w-[220px] mx-auto mt-2"
               >
-                {loading ? "VERIFYING..." : "VERIFY & LOGIN"}
+                {loading ? "VERIFYING..." : "VERIFY CODE"}
               </PixelButton>
 
-              <button
-                type="button"
-                className="text-pacova-pink/70 text-lg underline text-center font-vt323"
-                onClick={handleBackToLogin}
-                disabled={loading}
-              >
-                Back to login
-              </button>
+              {/* Retour au login */}
+              <div className="text-center border-t border-pacova-pink/30 pt-3 mt-1 font-vt323 text-base">
+                <button
+                  type="button"
+                  onClick={handleBackToLogin}
+                  className="text-gray-400 hover:text-pacova-pink hover:underline uppercase tracking-wide cursor-pointer"
+                >
+                  Back to Login
+                </button>
+              </div>
             </form>
           )}
         </Card>

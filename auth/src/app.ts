@@ -5,6 +5,7 @@ import { register } from "./registerController";
 import { login } from "./loginController";
 import { authenticateToken } from "./authMiddleware";
 import type { AuthenticatedRequest } from "./types/auth";
+import authRoutes from './routes/auth.routes';
 import { prisma } from "./prisma";
 import { setupTwoFactor, confirmTwoFactor } from "./twoFactorController";
 import { verifyTwoFactorLogin } from "./2faLoginController";
@@ -34,6 +35,7 @@ app.get("/health", (_req, res) => {
 
 app.post("/register", register);
 app.post("/login", login);
+app.use('/42', authRoutes); // express va comparer le rest de l URL avec les racine indique dans authRoutes()
 
 app.get("/me", authenticateToken, async (req, res) => {
   const userId = (req as AuthenticatedRequest).userId;
@@ -49,6 +51,8 @@ app.get("/me", authenticateToken, async (req, res) => {
       error: "Authentication invalid",
     });
   }
+
+
 
   return res.status(200).json({
     user: {

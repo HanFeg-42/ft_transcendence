@@ -8,7 +8,7 @@ interface ProfileCardProps {
   level?: number;
   currentXp?: number;
   maxXp?: number;
-  avatarUrl?: string; // Replace with your AI SVG path later
+  avatarUrl?: string;
   stats?: {
     matchesPlayed: number;
     wins: number;
@@ -29,67 +29,86 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const xpPercentage = Math.min(100, Math.round((currentXp / maxXp) * 100));
 
   return (
-    <Card variant='gray' className="w-full max-w-xl">
-      {/* 1. CIRCULAR NEON AVATAR */}
-      <div className="relative my-4">
-        <div className="w-36 h-36 rounded-full border-4 border-pacova-pink shadow-neon-pink flex items-center justify-center overflow-hidden bg-black/60">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
-          ) : (
-            /* Temporary Emoji Placeholder */
-            <span className="text-6xl select-none">👤</span>
-          )}
+    // Remplacement de variant="gray" par "green" pour conserver le thème néon rose de la bordure et du shadow de la maquette
+    // Ajout d'une min-height (h-full + min-h-3xl ou similaire selon le conteneur parent) pour forcer l'étirement vertical
+    <Card 
+      variant="green" 
+      className="w-full h-full flex flex-col items-center p-6 md:p-8 bg-pacova-surface/60 backdrop-blur-sm"
+    >
+      
+      {/* 1. HAUT : AVATAR + PSEUDO (Poussé vers le haut avec mt-4) */}
+      <div className="flex flex-col items-center w-full mt-4 flex-none">
+        <div className="relative mb-6 flex justify-center">
+          {/* Avatar agrandi (w-36 h-36) pour correspondre aux proportions généreuses de Figma */}
+          <div className="w-36 h-36 rounded-full border-2 border-pacova-green shadow-[0_0_25px_rgba(0,0,0,0.7)] flex items-center justify-center overflow-hidden bg-black/60">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-6xl select-none">👤</span>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* 2. USER DETAILS & LEVEL BADGE */}
-      <h2 className="font-pixelify text-3xl tracking-wider uppercase text-white mt-2">
-        {username}
-      </h2>
-      <p className="font-vt323 text-lg text-pacova-pink mb-3">{statusText}</p>
-
-      {/* Level Tag */}
-      <div className="border border-pacova-pink px-6 py-1 rounded-full bg-pacova-pink/10 font-pixelify text-sm text-pacova-pink shadow-neon-pink mb-4">
-        LEVEL {level}
-      </div>
-
-      {/* 3. XP PROGRESS BAR */}
-      <div className="w-full space-y-1 mb-6">
-        <div className="w-full h-3 bg-gray-900 border border-pacova-pink/40 rounded-full overflow-hidden p-0.5">
-          <div
-            className="h-full bg-pacova-pink rounded-full shadow-neon-pink transition-all duration-500"
-            style={{ width: `${xpPercentage}%` }}
-          />
-        </div>
-        <p className="font-vt323 text-sm text-gray-400 text-center tracking-widest">
-          {currentXp} / {maxXp} XP
+        {/* DETAILS (Textes agrandis et espacés) */}
+        <h2 className="font-pixelify text-3xl tracking-widest uppercase text-white mt-2 text-center">
+          {username}
+        </h2>
+        <p className="font-vt323 text-lg text-pacova-green mb-4 text-center tracking-widest uppercase animate-pulse">
+          {statusText}
         </p>
-      </div>
 
-      {/* 4. PLAYER STATS LIST */}
-      <div className="w-full space-y-3 font-vt323 text-xl text-gray-300 mb-6 px-2">
-        <div className="flex justify-between items-center border-b border-white/5 pb-1">
-          <span className="flex items-center gap-2">🎮 MATCHES PLAYED</span>
-          <span className="text-white font-bold">{stats.matchesPlayed}</span>
-        </div>
-        <div className="flex justify-between items-center border-b border-white/5 pb-1">
-          <span className="flex items-center gap-2">🏆 WINS</span>
-          <span className="text-white font-bold">{stats.wins}</span>
-        </div>
-        <div className="flex justify-between items-center border-b border-white/5 pb-1">
-          <span className="flex items-center gap-2">👾 LOSSES</span>
-          <span className="text-white font-bold">{stats.losses}</span>
-        </div>
-        <div className="flex justify-between items-center border-b border-white/5 pb-1">
-          <span className="flex items-center gap-2">📈 WIN RATE</span>
-          <span className="text-pacova-green font-bold">{stats.winRate}%</span>
+        {/* Level Tag */}
+        <div className="border border-pacova-green/40 px-6 py-1 rounded-full bg-pacova-green/10 font-pixelify text-xs text-pacova-green shadow-[0_0_10px_rgba(243,32,119,0.4)] mb-6 inline-block">
+          LEVEL {level}
         </div>
       </div>
 
-      {/* 5. EDIT PROFILE BUTTON */}
-      <PixelButton variant="outline-magenta" size="sm" className="w-full">
-        EDIT PROFILE
-      </PixelButton>
+      {/* 2. MILIEU : PROGRESS BARRES & STATS (Prend tout l'espace central disponible avec flex-1) */}
+      <div className="w-full flex-1 flex flex-col justify-center my-8 space-y-8 max-w-[90%]">
+        
+        {/* XP Progress Bar */}
+        <div className="w-full space-y-2">
+          <div className="w-full h-3 bg-gray-900 border border-pacova-green/40 rounded-full overflow-hidden p-0.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]">
+            <div
+              className="h-full bg-gradient-to-r from-pacova-green to-green-500 rounded-full shadow-[0_0_12px_rgba(243,32,119,0.9)] transition-all duration-500"
+              style={{ width: `${xpPercentage}%` }}
+            />
+          </div>
+          <p className="font-vt323 text-sm text-gray-400 text-center tracking-widest">
+            {currentXp} / {maxXp} XP
+          </p>
+        </div>
+
+        {/* Player Stats (Lignes plus espacées verticalement avec py-2 et text-xl) */}
+        <div className="w-full space-y-4 font-vt323 text-xl text-gray-300">
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <span className="text-gray-400 tracking-wider">🎮 MATCHES PLAYED</span>
+            <span className="text-white font-bold text-2xl">{stats.matchesPlayed}</span>
+          </div>
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <span className="text-gray-400 tracking-wider">🏆 WINS</span>
+            <span className="text-white font-bold text-2xl">{stats.wins}</span>
+          </div>
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <span className="text-gray-400 tracking-wider">👾 LOSSES</span>
+            <span className="text-white font-bold text-2xl">{stats.losses}</span>
+          </div>
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <span className="text-gray-400 tracking-wider">📈 WIN RATE</span>
+            <span className="text-pacova-green font-bold text-2xl drop-shadow-[0_0_8px_rgba(142,214,3,0.6)]">
+              {stats.winRate}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. BAS : BOUTON ACTION (Ancré tout en bas avec mt-auto) */}
+      <div className="w-full pt-4 mt-auto max-w-[90%] mb-2">
+        <PixelButton variant="olive-yellow" size="sm" className="w-full py-3 text-base tracking-widest">
+          EDIT PROFILE
+        </PixelButton>
+      </div>
+      
     </Card>
   );
 };
