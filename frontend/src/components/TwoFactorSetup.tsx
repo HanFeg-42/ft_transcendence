@@ -5,7 +5,7 @@ import Card from "./ui/Card";
 import { useAuth } from "../context/AuthContext";
 
 export default function TwoFactorSetup() {
-  const { token, user, verifyUser } = useAuth();
+  const { token, user, logout, verifyUser } = useAuth();
 
   const [qrCode, setQrCode] = useState("");
   const [code, setCode] = useState("");
@@ -100,7 +100,14 @@ export default function TwoFactorSetup() {
         return;
       }
 
-      await verifyUser();
+      const userWasRefreshed = await verifyUser();
+
+      if (!userWasRefreshed) {
+        logout();
+        setError(
+          "2FA was disabled, but account details could not be refreshed. Please sign in again.",
+        );
+      }
     } catch (error) {
       console.error("Failed to disable 2FA:", error);
       setError("Unable to connect to the server");

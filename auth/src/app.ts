@@ -3,7 +3,10 @@ import cors from "cors";
 
 import { register } from "./registerController";
 import { login } from "./loginController";
-import { authenticateToken } from "./authMiddleware";
+import {
+  authenticateToken,
+  requireRecentAuthentication,
+} from "./authMiddleware";
 import type { AuthenticatedRequest } from "./types/auth";
 import authRoutes from "./routes/auth.routes";
 import { prisma } from "./prisma";
@@ -70,6 +73,11 @@ app.get("/me", authenticateToken, async (req, res) => {
 app.post("/2fa/setup", authenticateToken, setupTwoFactor);
 app.post("/2fa/confirm", authenticateToken, confirmTwoFactor);
 app.post("/2fa/verify-login", verifyTwoFactorLogin);
-app.post("/2fa/disable", authenticateToken, disableTwoFactor);
+app.post(
+  "/2fa/disable",
+  authenticateToken,
+  requireRecentAuthentication,
+  disableTwoFactor,
+);
 
 export default app;
