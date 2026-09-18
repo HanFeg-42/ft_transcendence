@@ -16,7 +16,7 @@ export const Input: React.FC<InputProps> = ({
     <div className="flex flex-col gap-1.5 w-full">
       {/* 1. Affichage du label s'il existe */}
       {label && (
-        <label className="font-pixelify text-pacova-pink text-l uppercase tracking-wide">
+        <label className="font-pixelify text-pacova-pink text-base uppercase tracking-wide">
           {label}
         </label>
       )}

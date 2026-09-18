@@ -22,12 +22,12 @@ const routeMap: Record<string, string> = {
 };
 
 const ACHIEVEMENTS_DATA = [
-  { id: 'champion', title: 'CHAMPION', description: 'Win 100 matches', image: championImg },
-  { id: 'ghost-hunter', title: 'GHOST HUNTER', description: 'Defeat 50 ghosts', image: ghostHanterImg },
-  { id: 'cherry-collector', title: 'CHERRY COLLECTOR', description: 'Collect 200 cherries', image: cherrysImg },
-  { id: 'speedster', title: 'SPEEDSTER', description: 'Win 10 matches in a row', image: speederImg },
-  { id: 'pac-maniac', title: 'PAC-MANIAC', description: 'Play 500 matches', image: pacManiacImg },
-  { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', image: tournamentImg },
+  { id: 'champion', title: 'CHAMPION', description: 'Win 100 matches', image: championImg, borderColor: 'border-amber-400', textColor: 'text-amber-400' },
+  { id: 'ghost-hunter', title: 'GHOST HUNTER', description: 'Defeat 50 ghosts', image: ghostHanterImg, borderColor: 'border-pink-500', textColor: 'text-pink-500' },
+  { id: 'cherry-collector', title: 'CHERRY COLLECTOR', description: 'Collect 200 cherries', image: cherrysImg, borderColor: 'border-red-500', textColor: 'text-red-500' },
+  { id: 'speedster', title: 'SPEEDSTER', description: 'Win 10 matches in a row', image: speederImg, borderColor: 'border-yellow-400', textColor: 'text-yellow-400' },
+  { id: 'pac-maniac', title: 'PAC-MANIAC', description: 'Play 500 matches', image: pacManiacImg, borderColor: 'border-cyan-400', textColor: 'text-cyan-400' },
+  { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', image: tournamentImg, borderColor: 'border-purple-500', textColor: 'text-purple-500' },
 ];
 
 /** Renders the responsive user profile dashboard. */
@@ -84,7 +84,7 @@ export default function ProfilePage() {
                   <img 
                     src={ICONS.diamond} 
                     alt="Diamond Rank" 
-                    className="w-20 h-20 object-contain image-rendering-pixelated drop-shadow-[0_0_15px_rgba(243,32,119,0.6)] animate-pulse"
+                    className="w-20 h-20 object-contain image-rendering-pixelated drop-shadow-[0_0_15px_rgba(243,32,119,0.6)] animate-pulse motion-reduce:transition-none"
                   />
                   <h3 className="font-pixelify text-xl text-pacova-gray uppercase tracking-wide drop-shadow-[0_0_8px_rgba(142,214,3,0.4)]">
                     DIAMOND II
