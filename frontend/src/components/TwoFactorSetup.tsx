@@ -100,7 +100,12 @@ export default function TwoFactorSetup() {
         return;
       }
 
-      await verifyUser();
+      const verified = await verifyUser();
+
+      if (!verified) {
+        setError("2FA was disabled, but we couldn't refresh your session.");
+        return;
+      }
     } catch (error) {
       console.error("Failed to disable 2FA:", error);
       setError("Unable to connect to the server");
@@ -140,7 +145,7 @@ export default function TwoFactorSetup() {
           <p className="font-vt323 text-gray-400 text-center text-lg mt-2">
             Your account requires an authenticator code when you sign in.
           </p>
-          
+
           <PixelButton
             type="button"
             variant="filled-green"
