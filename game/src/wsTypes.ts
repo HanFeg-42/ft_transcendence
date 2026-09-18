@@ -7,12 +7,7 @@ import {
   GameState,
   JoinGamePayload,
 } from "../../shared/types/game-types";
-import {
-  endSession,
-  getSession,
-  joinSession,
-  startSessionLoop,
-} from "./gameSessions";
+import { endSession, getSession, joinSession } from "./gameSessions";
 import { applyInput, tick } from "./engine/engine";
 
 // --- Room registry ---------------------------------------------------
@@ -42,8 +37,15 @@ function broadcast(gameId: string, eventName: string, data: unknown) {
 
 // Handle a new connection
 function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
-  const userId: number = Number(req.headers["x-user-id"]);
-  console.log("[GAME-SERVICE] Client connected from:", req.url);
+  const userId = req.headers["x-user-id"] as string | undefined;
+
+  if (!userId) {
+    console.warn("[GAME-SERVICE] Connection missing x-user-id, rejecting");
+    ws.close(1008, "Missing identity");
+    return;
+  }
+
+  console.log("[GAME-SERVICE] Client connected:", userId, "from:", req.url);
 
   // Listen for incoming data packets from the client
   ws.on("message", (rawData: RawData) => {
@@ -52,7 +54,7 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 
   // Listen for client disconnects (tab closed, lost connection)
   ws.on("close", (code) => {
-    handleClose(ws, code);
+    handleClose(ws, code, userId);
   });
 
   // Listen for low-level socket errors
@@ -62,8 +64,8 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 }
 
 // Handle messages from the frontend
-function handleMessage(ws: WebSocket, rawData: RawData, userId: number) {
-  console.log(`[GAME-SERVICE] Player sent message`);
+function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
+  console.log(`[GAME-SERVICE] Player ${userId} sent message`);
   // Convert incoming binary buffer into a plain text string
   const rawText = rawData.toString();
 
@@ -102,8 +104,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: number) {
 
       activeLoops.set(gameId, loopId);
     }
-
-    // console.log(`[GAME-SERVICE] Client joined room ${gameId}`);
+    console.log(`[GAME-SERVICE] Client ${userId} joined room ${gameId}`);
     // return;
   }
 
@@ -146,8 +147,8 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: number) {
 }
 
 // Handle disconnection
-function handleClose(ws: WebSocket, code: number) {
-  console.log(`[GAME-SERVICE] Player left the game (Code: ${code})`);
+function handleClose(ws: WebSocket, code: number, userId: string) {
+  console.log(`[GAME-SERVICE] Player left the game: ${userId} (Code: ${code})`);
 
   // Cleanup active game session...
 

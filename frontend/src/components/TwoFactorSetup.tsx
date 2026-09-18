@@ -81,6 +81,39 @@ export default function TwoFactorSetup() {
     }
   };
 
+  const handleDisable = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/2fa/disable", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to disable 2FA");
+        return;
+      }
+
+      const verified = await verifyUser();
+
+      if (!verified) {
+        setError("2FA was disabled, but we couldn't refresh your session.");
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to disable 2FA:", error);
+      setError("Unable to connect to the server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card variant="green" className="p-5">
       <div className="flex items-center justify-between mb-4">
@@ -112,6 +145,17 @@ export default function TwoFactorSetup() {
           <p className="font-vt323 text-gray-400 text-center text-lg mt-2">
             Your account requires an authenticator code when you sign in.
           </p>
+
+          <PixelButton
+            type="button"
+            variant="filled-green"
+            size="md"
+            disabled={loading}
+            onClick={handleDisable}
+            className="w-full mt-4"
+          >
+            {loading ? "DISABLING..." : "DISABLE 2FA"}
+          </PixelButton>
         </div>
       ) : !qrCode ? (
         <>
@@ -140,8 +184,8 @@ export default function TwoFactorSetup() {
             </p>
 
             <p className="text-gray-400 text-lg mt-2">
-              Open Google Authenticator, Microsoft Authenticator,
-              or another TOTP application.
+              Open Google Authenticator, Microsoft Authenticator, or another
+              TOTP application.
             </p>
           </div>
 

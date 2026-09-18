@@ -7,6 +7,7 @@ import type { PlayerInputPayload, Direction } from '../../../shared/types/game-t
 
 
 export function useGameSocket(url: string) {
+  const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
 
   useEffect(() => {

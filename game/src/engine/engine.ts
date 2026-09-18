@@ -17,7 +17,7 @@ import { stepPlayer, stepChaser, ahead } from "./movement";
 const CENTER_OFFSET = 4;
 const TICKS_PER_SECOND = 30;
 
-export const addPlayer = (playerId: number, state: GameState) => {
+export const addPlayer = (playerId: string, state: GameState) => {
   if (state.players.length >= 2) return;
   const spawn: Tile = findSpawn();
   state.players[0].spawn = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
@@ -36,7 +36,7 @@ export const addPlayer = (playerId: number, state: GameState) => {
 };
 
 export const createGame = (
-  playerId: number,
+  playerId: string,
   timeLimit: number = 360,
 ): GameState => {
   const players: Player[] = [
@@ -77,7 +77,7 @@ const tilesAreEqual = (a: Tile, b: Tile): boolean => {
 
 export const applyInput = (
   state: GameState,
-  playerId: number,
+  playerId: string,
   dir: Direction,
 ) => {
   const player = state.players.find((p) => p.id === playerId);

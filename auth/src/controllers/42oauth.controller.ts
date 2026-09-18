@@ -30,7 +30,6 @@ export const redirectTo42 = (req: Request, res: Response): void => {
 
 import { Request, Response } from 'express';
 
-// ... (Garde l'interface et redirectTo42 ici)
 
 /**
  * 3. Deuxième fonction : Le Callback 42
@@ -138,7 +137,6 @@ export const handle42Callback = async (req: Request, res: Response): Promise<voi
     );
 
     // On envoie le JWT dans un cookie sécurisé et on redirige l'utilisateur
-    // const frontendUrl = process.env.FRONTEND_URL || 'https://localhost:443'
     res.cookie('jwt', token, { httpOnly: true, secure: false });
     res.redirect(`${process.env.FRONTEND_URL}/home`);
     

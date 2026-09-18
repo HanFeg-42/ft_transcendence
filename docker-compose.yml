@@ -56,7 +56,7 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: frontend
     ports:
-      - "443:443"
+      - "4438:443"
     depends_on:
       - api-gateway
     networks:
@@ -67,6 +67,19 @@ services:
       context: .
       dockerfile: chat/Dockerfile
     container_name: chat
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pacova
+
+  user:
+    build:
+      context: .
+      dockerfile: user/Dockerfile
+    container_name: user
     env_file:
       - .env
     depends_on:

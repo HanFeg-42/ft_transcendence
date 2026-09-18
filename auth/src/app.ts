@@ -5,11 +5,14 @@ import { register } from "./registerController";
 import { login } from "./loginController";
 import { authenticateToken } from "./authMiddleware";
 import type { AuthenticatedRequest } from "./types/auth";
-import authRoutes from './routes/auth.routes';
+import authRoutes from "./routes/auth.routes";
 import { prisma } from "./prisma";
-import { setupTwoFactor, confirmTwoFactor } from "./twoFactorController";
+import {
+  setupTwoFactor,
+  confirmTwoFactor,
+  disableTwoFactor,
+} from "./twoFactorController";
 import { verifyTwoFactorLogin } from "./2faLoginController";
-
 
 const app = express();
 
@@ -21,18 +24,12 @@ app.use(
 
 app.use(express.json());
 
-/*
- * Basic service route
- */
 app.get("/", (_req, res) => {
   res.status(200).json({
     message: "Auth service is running",
   });
 });
 
-/*
- * Health check
- */
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
@@ -40,16 +37,10 @@ app.get("/health", (_req, res) => {
   });
 });
 
-/*
- * Authentication routes
- */
 app.post("/register", register);
 app.post("/login", login);
-app.use('/42', authRoutes); // express va comparer le rest de l URL avec les racine indique dans authRoutes()
+app.use("/42", authRoutes); // express va comparer le rest de l URL avec les racine indique dans authRoutes()
 
-/*
- * Protected user route
- */
 app.get("/me", authenticateToken, async (req, res) => {
   const userId = (req as AuthenticatedRequest).userId;
 
@@ -65,8 +56,6 @@ app.get("/me", authenticateToken, async (req, res) => {
     });
   }
 
-
-
   return res.status(200).json({
     user: {
       id: user.id,
@@ -81,5 +70,6 @@ app.get("/me", authenticateToken, async (req, res) => {
 app.post("/2fa/setup", authenticateToken, setupTwoFactor);
 app.post("/2fa/confirm", authenticateToken, confirmTwoFactor);
 app.post("/2fa/verify-login", verifyTwoFactorLogin);
+app.post("/2fa/disable", authenticateToken, disableTwoFactor);
 
 export default app;

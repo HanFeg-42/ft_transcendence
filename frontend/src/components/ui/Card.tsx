@@ -1,10 +1,9 @@
 import React from 'react';
 
-// Options pour personnaliser la carte
 interface CardProps {
-  children: React.ReactNode; // Tout ce qu'on mettra à l'intérieur de la carte
-  variant?: 'pink' | 'green' | 'gray'; // Permet de choisir entre la version Rose et la version Verte
-  className?: string; // Pour ajouter du style personnalisé si besoin
+  children: React.ReactNode;
+  variant?: 'pink' | 'green' | 'gray';
+  className?: string;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -12,25 +11,35 @@ export const Card: React.FC<CardProps> = ({
   variant = 'pink',
   className = '',
 }) => {
-  // Sélection des styles selon la variante choisie
   const borderStyle = 
-    variant === 'pink' ? 'border-pacova-pink/40' : 
-    variant === 'green' ? 'border-pacova-green' : 'border-pacova-gray';
+    variant === 'pink' ? 'border-pacova-pink/50' : 
+    variant === 'green' ? 'border-pacova-green/50' : 'border-pacova-gray';
 
   const glowStyle = 
-variant === 'pink' ? 'drop-shadow-[0_0_12px_rgba(243,32,119,0.5)]' : 
-  variant === 'green' ? 'drop-shadow-[0_0_12px_rgba(142,214,3,0.5)]' : '';
+    variant === 'pink' ? 'drop-shadow-[0_0_12px_rgba(243,32,119,0.5)]' : 
+    variant === 'green' ? 'drop-shadow-[0_0_12px_rgba(142,214,3,0.5)]' :
+    variant === 'gray' ? 'drop-shadow-[0_0_12px_#00000080]' : '';
+
+  // Applique le texte noir pour 'gray', sinon reste blanc
+  const textStyle = variant === 'gray' ? 'text-black' : 'text-white';
+
   return (
     <div className={`
       relative
+      w-full
+      h-full
+      flex
+      flex-col
+      justify-between
       bg-pacova-surface
-      border-0
+      border-1
       ${borderStyle}
       ${glowStyle}
-      p-6
-      text-white
+      ${textStyle}
+      p-4 sm:p-5 md:p-6
       rounded-xl
       overflow-hidden
+      transition-all
       ${className}
     `}>
       {/* Effet d'écran rétro */}

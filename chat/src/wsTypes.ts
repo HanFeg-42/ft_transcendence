@@ -6,13 +6,13 @@ import { ChatEvents, ChatMessageOutgoing, ChatMessageIncoming } from '../../shar
 
 // Handle a new connection
 function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
-  const userId = "tmp";
+  const userId = req.headers['x-user-id'] as string | undefined;
 
-//   if (!userId) {
-//     console.warn('[CHAT-SERVICE] Connection missing x-user-id, rejecting');
-//     ws.close(1008, 'Missing identity');
-//     return;
-//   }
+  if (!userId) {
+    console.warn('[CHAT-SERVICE] Connection missing x-user-id, rejecting');
+    ws.close(1008, 'Missing identity');
+    return;
+  }
 
   console.log('[CHAT-SERVICE] Client connected:', userId);
 

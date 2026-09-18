@@ -3,7 +3,7 @@ import type { GameState } from "../../shared/types/game-types";
 
 const sessions = new Map<string, GameState>();
 
-export const joinSession = (gameId: string, playerId: number) => {
+export const joinSession = (gameId: string, playerId: string) => {
   if (!sessions.has(gameId)) sessions.set(gameId, createGame(playerId));
   else addPlayer(playerId, sessions.get(gameId)!);
   return sessions.get(gameId)!;

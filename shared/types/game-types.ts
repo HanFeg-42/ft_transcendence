@@ -61,7 +61,7 @@ export interface Tile {
 }
 
 export interface Player {
-  id: number;
+  id: string;
   spawn: Tile;
   tile: Tile;
   dir: Direction | null;

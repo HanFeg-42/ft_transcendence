@@ -70,7 +70,7 @@ const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
 };
 
 export default function Game() {
-  const stateRef = useRef<GameState>(createGame([123]));
+  const stateRef = useRef<GameState>(createGame(["123"]));
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const intervalRef = useRef<number>(undefined);
 
@@ -97,7 +97,7 @@ export default function Game() {
 
     if (!ctx) return;
 
-    stateRef.current = createGame([123]);
+    stateRef.current = createGame(["123"]);
 
     setHud({
       players: stateRef.current.players.map(({ score, lives }) => ({
@@ -119,7 +119,7 @@ export default function Game() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const dir = KEY_MAP[e.key];
-      if (dir) applyInput(stateRef.current, 123, dir);
+      if (dir) applyInput(stateRef.current, "123", dir);
     };
     window.addEventListener("keydown", handleKeyDown);
 

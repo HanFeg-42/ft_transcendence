@@ -12,7 +12,7 @@ const CENTER_OFFSET = 4;
 const TICKS_PER_SECOND = 30;
 
 export const createGame = (
-  playerIds: number[],
+  playerIds: string[],
   timeLimit: number = 360,
 ): GameState => {
   const center: Tile = findSpawn();
@@ -60,7 +60,7 @@ const tilesAreEqual = (a: Tile, b: Tile): boolean => {
 
 export const applyInput = (
   state: GameState,
-  playerId: number,
+  playerId: string,
   dir: Direction,
 ) => {
   const player = state.players.find((p) => p.id === playerId);
