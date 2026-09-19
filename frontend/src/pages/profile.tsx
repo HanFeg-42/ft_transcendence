@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Background from '../components/ui/Background';
 import Navbar from '../components/ui/Navbar';
 import ProfileCard from '../components/ui/ProfileCard';
@@ -5,6 +6,7 @@ import GameUI from '../components/ui/GameUI';
 import Card from '../components/ui/Card';
 import { ICONS } from '../utils/icons';
 import { useNavigate } from 'react-router-dom';
+import { getMyProfile, type ProfileData } from '../services/userService';
 
 import championImg from '../assets/achievement/champion.png';
 import cherrysImg from '../assets/achievement/cherrys.png';
@@ -31,8 +33,24 @@ const ACHIEVEMENTS_DATA = [
 ];
 
 /** Renders the responsive user profile dashboard. */
-export default function ProfilePage() {
+export default function profile() {
   const navigate = useNavigate();
+
+  // États pour stocker le profil et gérer le chargement/erreur
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    getMyProfile()
+      .then((data) => {
+        setProfile(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Erreur profil:', err);
+        setLoading(false);
+      });
+  }, []);
 
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
@@ -45,21 +63,25 @@ export default function ProfilePage() {
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
-        {/* COLONNE GAUCHE : Profil sans conteneur superflu autour */}
+        {/* COLONNE GAUCHE : Profil connecté aux données réelles */}
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col">
-          <ProfileCard
-            username="NOUSS"
-            statusText="Ready to play"
-            level={24}
-            currentXp={2350}
-            maxXp={3000}
-            stats={{
-              matchesPlayed: 243,
-              wins: 176,
-              losses: 67,
-              winRate: 72,
-            }}
-          />
+          {loading ? (
+            <Card variant="gray" className="w-full h-full flex items-center justify-center p-8">
+              <span className="font-pixelify text-pacova-green text-lg animate-pulse">
+                LOADING DATA...
+              </span>
+            </Card>
+          ) : (
+            <ProfileCard
+              username={profile?.username}
+              avatarUrl={profile?.avatar}
+              statusText={profile?.statusText || 'Ready to play'}
+              level={profile?.level ?? 1}
+              currentXp={profile?.currentXp ?? 0}
+              maxXp={profile?.maxXp ?? 1000}
+              stats={profile?.stats}
+            />
+          )}
         </div>
 
         {/* COLONNE DROITE : Match History, Rank en haut & Achievements en bas */}
@@ -116,7 +138,6 @@ export default function ProfilePage() {
             {/* Grille de cartes individuelles inspirée de votre modèle Figma */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {ACHIEVEMENTS_DATA.map((item) => (
-                /* 💡 On réutilise votre composant <Card> individuellement avec la variante 'gray' ou 'pink' */
                 <Card 
                   key={item.id} 
                   variant="gray" 
@@ -149,7 +170,6 @@ export default function ProfilePage() {
               ))}
             </div>
           </div>
-
 
         </div>
 

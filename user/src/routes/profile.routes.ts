@@ -5,20 +5,30 @@ const router = Router();
 
 // GET /profile/me - Profil de l'utilisateur connecté
 router.get('/me', async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user?.id; // Injecté par ton middleware d'auth JWT
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const userId = (req as any).user?.id;
+  
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, username: true, avatar: true, bio: true }
+  });
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, username: true, avatar: true, bio: true, createdAt: true }
-    });
+  if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    return res.json(user);
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message });
-  }
+  // Tu peux renvoyer l'objet formatté pour ton composant React :
+  return res.json({
+    username: user.username,
+    avatarUrl: user.avatar,
+    statusText: user.bio || 'Ready to play',
+    level: 1, // À connecter avec ta logique d'XP/Level plus tard
+    currentXp: 500,
+    maxXp: 1000,
+    stats: {
+      matchesPlayed: 0,
+      wins: 0,
+      losses: 0,
+      winRate: 0
+    }
+  });
 });
 
 // GET /profile/:id - Consulter le profil public d'un autre joueur
