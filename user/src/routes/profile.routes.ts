@@ -3,32 +3,45 @@ import { prisma } from '../prisma';
 
 const router = Router();
 
+// Extraire proprement l'ID utilisateur injecté par l'API Gateway
+function getUserIdFromHeader(req: Request): string | null {
+  const userId = req.headers['x-user-id'];
+  if (!userId) return null;
+  return Array.isArray(userId) ? userId[0] : userId;
+}
+
 // GET /profile/me - Profil de l'utilisateur connecté
 router.get('/me', async (req: Request, res: Response) => {
-  const userId = (req as any).user?.id;
-  
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, username: true, avatar: true, bio: true }
-  });
+  const userId = getUserIdFromHeader(req);
+  if (!userId) {
+    return res.status(401).json({ error: 'Non autorisé : Header x-user-id manquant' });
+  }
 
-  if (!user) return res.status(404).json({ error: 'User not found' });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true, avatar: true, bio: true }
+    });
 
-  // Tu peux renvoyer l'objet formatté pour ton composant React :
-  return res.json({
-    username: user.username,
-    avatarUrl: user.avatar,
-    statusText: user.bio || 'Ready to play',
-    level: 1, // À connecter avec ta logique d'XP/Level plus tard
-    currentXp: 500,
-    maxXp: 1000,
-    stats: {
-      matchesPlayed: 0,
-      wins: 0,
-      losses: 0,
-      winRate: 0
-    }
-  });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    return res.json({
+      username: user.username,
+      avatarUrl: user.avatar,
+      statusText: user.bio || 'Ready to play',
+      level: 1,
+      currentXp: 500,
+      maxXp: 1000,
+      stats: {
+        matchesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        winRate: 0
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /profile/:id - Consulter le profil public d'un autre joueur
@@ -48,13 +61,14 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 // PATCH /profile/me - Mettre à jour son propre profil
 router.patch('/me', async (req: Request, res: Response) => {
+  const userId = getUserIdFromHeader(req);
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
-    const userId = (req as any).user?.id;
     const { username, avatar, bio } = req.body;
 
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-    // Empêcher les doublons de username
     if (username) {
       const existingUser = await prisma.user.findUnique({ where: { username } });
       if (existingUser && existingUser.id !== userId) {
@@ -65,10 +79,9 @@ router.patch('/me', async (req: Request, res: Response) => {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        //... : ne mettre à jour que les champs qui ont réellement été fournis
-        ...(username && { username }),//exist and != null
+        ...(username && { username }),
         ...(avatar && { avatar }),
-        ...(bio !== undefined && { bio }),//could be null if user want to clear its bio
+        ...(bio !== undefined && { bio }),
       },
       select: { id: true, username: true, avatar: true, bio: true }
     });

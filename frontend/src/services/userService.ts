@@ -1,5 +1,5 @@
 // src/services/userService.ts
-const API_URL = 'http://localhost:8443/users';
+const API_URL = '/api/users';
 
 export interface ProfileData {
   username: string;
