@@ -24,9 +24,9 @@ function PacManIcon({ className = '', flip = false }: { className?: string; flip
 }
 
 const MOCK_FRIENDS: { id: number; username: string; icon: IconName; status: 'online' | 'offline' | 'busy' }[] = [
-  { id: 2, username: 'user1', icon: 'gost-pink', status: 'online' },
-  { id: 3, username: 'user2', icon: 'gost-red', status: 'online' },
-  { id: 4, username: 'yassine', icon: 'gost-blue', status: 'offline' },
+  { id: 1, username: 'user1', icon: 'gost-pink', status: 'online' },
+  { id: 2, username: 'user2', icon: 'gost-red', status: 'online' },
+  { id: 3, username: 'yassine', icon: 'gost-blue', status: 'offline' },
 ];
 
 const routeMap: Record<string, string> = {
@@ -79,6 +79,23 @@ export default function Chat() {
     setDraft('');
   };
 
+  // FIX: MOCK_FRIENDS' hardcoded ids (1, 2, 3) can collide with a real
+  // logged-in user's id, which would otherwise let you select "yourself"
+  // as a friend and message yourself. Filter your own id out of the list
+  // shown in the sidebar. Runs after the !user early-return below via the
+  // effect further down, and is computed here for the render itself.
+  const visibleFriends = user ? MOCK_FRIENDS.filter((friend) => friend.id !== Number(user.id)) : MOCK_FRIENDS;
+
+  // FIX: if the default/current selection happens to be yourself (because
+  // MOCK_FRIENDS[0] or a previous selection matches your real id), fall
+  // back to the first non-you friend as soon as we know who "you" are.
+  useEffect(() => {
+    if (user && selectedFriend.id === Number(user.id)) {
+      const fallback = MOCK_FRIENDS.find((friend) => friend.id !== Number(user.id));
+      if (fallback) setSelectedFriend(fallback);
+    }
+  }, [user?.id]);
+
   if (!user || !token) {
     return (
       <Background>
@@ -117,7 +134,7 @@ export default function Chat() {
           </h2>
 
           <div className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0 p-4">
-            {MOCK_FRIENDS.map((friend) => {
+            {visibleFriends.map((friend) => {
               const isSelected = friend.id === selectedFriend.id;
               return (
                 <button
