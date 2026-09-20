@@ -11,7 +11,7 @@ import Game from "./pages/Game";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import DesignSystem from './pages/DesignSystem'
 // import Design from './pages/Design'
-import Profile from './pages/ProfilePage'
+import Profile from "./pages/ProfilePage";
 import OnlineGame from "./pages/OnlineGame"; // TEMP
 import ChatWs from "./pages/ChatWs"; // TEMP
 
@@ -29,11 +29,11 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
+        <Route path="/online-game" element={<OnlineGame />} /> {/* TEMP */}
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
       {/* <Route path="/Design" element={<Design />} /> */}
       <Route path="/ProfilePage" element={<Profile />} />
-      <Route path="/online-game" element={<OnlineGame />} /> {/* TEMP */}
       <Route path="/ws-chat" element={<ChatWs />} /> {/* TEMP */}
     </Routes>
   );
