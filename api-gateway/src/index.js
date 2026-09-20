@@ -60,6 +60,21 @@ app.use(
   })
 );
 
+app.use(
+  '/chat',
+  authenticateToken,
+  createProxyMiddleware({
+    target: process.env.CHAT_SERVICE_URL || 'http://chat:3003',
+    changeOrigin: true,
+    on: {
+      error: (err, req, res) => {
+        console.error('[API-GATEWAY] Chat service error:', err.message);
+        if (!res.headersSent) res.status(502).json({ error: 'Chat service unreachable' });
+      }
+    }
+  })
+);
+
 // ws-only proxy instances, only ever used via .upgrade() below
 const gameWsProxy = createProxyMiddleware({
   target: process.env.GAME_SERVICE_URL || 'http://game:3002',
