@@ -1,12 +1,22 @@
-import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useGameSocket } from "../hooks/useGameSocket";
+import Input from "../components/ui/Input";
+import PixelButton from "../components/ui/PixelButton";
+import { useState } from "react";
+
+// const TEST_TOKEN =
+//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4OTg2MTAzNiwiZXhwIjoxNzg5ODY0NjM2fQ.6dh0QOHILRk2dOSqwD78tSkh89TUlhGcI1liKUlV7qA";
+
+import { useEffect, useRef } from "react";
 import { MAZE, WIDTH, HEIGHT } from "../../../shared/engine/maze";
-import { createGame, applyInput, tick } from "../../../shared/engine/engine";
-import type { GameState, Direction, Tile, GameStatus } from "../../../shared/types/game-types";
+import type {
+  GameState,
+  Direction,
+  Tile,
+} from "../../../shared/types/game-types";
 import { ahead, TICKS_PER_TILE } from "../../../shared/engine/movement";
 import ArenaBackground from "../components/ui/ArenaBackground";
 import Badge from "../components/ui/Badge";
-import PixelButton from "../components/ui/PixelButton";
-// import Badge from "../components/ui/Badge";
 
 const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
@@ -69,85 +79,41 @@ const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
   });
 };
 
-export default function Game() {
-  const stateRef = useRef<GameState>(createGame("local"));
+const GameRoom = ({ gameId }: { gameId: string }) => {
+  const { user, token } = useAuth();
+  const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const intervalRef = useRef<number>(undefined);
 
-  const startLoop = (ctx: CanvasRenderingContext2D) => {
-    intervalRef.current = setInterval(() => {
-      tick(stateRef.current);
-      setHud({
-        players: stateRef.current.players.map(({ score, lives }) => ({
-          score,
-          lives,
-        })),
-        timeRemaining: stateRef.current.timeRemaining,
-        status: stateRef.current.status,
-      });
-
-      if (stateRef.current.status !== "playing")
-        clearInterval(intervalRef.current);
-      draw(ctx, stateRef.current);
-    }, 1000 / 30);
-  };
-
-  const restart = () => {
-    const ctx = canvasRef.current?.getContext("2d");
-
-    if (!ctx) return;
-
-    stateRef.current = createGame("local");
-
-    setHud({
-      players: stateRef.current.players.map(({ score, lives }) => ({
-        score,
-        lives,
-      })),
-      timeRemaining: stateRef.current.timeRemaining,
-      status: stateRef.current.status,
-    });
-    startLoop(ctx);
-  };
-
-  const [hud, setHud] = useState<{
-    players: { score: number; lives: number }[];
-    timeRemaining: number;
-    status: GameStatus;
-  }>({ players: [], timeRemaining: 360, status: "playing" });
+  const {
+    gameState: state,
+    // isConnected,
+    sendPlayerInput,
+  } = useGameSocket(url, gameId, user?.username ?? "guest");
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const dir = KEY_MAP[e.key];
-      if (dir) applyInput(stateRef.current, "local", dir);
+      if (dir) sendPlayerInput(dir);
     };
     window.addEventListener("keydown", handleKeyDown);
 
-    const ctx = canvasRef.current?.getContext("2d");
-
-    if (!ctx) return;
-
-    setHud({
-      players: stateRef.current.players.map(({ score, lives }) => ({
-        score,
-        lives,
-      })),
-      timeRemaining: stateRef.current.timeRemaining,
-      status: stateRef.current.status,
-    });
-    startLoop(ctx);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      clearInterval(intervalRef.current);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || !state) return;
+
+    draw(ctx, state);
+  }, [state]);
+
+  if (!state) return <p>Joined the room {gameId}</p>;
   return (
     <ArenaBackground>
       <div className="flex-1 flex-col flex items-center justify-center gap-4">
         <div className="flex gap-4 w-152 justify-between">
-          <Badge variant="yellow">timeRemaining: {hud.timeRemaining} </Badge>
-          {hud.players.map((p, index) => (
+          <Badge variant="yellow">timeRemaining: {state.timeRemaining} </Badge>
+          {state.players.map((p, index) => (
             <Badge variant="green">
               Player{index + 1} score: {p.score} lives: {p.lives}
             </Badge>
@@ -159,16 +125,39 @@ export default function Game() {
             width={WIDTH * TILE_SIZE}
             height={HEIGHT * TILE_SIZE}
           />
-          {hud.status !== "playing" && (
+          {state.status !== "playing" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
-              <Badge variant={hud.status === "won" ? "green" : "red"}>
-                {hud.status === "won" ? "You Win!" : "Game Over"}
+              <Badge variant={state.status === "won" ? "green" : "red"}>
+                {state.status === "won" ? "You Win!" : "Game Over"}
               </Badge>
-              <PixelButton onClick={restart}>Restart</PixelButton>
             </div>
           )}
         </div>
       </div>
     </ArenaBackground>
   );
-}
+};
+
+const OnlineGame = () => {
+  const [gameRoom, setGameRoom] = useState<string | null>(null);
+  const [roomInput, setRoomInput] = useState<string>("");
+
+  if (!gameRoom)
+    return (
+      <ArenaBackground>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <Input
+            placeholder="Enter room name"
+            value={roomInput}
+            onChange={(e) => setRoomInput(e.target.value)}
+            className="text-center"
+          />
+          <PixelButton onClick={() => setGameRoom(roomInput)}>
+            Join gameroom
+          </PixelButton>
+        </div>
+      </ArenaBackground>
+    );
+  return <GameRoom gameId={gameRoom} />;
+};
+export default OnlineGame;

@@ -53,6 +53,15 @@ export default function Home() {
           PLAY NOW
         </PixelButton>
         
+        <PixelButton
+          variant="filled-pink"
+          size="lg"
+          onClick={() => navigate("/online-game")}
+          className="self-start"
+        >
+          PLAY ONLINE
+        </PixelButton>
+        
         <button
           onClick={handleLogout}
           className="font-vt323 text-pacova-pink text-lg underline self-start uppercase"

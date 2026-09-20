@@ -4,6 +4,7 @@ WORKDIR /app/game
 COPY game/package.json game/package-lock.json ./
 RUN npm ci
 
+COPY shared/engine ../shared/engine
 COPY shared/types ../shared/types
 COPY game/ .
 

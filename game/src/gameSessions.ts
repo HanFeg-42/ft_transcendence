@@ -1,4 +1,4 @@
-import { addPlayer, createGame, tick } from "./engine/engine";
+import { addPlayer, createGame, tick } from "../../shared/engine/engine";
 import type { GameState } from "../../shared/types/game-types";
 
 const sessions = new Map<string, GameState>();

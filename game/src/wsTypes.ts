@@ -8,7 +8,7 @@ import {
   JoinGamePayload,
 } from "../../shared/types/game-types";
 import { endSession, getSession, joinSession } from "./gameSessions";
-import { applyInput, tick } from "./engine/engine";
+import { applyInput, tick } from "../../shared/engine/engine";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so

@@ -4,7 +4,7 @@ import type {
   Chaser,
   Tile,
   Direction,
-} from "../../../shared/types/game-types";
+} from "../types/game-types";
 import {
   findChaserSpawns,
   findSpawn,
@@ -18,7 +18,8 @@ const CENTER_OFFSET = 4;
 const TICKS_PER_SECOND = 30;
 
 export const addPlayer = (playerId: string, state: GameState) => {
-  if (state.players.length >= 2) return;
+  if (state.players.length >= 2 || state.players[0].id == playerId) return;
+
   const spawn: Tile = findSpawn();
   state.players[0].spawn = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
   state.players[0].tile = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
@@ -159,7 +160,7 @@ export const tick = (state: GameState) => {
   if (!state.pellets.flat().some((hasPellet) => hasPellet))
     state.status = "won";
   else if (
-    state.players.every((player) => player.lives <= 0) ||
+    state.players.some((player) => player.lives <= 0) ||
     state.timeRemaining <= 0
   )
     state.status = "lost";

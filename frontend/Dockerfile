@@ -2,6 +2,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
+COPY shared/engine ../shared/engine
 COPY shared/types ../shared/types
 COPY frontend/ .
 RUN npm run build
