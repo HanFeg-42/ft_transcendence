@@ -18,7 +18,7 @@ export async function login(req: Request, res: Response) {
     },
   });
 
-  if (!user) {
+  if (!user || !user.passwordHash) {
     return res.status(401).json({
       error: "Invalid email or password",
     });
