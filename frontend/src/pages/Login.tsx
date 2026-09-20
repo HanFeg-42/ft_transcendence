@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Background from "../components/ui/Background";
@@ -27,6 +27,70 @@ export default function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const oauthExchangeStarted = useRef(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ticket = params.get("oauth_ticket");
+    const oauthError = params.get("error");
+
+    if (oauthExchangeStarted.current || (!ticket && !oauthError)) {
+      return;
+    }
+
+    oauthExchangeStarted.current = true;
+
+    // Remove the temporary ticket/error from the browser URL.
+    window.history.replaceState(null, "", window.location.pathname);
+
+    if (oauthError) {
+      setError(
+        oauthError === "oauth_cancelled"
+          ? "42 login was cancelled."
+          : "42 login failed. Please try again.",
+      );
+      return;
+    }
+
+    const completeOAuthLogin = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch("/api/auth/42/exchange", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ticket }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || "42 login failed. Please try again.");
+          return;
+        }
+
+        if (data.requiresTwoFactor) {
+          setChallengeToken(data.challengeToken);
+          setRequiresTwoFactor(true);
+          setTwoFactorCode("");
+          return;
+        }
+
+        login(data.user, data.token);
+        navigate("/home", { replace: true });
+      } catch {
+        setError("Unable to connect to the server. Please try 42 login again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void completeOAuthLogin();
+  }, [login, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -142,7 +206,7 @@ export default function Login() {
 
   // 42 OAuth
   const handle42Login = () => {
-    window.location.href = "https://localhost:443/api/auth/42/login";
+    window.location.href = "/api/auth/42/login";
   };
 
   return (
