@@ -1,20 +1,14 @@
 import express from 'express';
+import cors from 'cors';
 import profileRoutes from './routes/profile.routes';
-import { authenticateToken } from './middleware/auth.middleware'
-import cors from 'cors'
+import { authenticateToken } from './middleware/auth.middleware';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+// Charger les routes
+app.use('/profile', authenticateToken, profileRoutes);
 
-
-// Charger les routes de profil
-app.use('/profile' ,authenticateToken , profileRoutes);
-
-
-const PORT = 3004;
-app.listen(PORT, () => {
-    console.log(`User Microservice running on port ${PORT}`);
-});
+export default app;

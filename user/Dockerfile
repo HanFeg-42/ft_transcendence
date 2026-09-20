@@ -1,4 +1,7 @@
-FROM node:18-alpine
+FROM node:22-alpine
+
+# Installer les dépendances système requises par Prisma sous Alpine
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app/user
 
