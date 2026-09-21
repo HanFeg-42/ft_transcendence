@@ -7,6 +7,7 @@ import Card from '../components/ui/Card';
 import { ICONS } from '../utils/icons';
 import { useNavigate } from 'react-router-dom';
 import { getMyProfile, type ProfileData } from '../services/userService';
+import { useAuth } from '../context/AuthContext'; // 1. Importer useAuth
 
 import championImg from '../assets/achievement/champion.png';
 import cherrysImg from '../assets/achievement/cherrys.png';
@@ -33,24 +34,34 @@ const ACHIEVEMENTS_DATA = [
 ];
 
 /** Renders the responsive user profile dashboard. */
-export default function profile() {
+export default function Profile() { // 2. Nom de composant en Majuscule
   const navigate = useNavigate();
+  const { token } = useAuth(); // 3. Extraire le token du contexte React
 
-  // États pour stocker le profil et gérer le chargement/erreur
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getMyProfile()
+    // Si aucun token n'est présent dans le contexte React
+    if (!token) {
+      console.warn('Aucun token JWT disponible dans useAuth()');
+      setLoading(false);
+      return;
+    }
+
+    // Appel de getMyProfile en transmettant le token JWT
+    getMyProfile(token)
       .then((data) => {
         setProfile(data);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Erreur profil:', err);
+        console.error('Erreur chargement profil:', err);
+        setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [token]); // 4. Se déclenche dès que le token est disponible
 
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
@@ -63,12 +74,18 @@ export default function profile() {
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
-        {/* COLONNE GAUCHE : Profil connecté aux données réelles */}
+        {/* COLONNE GAUCHE : Profil */}
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col">
           {loading ? (
             <Card variant="gray" className="w-full h-full flex items-center justify-center p-8">
               <span className="font-pixelify text-pacova-green text-lg animate-pulse">
                 LOADING DATA...
+              </span>
+            </Card>
+          ) : error ? (
+            <Card variant="gray" className="w-full h-full flex items-center justify-center p-8 text-center">
+              <span className="font-pixelify text-red-500 text-sm">
+                FAILED TO LOAD PROFILE
               </span>
             </Card>
           ) : (
@@ -84,18 +101,14 @@ export default function profile() {
           )}
         </div>
 
-        {/* COLONNE DROITE : Match History, Rank en haut & Achievements en bas */}
+        {/* COLONNE DROITE : Match History, Rank & Achievements */}
         <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
           
-          {/* Ligne du Haut : Match History et Current Rank s'alignent parfaitement sur la hauteur */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch flex-1">
-            
-            {/* Match History */}
             <div className="md:col-span-2 flex flex-col h-full">
               <GameUI />
             </div>
 
-            {/* Current Rank */}
             <div className="md:col-span-1 flex h-full">
               <Card variant="gray" className="w-full h-full flex flex-col justify-between items-center text-center p-5 bg-pacova-surface/60 backdrop-blur-sm">
                 <span className="font-pixelify text-xl text-pacova-green uppercase tracking-widest self-start">
@@ -125,17 +138,14 @@ export default function profile() {
                 </div>
               </Card>
             </div>
-
           </div>
 
-            {/* Ligne du Bas : Achievements Cards indépendantes et immersives */}
+          {/* Achievements */}
           <div className="w-full flex flex-col gap-4 mt-4">
-            {/* Titre de section épuré sans grand conteneur */}
             <span className="font-pixelify text-xl text-pacova-pink uppercase tracking-widest block pl-1">
               ▼ ACHIEVEMENTS
             </span>
 
-            {/* Grille de cartes individuelles inspirée de votre modèle Figma */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {ACHIEVEMENTS_DATA.map((item) => (
                 <Card 
@@ -147,7 +157,6 @@ export default function profile() {
                             transform hover:scale-105 transition-all duration-300 ease-out 
                             min-h-[190px] cursor-pointer"
                 >
-                  {/* 1. L'image du succès prend une place maximale en haut */}
                   <div className="w-full flex-1 flex items-center justify-center mb-2">
                     <img 
                       src={item.image} 
@@ -157,7 +166,6 @@ export default function profile() {
                     />
                   </div>
 
-                  {/* 2. Les informations textuelles écrites à l'intérieur, en bas de la carte */}
                   <div className="w-full space-y-1.5 mt-auto">
                     <h4 className="font-pixelify text-xs sm:text-sm text-yellow-400 font-bold uppercase tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                       {item.title}
