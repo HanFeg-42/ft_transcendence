@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import { register } from "./registerController";
 import { login } from "./loginController";
@@ -23,6 +24,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (_req, res) => {
   res.status(200).json({

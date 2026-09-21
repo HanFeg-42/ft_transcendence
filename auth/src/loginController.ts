@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import jwt from "jsonwebtoken";
+import { createSession } from "./sessionTokens";
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
@@ -73,10 +74,7 @@ export async function login(req: Request, res: Response) {
   }
 
   // Normal login for users without 2FA
-  const token = jwt.sign({ userId: user.id }, jwtSecret, {
-    expiresIn: "1h",
-    algorithm: "HS256",
-  });
+  const token = createSession(res, user.id);
 
   return res.status(200).json({
     message: "Login successful",
