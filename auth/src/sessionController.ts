@@ -89,3 +89,13 @@ export async function refreshSession(req: Request, res: Response) {
     },
   });
 }
+
+export function logoutSession(_req: Request, res: Response) {
+  res.setHeader("Cache-Control", "no-store");
+
+  clearRefreshCookie(res);
+
+  return res.status(200).json({
+    message: "Logged out successfully",
+  });
+}
