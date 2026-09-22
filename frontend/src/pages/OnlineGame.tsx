@@ -8,13 +8,13 @@ import { useState } from "react";
 //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4OTg2MTAzNiwiZXhwIjoxNzg5ODY0NjM2fQ.6dh0QOHILRk2dOSqwD78tSkh89TUlhGcI1liKUlV7qA";
 
 import { useEffect, useRef } from "react";
-import { MAZE, WIDTH, HEIGHT } from "../../../shared/engine/maze";
+import { MAZE, WIDTH, HEIGHT } from "../engine/maze";
 import type {
   GameState,
   Direction,
   Tile,
 } from "../../../shared/types/game-types";
-import { ahead, TICKS_PER_TILE } from "../../../shared/engine/movement";
+import { ahead, TICKS_PER_TILE } from "../engine/movement";
 import ArenaBackground from "../components/ui/ArenaBackground";
 import Badge from "../components/ui/Badge";
 

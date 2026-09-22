@@ -1,4 +1,4 @@
-import type { Tile } from "../types/game-types";
+import type { Tile } from "../../../shared/types/game-types";
 
 export const MAZE: string[] = [
   "###################",

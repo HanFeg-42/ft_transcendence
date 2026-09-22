@@ -1,4 +1,4 @@
-import type { Chaser, Direction, Player, Tile } from "../types/game-types";
+import type { Chaser, Direction, Player, Tile } from "../../../shared/types/game-types";
 import { isWall } from "./maze";
 
 export const TICKS_PER_TILE = 8;

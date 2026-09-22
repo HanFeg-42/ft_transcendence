@@ -53,7 +53,7 @@ export interface GameOverPayload {
 }
 
 export type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
-export type GameStatus = "playing" | "won" | "lost";
+export type GameStatus = "waiting" | "playing" | "won" | "lost";
 
 export interface Tile {
   x: number;

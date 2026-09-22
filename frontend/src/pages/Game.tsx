@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { MAZE, WIDTH, HEIGHT } from "../../../shared/engine/maze";
-import { createGame, applyInput, tick } from "../../../shared/engine/engine";
+import { MAZE, WIDTH, HEIGHT } from "../engine/maze";
+import { createGame, applyInput, tick } from "../engine/engine";
 import type { GameState, Direction, Tile, GameStatus } from "../../../shared/types/game-types";
-import { ahead, TICKS_PER_TILE } from "../../../shared/engine/movement";
+import { ahead, TICKS_PER_TILE } from "../engine/movement";
 import ArenaBackground from "../components/ui/ArenaBackground";
 import Badge from "../components/ui/Badge";
 import PixelButton from "../components/ui/PixelButton";

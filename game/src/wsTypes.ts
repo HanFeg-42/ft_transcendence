@@ -8,7 +8,7 @@ import {
   JoinGamePayload,
 } from "../../shared/types/game-types";
 import { endSession, getSession, joinSession } from "./gameSessions";
-import { applyInput, tick } from "../../shared/engine/engine";
+import { applyInput, tick } from "./engine/engine";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so
@@ -91,6 +91,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
 
     if (state.players.length == 2) {
       if (activeLoops.has(gameId)) return;
+      state.status = "playing";
 
       const loopId = setInterval(() => {
         tick(state);
@@ -155,6 +156,8 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
   for (const [gameId, sockets] of gameRooms) {
     if (sockets.delete(ws) && sockets.size === 0) {
       gameRooms.delete(gameId);
+      if(getSession(gameId)?.status === "waiting")
+      endSession(gameId);
     }
   }
 }

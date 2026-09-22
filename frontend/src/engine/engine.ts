@@ -4,7 +4,7 @@ import type {
   Chaser,
   Tile,
   Direction,
-} from "../types/game-types";
+} from "../../../shared/types/game-types";
 import {
   findChaserSpawns,
   findSpawn,
