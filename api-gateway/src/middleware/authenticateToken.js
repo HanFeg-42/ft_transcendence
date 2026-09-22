@@ -35,7 +35,7 @@ export function authenticateToken(req, res, next) {
       algorithms: ["HS256"],
     });
 
-    if (typeof decoded === "string" || typeof decoded.userId !== "number") {
+    if (typeof decoded === "string" || (typeof decoded.userId !== "number" && typeof decoded.userId !== "string")) {
       return res.status(401).json({
         error: "Invalid token",
       });
