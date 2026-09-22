@@ -26,8 +26,6 @@ export async function refreshSession(req: Request, res: Response) {
   const refreshToken = req.cookies?.refresh_token;
 
   if (typeof refreshToken !== "string") {
-    clearRefreshCookie(res);
-
     return res.status(401).json({
       error: "No valid session",
     });
