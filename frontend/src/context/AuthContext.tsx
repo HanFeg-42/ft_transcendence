@@ -1,10 +1,11 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types/auth";
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  isLoading: boolean;
   login: (user: User, token: string) => void;
   // void login(User user, char *token); in C
   logout: () => void;
@@ -20,6 +21,43 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function restoreSession() {
+      try {
+        const response = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        if (isActive) {
+          setUser(data.user);
+          setToken(data.token);
+        }
+      } catch (error) {
+        console.error("Failed to restore session:", error);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    restoreSession();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const login = (user: User, token: string) => {
     setUser(user);
@@ -63,6 +101,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       value={{
         user,
         token,
+        isLoading,
         login,
         logout,
         verifyUser,
