@@ -40,7 +40,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       <div className="flex flex-col items-center w-full mt-4 flex-none">
         <div className="relative mb-6 flex justify-center">
           {/* Avatar agrandi (w-36 h-36) pour correspondre aux proportions généreuses de Figma */}
+<<<<<<< HEAD
           <div className="w-36 h-36 rounded-full border-2 border-pacova-green shadow-[0_0_25px_rgba(0,0,0,0.7)] flex items-center justify-center overflow-hidden bg-black/60">
+=======
+          <div className="w-36 h-36 rounded-full border-2 border-pacova-green shadow-[0_0_25px_rgba(142,214,3,0.7)] flex items-center justify-center overflow-hidden bg-black/60">
+>>>>>>> feat/nouss-user-profile
             {avatarUrl ? (
               <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
             ) : (
@@ -53,7 +57,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <h2 className="font-pixelify text-3xl tracking-widest uppercase text-white mt-2 text-center">
           {username}
         </h2>
+<<<<<<< HEAD
         <p className="font-vt323 text-lg text-pacova-green mb-4 text-center tracking-widest uppercase animate-pulse">
+=======
+        <p className="font-vt323 text-lg text-pacova-green mb-4 text-center tracking-widest uppercase animate-pulse motion-reduce:transition-none">
+>>>>>>> feat/nouss-user-profile
           {statusText}
         </p>
 

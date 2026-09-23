@@ -40,7 +40,7 @@ export function authenticateToken(req, res, next) {
         error: "Invalid token",
       });
     }
-
+ 
     req.headers["x-user-id"] = String(decoded.userId);
 
     next();

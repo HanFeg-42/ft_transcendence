@@ -4,3 +4,4 @@
 CREATE DATABASE auth_db;
 CREATE DATABASE chat_db;
 CREATE DATABASE game_db;
+CREATE DATABASE user_db;

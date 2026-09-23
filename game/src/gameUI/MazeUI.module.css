@@ -1,0 +1,28 @@
+/* MazeUI.module.css */
+.mazeContainer {
+    position: relative;
+    background-color: #000;
+}
+
+.wall {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--neon-pink);
+    box-shadow: 0 0 10px var(--neon-pink), inset 0 0 5px var(--neon-pink);
+    border-radius: 8px;
+}
+
+.dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background-color: var(--neon-yellow);
+    border-radius: 50%;
+    margin: 13px;
+}
+
+.ghost-red { background-color: #ff0000; }
+.ghost-pink { background-color: #ffb8ff; }
+.ghost-cyan { background-color: #00ffff; }
+.ghost-orange { background-color: #ffb851; }

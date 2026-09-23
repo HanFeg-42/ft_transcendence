@@ -213,10 +213,7 @@ export default function Login() {
     <Background>
       <div className="flex-1 flex items-center justify-center p-4">
         {/* Largeur max ajustée à 360px pour un format plus compact et moins étiré */}
-        <Card
-          variant="pink"
-          className="w-[92%] sm:w-full max-w-[360px] mx-auto"
-        >
+        <Card variant="pink" className="w-[92%] sm:w-full max-w-[360px] mx-auto">
           {!requiresTwoFactor ? (
             <form
               onSubmit={handleSubmit}
@@ -276,13 +273,9 @@ export default function Login() {
               </PixelButton>
 
               {/* Divider */}
-              <div className="flex items-center my-0.5">
-                {" "}
-                {/* 💡 my-1 -> my-0.5 */}
+              <div className="flex items-center my-0.5"> {/* 💡 my-1 -> my-0.5 */}
                 <div className="flex-1 border-t border-pacova-pink/30"></div>
-                <span className="px-3 font-vt323 text-gray-400 text-sm">
-                  OR
-                </span>
+                <span className="px-3 font-vt323 text-gray-400 text-sm">OR</span>
                 <div className="flex-1 border-t border-pacova-pink/30"></div>
               </div>
 
@@ -327,8 +320,7 @@ export default function Login() {
                   ✓ Password verified
                 </p>
                 <p className="text-gray-400 text-sm">
-                  Enter the 6-digit code from your authenticator app to
-                  continue.
+                  Enter the 6-digit code from your authenticator app to continue.
                 </p>
               </div>
 
@@ -339,11 +331,7 @@ export default function Login() {
                 name="twoFactorCode"
                 placeholder="000000"
                 value={twoFactorCode}
-                onChange={(e) =>
-                  setTwoFactorCode(
-                    e.target.value.replace(/\D/g, "").slice(0, 6),
-                  )
-                }
+                onChange={(e) => setTwoFactorCode(e.target.value)}
                 maxLength={6}
               />
 
@@ -370,7 +358,6 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={handleBackToLogin}
-                  disabled={loading}
                   className="text-gray-400 hover:text-pacova-pink hover:underline uppercase tracking-wide cursor-pointer"
                 >
                   Back to Login
