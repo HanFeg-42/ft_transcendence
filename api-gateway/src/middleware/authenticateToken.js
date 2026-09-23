@@ -35,12 +35,12 @@ export function authenticateToken(req, res, next) {
       algorithms: ["HS256"],
     });
 
-    if (typeof decoded === "string" || (typeof decoded.userId !== "number" && typeof decoded.userId !== "string")) {
+    if (typeof decoded === "string" || typeof decoded.userId !== "number") {
       return res.status(401).json({
         error: "Invalid token",
       });
     }
-
+ 
     req.headers["x-user-id"] = String(decoded.userId);
 
     next();
