@@ -1,8 +1,10 @@
 import http from 'http';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
-
 // Import shared WebSocket contract rules (event names and payload shapes)
 import { ChatEvents, ChatMessageIncoming, ChatClientMessage, ChatServerMessage } from '../../shared/types/chat-types';
+import { prisma } from './prisma';
+
+
 
 // userId -> that user's live socket. This is the routing table: it's what
 // lets handleMessage find the RECEIVER's connection instead of the sender's.
@@ -38,7 +40,7 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 }
 
 // Handle messages from the frontend
-function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
+async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   const rawText = rawData.toString();
 
   let packet: ChatClientMessage;
@@ -54,13 +56,22 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const outgoing = packet.data; // narrowed to ChatMessageOutgoing, no cast needed
       console.log(`[CHAT-SERVICE] Message from ${userId}:`, outgoing);
 
-      // TODO: persist to DB once chat_db exists 
-      const reply: ChatMessageIncoming = {
-        id: 0,
-        sender_id: Number(userId),
-        receiver_id: outgoing.receiver_id,
+
+      const saved = await prisma.message.create({
+      data: {
+        senderId: Number(userId),
+        receiverId: outgoing.receiver_id,
         content: outgoing.content,
-        created_at: new Date().toISOString(),
+      },
+      });
+
+      //persist to DB 
+      const reply: ChatMessageIncoming = {
+        id: saved.id,
+        sender_id: saved.senderId,
+        receiver_id: saved.receiverId,
+        content: saved.content,
+        created_at: saved.createdAt.toISOString(),
       };
 
       const message: ChatServerMessage = {
