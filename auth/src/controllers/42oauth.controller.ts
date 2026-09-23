@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
 import { randomBytes } from "node:crypto";
+import { createSession } from "../sessionTokens";
 
 // 1. On crée une interface TypeScript pour typer proprement les données que 42 nous renverra plus tard
 interface FortyTwoUser {
@@ -22,7 +23,7 @@ type OAuthLoginResult =
     }
   | {
       requiresTwoFactor: false;
-      token: string;
+      // token: string;
       user: {
         id: number;
         username: string;
@@ -77,7 +78,17 @@ export const exchangeOAuthTicket = (req: Request, res: Response): void => {
     return;
   }
 
-  res.status(200).json(entry.result);
+  if (entry.result.requiresTwoFactor) {
+    res.status(200).json(entry.result);
+    return;
+  }
+
+  const token = createSession(res, entry.result.user.id);
+
+  res.status(200).json({
+    ...entry.result,
+    token,
+  });
 };
 
 /**
@@ -253,14 +264,14 @@ export const handle42Callback = async (
       };
     } else {
       // Même format et durée que la connexion classique.
-      const token = jwt.sign({ userId: user.id }, jwtSecret, {
-        expiresIn: "1h",
-        algorithm: "HS256",
-      });
+      // const token = jwt.sign({ userId: user.id }, jwtSecret, {
+      //   expiresIn: "1h",
+      //   algorithm: "HS256",
+      // });
 
       result = {
         requiresTwoFactor: false,
-        token,
+        // token,
         user: {
           id: user.id,
           username: user.username,

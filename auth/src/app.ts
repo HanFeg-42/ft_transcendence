@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import { register } from "./registerController";
 import { login } from "./loginController";
@@ -13,6 +14,7 @@ import {
   disableTwoFactor,
 } from "./twoFactorController";
 import { verifyTwoFactorLogin } from "./2faLoginController";
+import { refreshSession, logoutSession } from "./sessionController";
 
 const app = express();
 
@@ -23,6 +25,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (_req, res) => {
   res.status(200).json({
@@ -39,6 +42,8 @@ app.get("/health", (_req, res) => {
 
 app.post("/register", register);
 app.post("/login", login);
+app.post("/refresh", refreshSession);
+app.post("/logout", logoutSession);
 app.use("/42", authRoutes); // express va comparer le rest de l URL avec les racine indique dans authRoutes()
 
 app.get("/me", authenticateToken, async (req, res) => {
