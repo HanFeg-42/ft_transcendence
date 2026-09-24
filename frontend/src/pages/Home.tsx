@@ -65,7 +65,6 @@ export default function Home() {
         >
           PLAY NOW
         </PixelButton>
-
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}
