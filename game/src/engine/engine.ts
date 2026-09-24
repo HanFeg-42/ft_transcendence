@@ -36,6 +36,8 @@ export const addPlayer = (playerId: string, state: GameState) => {
   });
 };
 
+export const removePlayer = (playerId: string, state: GameState) => state.players = state.players.filter( (p) => p.id !== playerId);
+
 export const createGame = (
   playerId: string,
   timeLimit: number = 360,

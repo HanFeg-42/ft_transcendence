@@ -107,7 +107,22 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
     draw(ctx, state);
   }, [state]);
 
-  if (!state) return <p>Joined the room {gameId}</p>;
+  if (!state) return <p>Joining the room {gameId}</p>;
+  if (state.status === "waiting")
+  return (
+    <div>
+      <p>Room {gameId}</p>
+      {state.players.map((p, i) => (
+        <p key={p.id}>Player {i + 1} joined</p>
+      ))}
+      {state.players.length === 2 ? (
+        <p>Starting the game</p>
+      ) : (
+        <p>Waiting for another player...</p>
+      )}
+    </div>
+  );
+
   return (
     <ArenaBackground>
       <div className="flex-1 flex-col flex items-center justify-center gap-4">
@@ -125,7 +140,7 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
             width={WIDTH * TILE_SIZE}
             height={HEIGHT * TILE_SIZE}
           />
-          {state.status !== "playing" && (
+          {(state.status === "won" || state.status === "lost") && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
               <Badge variant={state.status === "won" ? "green" : "red"}>
                 {state.status === "won" ? "You Win!" : "Game Over"}

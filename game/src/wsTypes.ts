@@ -8,13 +8,15 @@ import {
   JoinGamePayload,
 } from "../../shared/types/game-types";
 import { endSession, getSession, joinSession } from "./gameSessions";
-import { applyInput, tick } from "./engine/engine";
+import { applyInput, tick, removePlayer } from "./engine/engine";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so
 // it persists across all connections, not reset per-client.
 const gameRooms = new Map<string, Set<WebSocket>>();
 const activeLoops = new Map<string, NodeJS.Timeout>();
+const pendingStarts = new Map<string, NodeJS.Timeout>();
+const START_DELAY_MS = 3000;
 
 // Send a message to every socket currently in a given room
 // Send a message to every socket currently in a given room
@@ -81,30 +83,47 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   // --- Join a room ---
   if (packet.event === GameEvents.JOIN_GAME) {
     const { gameId }: JoinGamePayload = packet.data;
-
+    const existing = getSession(gameId);
+    if (
+      existing &&
+      existing.players.length >= 2 &&
+      !existing.players.some((p) => p.id === userId)
+    ) {
+      ws.close(1008, "Room full");
+      return;
+    }
     if (!gameRooms.has(gameId)) {
       gameRooms.set(gameId, new Set());
     }
     gameRooms.get(gameId)!.add(ws);
 
     const state: GameState = joinSession(gameId, userId);
+    broadcast(gameId, GameEvents.GAME_STATE, state);
 
-    if (state.players.length == 2) {
-      if (activeLoops.has(gameId)) return;
-      state.status = "playing";
+    if (state.players.length === 2) {
+      if (activeLoops.has(gameId) || pendingStarts.has(gameId)) return;
 
-      const loopId = setInterval(() => {
-        tick(state);
-        broadcast(gameId, GameEvents.GAME_STATE, state);
-        if (state.status !== "playing") {
-          activeLoops.delete(gameId);
-          endSession(gameId);
-          clearInterval(loopId);
-        }
-      }, 1000 / 30);
+      const timeoutId = setTimeout(() => {
+        pendingStarts.delete(gameId);
+        state.status = "playing";
 
-      activeLoops.set(gameId, loopId);
+        const loopId = setInterval(() => {
+          tick(state);
+          broadcast(gameId, GameEvents.GAME_STATE, state);
+          if (state.status !== "playing") {
+            activeLoops.delete(gameId);
+            gameRooms.delete(gameId);
+            endSession(gameId);
+            clearInterval(loopId);
+          }
+        }, 1000 / 30);
+
+        activeLoops.set(gameId, loopId);
+      }, START_DELAY_MS);
+
+      pendingStarts.set(gameId, timeoutId);
     }
+
     console.log(`[GAME-SERVICE] Client ${userId} joined room ${gameId}`);
     // return;
   }
@@ -154,11 +173,19 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
   // Cleanup active game session...
 
   for (const [gameId, sockets] of gameRooms) {
-    if (sockets.delete(ws) && sockets.size === 0) {
-      gameRooms.delete(gameId);
-      if(getSession(gameId)?.status === "waiting")
-      endSession(gameId);
+    if (!sockets.delete(ws)) continue;
+    const state = getSession(gameId);
+    if (state?.status === "waiting") {
+      removePlayer(userId, state);
+      broadcast(gameId, GameEvents.GAME_STATE, state);
+      const timeoutId = pendingStarts.get(gameId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        pendingStarts.delete(gameId);
+      }
+      if (state.players.length === 0) endSession(gameId);
     }
+    if (sockets.size === 0) gameRooms.delete(gameId);
   }
 }
 
