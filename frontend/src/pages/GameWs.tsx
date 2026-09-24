@@ -153,7 +153,7 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
   );
 };
 
-const OnlineGame = () => {
+const GameWs = () => {
   const [gameRoom, setGameRoom] = useState<string | null>(null);
   const [roomInput, setRoomInput] = useState<string>("");
 
@@ -175,4 +175,4 @@ const OnlineGame = () => {
     );
   return <GameRoom gameId={gameRoom} />;
 };
-export default OnlineGame;
+export default GameWs;

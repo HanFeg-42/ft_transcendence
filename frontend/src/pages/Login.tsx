@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Background from "../components/ui/Background";
@@ -27,6 +27,70 @@ export default function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const oauthExchangeStarted = useRef(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ticket = params.get("oauth_ticket");
+    const oauthError = params.get("error");
+
+    if (oauthExchangeStarted.current || (!ticket && !oauthError)) {
+      return;
+    }
+
+    oauthExchangeStarted.current = true;
+
+    // Remove the temporary ticket/error from the browser URL.
+    window.history.replaceState(null, "", window.location.pathname);
+
+    if (oauthError) {
+      setError(
+        oauthError === "oauth_cancelled"
+          ? "42 login was cancelled."
+          : "42 login failed. Please try again.",
+      );
+      return;
+    }
+
+    const completeOAuthLogin = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch("/api/auth/42/exchange", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ticket }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || "42 login failed. Please try again.");
+          return;
+        }
+
+        if (data.requiresTwoFactor) {
+          setChallengeToken(data.challengeToken);
+          setRequiresTwoFactor(true);
+          setTwoFactorCode("");
+          return;
+        }
+
+        login(data.user, data.token);
+        navigate("/home", { replace: true });
+      } catch {
+        setError("Unable to connect to the server. Please try 42 login again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void completeOAuthLogin();
+  }, [login, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -142,14 +206,17 @@ export default function Login() {
 
   // 42 OAuth
   const handle42Login = () => {
-    window.location.href = "https://localhost:443/api/auth/42/login";
+    window.location.href = "/api/auth/42/login";
   };
 
   return (
     <Background>
       <div className="flex-1 flex items-center justify-center p-4">
         {/* Largeur max ajustée à 360px pour un format plus compact et moins étiré */}
-        <Card variant="pink" className="w-[92%] sm:w-full max-w-[360px] mx-auto">
+        <Card
+          variant="pink"
+          className="w-[92%] sm:w-full max-w-[360px] mx-auto"
+        >
           {!requiresTwoFactor ? (
             <form
               onSubmit={handleSubmit}
@@ -209,9 +276,13 @@ export default function Login() {
               </PixelButton>
 
               {/* Divider */}
-              <div className="flex items-center my-0.5"> {/* 💡 my-1 -> my-0.5 */}
+              <div className="flex items-center my-0.5">
+                {" "}
+                {/* 💡 my-1 -> my-0.5 */}
                 <div className="flex-1 border-t border-pacova-pink/30"></div>
-                <span className="px-3 font-vt323 text-gray-400 text-sm">OR</span>
+                <span className="px-3 font-vt323 text-gray-400 text-sm">
+                  OR
+                </span>
                 <div className="flex-1 border-t border-pacova-pink/30"></div>
               </div>
 
@@ -256,7 +327,8 @@ export default function Login() {
                   ✓ Password verified
                 </p>
                 <p className="text-gray-400 text-sm">
-                  Enter the 6-digit code from your authenticator app to continue.
+                  Enter the 6-digit code from your authenticator app to
+                  continue.
                 </p>
               </div>
 
@@ -267,7 +339,11 @@ export default function Login() {
                 name="twoFactorCode"
                 placeholder="000000"
                 value={twoFactorCode}
-                onChange={(e) => setTwoFactorCode(e.target.value)}
+                onChange={(e) =>
+                  setTwoFactorCode(
+                    e.target.value.replace(/\D/g, "").slice(0, 6),
+                  )
+                }
                 maxLength={6}
               />
 
@@ -294,6 +370,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={handleBackToLogin}
+                  disabled={loading}
                   className="text-gray-400 hover:text-pacova-pink hover:underline uppercase tracking-wide cursor-pointer"
                 >
                   Back to Login

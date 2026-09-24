@@ -1,12 +1,20 @@
-import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ProtectedRoute() {
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/login" replace />
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0D0914] text-white">
+        Restoring session...
+      </div>
+    );
   }
 
-  return <Outlet />
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
 }

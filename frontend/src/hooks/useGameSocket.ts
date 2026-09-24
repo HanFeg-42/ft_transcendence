@@ -50,7 +50,13 @@ export function useGameSocket(url: string, gameId: string, username: string) {
   // Handle messages from the backend
   function handleMessage(event: MessageEvent) {
     // Convert incoming message string into a usable JavaScript object
-    const packet = JSON.parse(event.data);
+    let packet
+    try {
+      packet = JSON.parse(event.data);
+    } catch (err) {
+      console.warn('[GAME-CLIENT] Invalid JSON received, ignoring:', event.data);
+      return; // drop the bad message, keep the connection alive
+    }
 
     // Check if incoming packet matches game state update
     if (packet.event === GameEvents.GAME_STATE) {
