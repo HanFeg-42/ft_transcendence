@@ -10,11 +10,8 @@ import Game from "./pages/Game";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import DesignSystem from './pages/DesignSystem'
 // import Design from './pages/Design'
-<<<<<<< HEAD
-import Profile from './pages/ProfilePage'
-=======
+// import Profile from './pages/ProfilePage'
 import Profile from "./pages/profile";
->>>>>>> feat/nouss-user-profile
 import GameWs from "./pages/GameWs"; // TEMP
 
 /** Renders the application's route configuration. */
@@ -34,11 +31,7 @@ function App() {
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
       {/* <Route path="/Design" element={<Design />} /> */}
-<<<<<<< HEAD
-      <Route path="/ProfilePage" element={<Profile />} />
-=======
-      <Route path="/profile" element={<Profile />} />
->>>>>>> feat/nouss-user-profile
+      {/* <Route path="/ProfilePage" element={<Profile />} /> */}
       <Route path="/ws-game" element={<GameWs />} /> {/* TEMP */}
     </Routes>
   );

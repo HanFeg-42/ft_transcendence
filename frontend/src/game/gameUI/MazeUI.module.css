@@ -1,0 +1,102 @@
+/* game/ui/MazeUI.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.mazeContainer {
+    position: relative;
+    background-color: #000;
+    border: 4px solid #ff00ff;
+    box-shadow: 
+        0 0 20px #ff00ff,
+        inset 0 0 20px rgba(255, 0, 255, 0.2);
+    border-radius: 12px;
+    margin: 0 auto;
+    /* Fond avec grille subtile */
+    background-image:
+        linear-gradient(rgba(255, 0, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 255, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+/* ===== MURS ===== */
+.wall {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid #ff00ff;
+    box-shadow:
+        0 0 8px #ff00ff,
+        inset 0 0 4px #ff00ff;
+    border-radius: 6px;
+    background: rgba(255, 0, 255, 0.05);
+}
+
+/* ===== PELLETS ===== */
+.pellet {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background-color: #ffff99;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 6px #ffff99;
+}
+
+.powerPellet {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #ffcc00;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px #ffcc00, 0 0 20px #ffcc00;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: translate(-50%, -50%) scale(1); }
+    to   { transform: translate(-50%, -50%) scale(1.3); }
+}
+
+/* ===== JOUEUR (Pac-Man) ===== */
+.player {
+    position: absolute;
+    background-color: #ffff00;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #ffff00, 0 0 30px #ffff00;
+    /* Animation de la bouche */
+    animation: chomp 0.3s infinite alternate;
+    z-index: 10;
+}
+
+@keyframes chomp {
+    from { clip-path: polygon(100% 50%, 0 0, 0 100%); }
+    to   { clip-path: polygon(100% 50%, 0 25%, 0 75%); }
+}
+
+/* ===== CHASERS (Fantômes) ===== */
+.chaser {
+    position: absolute;
+    border-radius: 50% 50% 0 0;
+    z-index: 9;
+    /* Forme de fantôme avec la jupe ondulée */
+    clip-path: polygon(
+        0% 0%, 100% 0%, 100% 100%,
+        75% 80%, 50% 100%, 25% 80%, 0% 100%
+    );
+}
+
+.chaser0 { /* Rouge */
+    background-color: #ff0000;
+    box-shadow: 0 0 15px #ff0000;
+}
+.chaser1 { /* Rose */
+    background-color: #ffb8ff;
+    box-shadow: 0 0 15px #ffb8ff;
+}
+.chaser2 { /* Cyan */
+    background-color: #00ffff;
+    box-shadow: 0 0 15px #00ffff;
+}
+.chaser3 { /* Orange */
+    background-color: #ffb851;
+    box-shadow: 0 0 15px #ffb851;
+}

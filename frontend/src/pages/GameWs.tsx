@@ -5,8 +5,8 @@ const TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEyMywiaWF
 
 export default function GameWs() {
   const { isConnected, sendPlayerInput } = useGameSocket(
-        `wss://localhost/api/game/ws?token=${TEST_TOKEN}`);
-
+        `wss://localhost/api/game/ws?token=${TEST_TOKEN}`,
+        'game-1');
   // Rendered UI
   return (
     <div style={{ padding: 20 }}>

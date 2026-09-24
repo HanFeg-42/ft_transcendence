@@ -89,13 +89,8 @@ const variantStyles: Record<
 };
 
 const sizeStyles: Record<PixelButtonSize, string> = {
-<<<<<<< HEAD
-  sm: "px-3 py-1 text-s font-pixelify min-h-[32px]",
-  md: "px-4 py-1.5 sm:px-5 sm:py-2 text-s sm:text-base font-pixelify min-h-[38px]", // 💡 Réduit le padding et min-h de 42px à 38px
-=======
   sm: "px-3 py-1 text-sm font-pixelify min-h-[32px]",
   md: "px-4 py-1.5 sm:px-5 sm:py-2 text-sm sm:text-base font-pixelify min-h-[38px]", // 💡 Réduit le padding et min-h de 42px à 38px
->>>>>>> feat/nouss-user-profile
   lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-lg sm:text-xl font-pixelify min-h-[44px]",
 };
 
