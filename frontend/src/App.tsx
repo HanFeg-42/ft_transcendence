@@ -4,7 +4,7 @@ import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import ProfilePage from "./pages/ProfilePage";
-import Chat from "./pages/Chat";
+import Chat from "./pages/Chat/";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Game from "./pages/Game";

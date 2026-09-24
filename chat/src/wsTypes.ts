@@ -57,6 +57,24 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       console.log(`[CHAT-SERVICE] Message from ${userId}:`, outgoing);
 
 
+      // Silently drop the message if the receiver has blocked the sender —
+      // no persistence, no error back to the sender (standard chat UX: you
+      // shouldn't be able to tell you've been blocked from message behavior alone).
+      const isBlocked = await prisma.blockedUser.findUnique({
+        where: {
+          blockerId_blockedId: {
+            blockerId: outgoing.receiver_id,
+            blockedId: Number(userId),
+          },
+        },
+      });
+
+      if (isBlocked) {
+        console.log(`[CHAT-SERVICE] Message from ${userId} to ${outgoing.receiver_id} dropped — blocked`);
+        break;
+      }
+
+
       const saved = await prisma.message.create({
       data: {
         senderId: Number(userId),

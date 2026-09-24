@@ -19,3 +19,13 @@ model Message {
 
   @@index([senderId, receiverId, createdAt])
 }
+
+
+model BlockedUser {
+  id        Int      @id @default(autoincrement())
+  blockerId Int
+  blockedId Int
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
