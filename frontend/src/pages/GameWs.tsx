@@ -93,7 +93,10 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const dir = KEY_MAP[e.key];
-      if (dir) sendPlayerInput(dir);
+      if (dir) {
+        e.preventDefault();
+        sendPlayerInput(dir);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
 
@@ -109,19 +112,19 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
 
   if (!state) return <p>Joining the room {gameId}</p>;
   if (state.status === "waiting")
-  return (
-    <div>
-      <p>Room {gameId}</p>
-      {state.players.map((p, i) => (
-        <p key={p.id}>Player {i + 1} joined</p>
-      ))}
-      {state.players.length === 2 ? (
-        <p>Starting the game</p>
-      ) : (
-        <p>Waiting for another player...</p>
-      )}
-    </div>
-  );
+    return (
+      <div>
+        <p>Room {gameId}</p>
+        {state.players.map((p, i) => (
+          <p key={p.id}>Player {i + 1} joined</p>
+        ))}
+        {state.players.length === 2 ? (
+          <p>Starting the game</p>
+        ) : (
+          <p>Waiting for another player...</p>
+        )}
+      </div>
+    );
 
   return (
     <ArenaBackground>
