@@ -1,0 +1,3 @@
+understand profile.ts 
+  const [error, setError] = useState<string | null>(null);
+- how user data is loaded
