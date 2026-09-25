@@ -8,7 +8,7 @@ interface MessageListProps {
   currentUserId: number;
   historyLoading: boolean;
   historyError: string | null;
-  messagesEndRef: RefObject<HTMLDivElement>;
+  messagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
 export default function MessageList({

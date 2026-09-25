@@ -12,18 +12,44 @@ import FriendsSidebar from './FriendsSidebar';
 import ConversationHeader from './ConversationHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import NewChatModal from './NewChatModal';
 
 export default function Chat() {
   const { token, user } = useAuth();
   const navigate = useNavigate();
-  const { isConnected, messages, sendMessage } = useChatSocket(
+  const { messages, sendMessage, presence } = useChatSocket(
     user && token ? `wss://localhost/api/chat/ws?token=${token}` : '',
     user ? Number(user.id) : 0
   );
   const [selectedFriend, setSelectedFriend] = useState(MOCK_FRIENDS[0]);
   const [draft, setDraft] = useState('');
 
+  // ADDED: New Chat modal open/closed.
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+
+  // ADDED: muted friend ids, persisted per logged-in user so it survives a
+  // reload. Client-side only for now — there's no notification system yet
+  // for this to actually gate, but the toggle + persistence is real.
+  const [mutedIds, setMutedIds] = useState<Set<number>>(() => new Set());
+
+  // ADDED: per-friend "clear conversation" cutoff. Clearing only hides
+  // messages before this timestamp in THIS client — it can't reach into
+  // useChatSocket's shared `messages` state or the server's persisted
+  // history, so it's implemented as a client-side filter instead.
+  const [clearedBefore, setClearedBefore] = useState<Record<number, string>>({});
+
   const userReady = Boolean(user && token);
+
+  // Load muted ids once we know who the user is.
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = localStorage.getItem(`pacova-muted-${user.id}`);
+      setMutedIds(new Set(raw ? (JSON.parse(raw) as number[]) : []));
+    } catch (err) {
+      console.warn('[CHAT] Failed to load muted friends from storage:', err);
+    }
+  }, [user?.id]);
 
   const { historyMessages, historyLoading, historyError } = useChatHistory(
     selectedFriend.id,
@@ -32,10 +58,7 @@ export default function Chat() {
   );
   const { blockStatus, handleToggleBlock } = useBlockStatus(selectedFriend.id, token, userReady);
 
-  // ref to the always-empty div at the end of the message list, so we can
-  // scroll it into view whenever a new message arrives instead of leaving
-  // the user stuck wherever they were scrolled to.
-  const messagesEndRef = useRef<HTMLDivElement>(null!);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
@@ -48,16 +71,36 @@ export default function Chat() {
     setDraft('');
   };
 
-  // MOCK_FRIENDS' hardcoded ids (1, 2, 3) can collide with a real logged-in
-  // user's id, which would otherwise let you select "yourself" as a friend
-  // and message yourself. Filter your own id out of the list shown in the
-  // sidebar. Runs after the !user early-return below via the effect
-  // further down, and is computed here for the render itself.
+  // ADDED: toggle mute for the currently selected friend, persisting the
+  // updated set back to localStorage.
+  const handleToggleMute = () => {
+    if (!user) return;
+    setMutedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(selectedFriend.id)) next.delete(selectedFriend.id);
+      else next.add(selectedFriend.id);
+      try {
+        localStorage.setItem(`pacova-muted-${user.id}`, JSON.stringify([...next]));
+      } catch (err) {
+        console.warn('[CHAT] Failed to persist muted friends:', err);
+      }
+      return next;
+    });
+  };
+
+  // ADDED: hide everything before "now" for the current friend, in this
+  // client only.
+  const handleClearConversation = () => {
+    setClearedBefore((prev) => ({ ...prev, [selectedFriend.id]: new Date().toISOString() }));
+  };
+
   const visibleFriends = user ? MOCK_FRIENDS.filter((friend) => friend.id !== Number(user.id)) : MOCK_FRIENDS;
 
-  // If the default/current selection happens to be yourself (because
-  // MOCK_FRIENDS[0] or a previous selection matches your real id), fall
-  // back to the first non-you friend as soon as we know who "you" are.
+  const visibleFriendsLive = visibleFriends.map((friend) => ({
+    ...friend,
+    status: presence[friend.id] ?? friend.status,
+  }));
+
   useEffect(() => {
     if (user && selectedFriend.id === Number(user.id)) {
       const fallback = MOCK_FRIENDS.find((friend) => friend.id !== Number(user.id));
@@ -76,27 +119,26 @@ export default function Chat() {
     );
   }
 
-  // ONLINE only when the selected friend's status says so AND the chat
-  // socket is actually connected — nothing hardcoded.
-  const isFriendOnline = selectedFriend.status === 'online' && isConnected;
+  const selectedFriendLive = { ...selectedFriend, status: presence[selectedFriend.id] ?? selectedFriend.status };
+  const isFriendOnline = selectedFriendLive.status === 'online';
 
-  // History comes from REST (past messages), messages comes from the WS
-  // hook (live ones sent/received after page load). Merge and dedupe by id
-  // so a message that arrives live isn't shown twice if it's also present
-  // in a refetched history.
   const liveForFriend = messages.filter(
     (message) => message.sender_id === selectedFriend.id || message.receiver_id === selectedFriend.id
   );
 
-  const conversation = [...historyMessages, ...liveForFriend].filter(
+  let conversation = [...historyMessages, ...liveForFriend].filter(
     (message, index, all) => all.findIndex((m) => m.id === message.id) === index
   );
 
-  // true when either side has blocked the other — used to disable input/send.
-  const isBlockedEitherWay = blockStatus.iBlockedThem || blockStatus.theyBlockedMe;
+  // ADDED: apply the per-friend clear cutoff, if one was set.
+  const cutoff = clearedBefore[selectedFriend.id];
+  if (cutoff) {
+    conversation = conversation.filter((message) => message.created_at > cutoff);
+  }
 
-  // Fires whenever the visible conversation grows (new message sent or
-  // received, or friend switched) and jumps the list to the bottom.
+  const isBlockedEitherWay = blockStatus.iBlockedThem || blockStatus.theyBlockedMe;
+  const isMutedSelected = mutedIds.has(selectedFriend.id);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation.length, selectedFriend.id]);
@@ -106,19 +148,27 @@ export default function Chat() {
       <Navbar activeTab="CHAT" onSelectTab={handleSelectTab} />
 
       <main className="flex-1 min-h-0 h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] max-w-[1320px] mx-auto w-full px-4 py-5 flex gap-5 overflow-hidden">
-        <FriendsSidebar friends={visibleFriends} selectedFriend={selectedFriend} onSelectFriend={setSelectedFriend} />
+        <FriendsSidebar
+          friends={visibleFriendsLive}
+          selectedFriend={selectedFriendLive}
+          onSelectFriend={setSelectedFriend}
+          onNewChat={() => setIsNewChatOpen(true)}
+        />
 
         <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-[#050B1E] border-2 border-pacova-green-dark rounded-lg overflow-hidden">
           <ConversationHeader
-            friend={selectedFriend}
+            friend={selectedFriendLive}
             isFriendOnline={isFriendOnline}
             blockStatus={blockStatus}
             onToggleBlock={handleToggleBlock}
+            isMuted={isMutedSelected}
+            onToggleMute={handleToggleMute}
+            onClearConversation={handleClearConversation}
           />
 
           <MessageList
             conversation={conversation}
-            selectedFriend={selectedFriend}
+            selectedFriend={selectedFriendLive}
             currentUserId={user.id}
             historyLoading={historyLoading}
             historyError={historyError}
@@ -128,6 +178,13 @@ export default function Chat() {
           <MessageInput draft={draft} onDraftChange={setDraft} onSend={handleSend} disabled={isBlockedEitherWay} />
         </section>
       </main>
+
+      <NewChatModal
+        isOpen={isNewChatOpen}
+        onClose={() => setIsNewChatOpen(false)}
+        friends={visibleFriendsLive}
+        onSelectFriend={setSelectedFriend}
+      />
     </Background>
   );
 }

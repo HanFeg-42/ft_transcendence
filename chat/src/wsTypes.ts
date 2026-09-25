@@ -1,17 +1,55 @@
 import http from 'http';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
-// Import shared WebSocket contract rules (event names and payload shapes)
-import { ChatEvents, ChatMessageIncoming, ChatClientMessage, ChatServerMessage } from '../../shared/types/chat-types';
+import { ChatEvents, ChatMessageIncoming, ChatClientMessage, ChatServerMessage, ChatPresenceEvent } from '../../shared/types/chat-types';
 import { prisma } from './prisma';
 
+// userId -> that user's live sockets. A Set, not a single socket, so a
+// second tab doesn't overwrite/kick out the first one.
+const onlineUsers = new Map<string, Set<WebSocket>>();
 
+// Users this userId has an existing Message with, in either direction —
+// stand-in for a real friends list, which doesn't exist yet.
+async function getMessagePartners(userId: string): Promise<number[]> {
+  const id = Number(userId);
+  const rows = await prisma.message.findMany({
+    where: { OR: [{ senderId: id }, { receiverId: id }] },
+    select: { senderId: true, receiverId: true },
+  });
 
-// userId -> that user's live socket. This is the routing table: it's what
-// lets handleMessage find the RECEIVER's connection instead of the sender's.
-const onlineUsers = new Map<string, WebSocket>();
+  const partners = new Set<number>();
+  for (const row of rows) {
+    partners.add(row.senderId === id ? row.receiverId : row.senderId);
+  }
+  return [...partners];
+}
+
+function sendPresence(ws: WebSocket, userId: number, status: 'online' | 'offline') {
+  if (ws.readyState !== WebSocket.OPEN) return;
+  try {
+    const data: ChatPresenceEvent = { user_id: userId, status };
+    const packet: ChatServerMessage = { event: ChatEvents.PRESENCE, data };
+    ws.send(JSON.stringify(packet));
+  } catch (err) {
+    console.warn('[CHAT-SERVICE] Failed to send presence to a socket, dropping it:', err);
+  }
+}
+
+function broadcastPresenceToPartners(partnerIds: number[], userId: number, status: 'online' | 'offline') {
+  for (const partnerId of partnerIds) {
+    const sockets = onlineUsers.get(String(partnerId));
+    if (!sockets) continue;
+    for (const socket of sockets) {
+      if (socket.readyState !== WebSocket.OPEN) {
+        sockets.delete(socket); // stale entry, never got cleaned by its own close event
+        continue;
+      }
+      sendPresence(socket, userId, status);
+    }
+  }
+}
 
 // Handle a new connection
-function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
+async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   const userId = req.headers['x-user-id'] as string | undefined;
 
   if (!userId) {
@@ -21,22 +59,31 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   }
 
   console.log('[CHAT-SERVICE] Client connected:', userId);
-  onlineUsers.set(userId, ws);
 
-  // Listen for incoming data packets from the client
-  ws.on('message', (rawData: RawData) => {
-    handleMessage(ws, rawData, userId);
-  });
+  const wasOffline = !onlineUsers.has(userId);
+  const sockets = onlineUsers.get(userId) ?? new Set<WebSocket>();
+  sockets.add(ws);
+  onlineUsers.set(userId, sockets);
 
-  // Listen for client disconnects (tab closed, lost connection)
-  ws.on('close', (code) => {
-    handleClose(ws, code, userId);
-  });
+  const partners = await getMessagePartners(userId);
 
-  // Listen for low-level socket errors
-  ws.on('error', (err) => {
-    handleError(ws, err);
-  });
+  // Snapshot: tell THIS newly connected client who among their message
+  // partners is already online — they only started listening now, so they
+  // missed any earlier "came online" broadcast.
+  for (const partnerId of partners) {
+  const status = onlineUsers.has(String(partnerId)) ? 'online' : 'offline';
+  sendPresence(ws, partnerId, status);
+  }
+
+  // Only the FIRST socket for this user is a real "came online" transition —
+  // a second tab opening shouldn't re-announce someone already online.
+  if (wasOffline) {
+    broadcastPresenceToPartners(partners, Number(userId), 'online');
+  }
+
+  ws.on('message', (rawData: RawData) => handleMessage(ws, rawData, userId));
+  ws.on('close', (code) => handleClose(ws, code, userId));
+  ws.on('error', (err) => handleError(ws, err));
 }
 
 // Handle messages from the frontend
@@ -48,18 +95,14 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     packet = JSON.parse(rawText);
   } catch (err) {
     console.warn('[CHAT-SERVICE] Invalid JSON received, ignoring:', rawText);
-    return; // drop the bad message, keep the connection and service alive
+    return;
   }
 
   switch (packet.event) {
     case ChatEvents.MESSAGE: {
-      const outgoing = packet.data; // narrowed to ChatMessageOutgoing, no cast needed
+      const outgoing = packet.data;
       console.log(`[CHAT-SERVICE] Message from ${userId}:`, outgoing);
 
-
-      // Silently drop the message if the receiver has blocked the sender —
-      // no persistence, no error back to the sender (standard chat UX: you
-      // shouldn't be able to tell you've been blocked from message behavior alone).
       const isBlocked = await prisma.blockedUser.findUnique({
         where: {
           blockerId_blockedId: {
@@ -74,16 +117,14 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         break;
       }
 
-
       const saved = await prisma.message.create({
-      data: {
-        senderId: Number(userId),
-        receiverId: outgoing.receiver_id,
-        content: outgoing.content,
-      },
+        data: {
+          senderId: Number(userId),
+          receiverId: outgoing.receiver_id,
+          content: outgoing.content,
+        },
       });
 
-      //persist to DB 
       const reply: ChatMessageIncoming = {
         id: saved.id,
         sender_id: saved.senderId,
@@ -92,49 +133,55 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         created_at: saved.createdAt.toISOString(),
       };
 
-      const message: ChatServerMessage = {
-        event: ChatEvents.MESSAGE,
-        data: reply,
-      };
+      const message: ChatServerMessage = { event: ChatEvents.MESSAGE, data: reply };
+      const payload = JSON.stringify(message);
 
-      // Look up the RECEIVER's socket in the routing table, not the sender's.
-      const receiverSocket = onlineUsers.get(String(outgoing.receiver_id));
-
-      if (!receiverSocket || receiverSocket.readyState !== WebSocket.OPEN) {
-        console.warn(`[CHAT-SERVICE] Receiver ${outgoing.receiver_id} not online, message not delivered`);
-        break; // no persistence yet, so an offline receiver just misses it for now
+      // Deliver to every socket the RECEIVER has open (multi-tab).
+      const receiverSockets = onlineUsers.get(String(outgoing.receiver_id));
+      if (receiverSockets) {
+        for (const socket of receiverSockets) {
+          if (socket.readyState === WebSocket.OPEN) socket.send(payload);
+        }
+      } else {
+        console.warn(`[CHAT-SERVICE] Receiver ${outgoing.receiver_id} not online, message not delivered live (still persisted)`);
       }
 
-      receiverSocket.send(JSON.stringify(message));
+      // ADDED: echo to the SENDER'S other open tabs (not this socket — it
+      // already appended its own copy optimistically) so multi-tab stays synced.
+      const senderSockets = onlineUsers.get(userId);
+      if (senderSockets) {
+        for (const socket of senderSockets) {
+          if (socket !== ws && socket.readyState === WebSocket.OPEN) socket.send(payload);
+        }
+      }
       break;
     }
   }
 }
 
 // Handle disconnection
-function handleClose(ws: WebSocket, code: number, userId: string) {
+async function handleClose(ws: WebSocket, code: number, userId: string) {
   console.log(`[CHAT-SERVICE] Client disconnected: ${userId} (Code: ${code})`);
 
-  // Only remove the entry if it still points at THIS socket — avoids a race
-  // where a user reconnects (new socket registers) before the old socket's
-  // close event fires and wipes out the new entry.
-  if (onlineUsers.get(userId) === ws) {
+  const sockets = onlineUsers.get(userId);
+  if (!sockets) return;
+
+  sockets.delete(ws);
+
+  // Only drop to "offline" once their LAST socket closes.
+  if (sockets.size === 0) {
     onlineUsers.delete(userId);
+    const partners = await getMessagePartners(userId);
+    broadcastPresenceToPartners(partners, Number(userId), 'offline');
   }
 }
 
-// Handle socket errors
 function handleError(ws: WebSocket, err: Error) {
   console.error('[CHAT-SERVICE] Socket error:', err.message);
 }
 
-// Setup WebSocket server
 export function setupWebSocket(server: http.Server) {
   const wss = new WebSocketServer({ server });
-
-  wss.on('connection', (ws, req) => {
-    handleConnection(ws, req);
-  });
-
+  wss.on('connection', (ws, req) => { handleConnection(ws, req); });
   console.log('[CHAT-SERVICE] WebSocket server initialized');
 }

@@ -5,6 +5,7 @@
 export const ChatEvents = {
   MESSAGE: "message",   // send/receive a chat message
   TYPING: "typing",     // optional: "user is typing" indicator
+  PRESENCE: "presence",
 } as const;
 
 export type ChatEvent = typeof ChatEvents[keyof typeof ChatEvents];
@@ -32,6 +33,10 @@ export interface ChatTypingEvent {
 }
 
 
+export interface ChatPresenceEvent {
+  user_id: number;
+  status: 'online' | 'offline';
+}
 
 
 // --- Envelopes ----------------------------------------------------------
@@ -44,4 +49,5 @@ export type ChatClientMessage =
 
 export type ChatServerMessage =
   | { event: typeof ChatEvents.MESSAGE; data: ChatMessageIncoming }
-  | { event: typeof ChatEvents.TYPING; data: ChatTypingEvent };
+  | { event: typeof ChatEvents.TYPING; data: ChatTypingEvent }
+  | { event: typeof ChatEvents.PRESENCE; data: ChatPresenceEvent };

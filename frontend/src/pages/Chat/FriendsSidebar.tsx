@@ -8,9 +8,10 @@ interface FriendsSidebarProps {
   friends: Friend[];
   selectedFriend: Friend;
   onSelectFriend: (friend: Friend) => void;
+  onNewChat: () => void;
 }
 
-export default function FriendsSidebar({ friends, selectedFriend, onSelectFriend }: FriendsSidebarProps) {
+export default function FriendsSidebar({ friends, selectedFriend, onSelectFriend, onNewChat }: FriendsSidebarProps) {
   return (
     <div className="w-[22rem] shrink-0 min-h-0 flex flex-col bg-[#050B1E] border-2 border-pacova-green-dark rounded-lg overflow-hidden">
       <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider text-center px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
@@ -63,7 +64,7 @@ export default function FriendsSidebar({ friends, selectedFriend, onSelectFriend
           variant="outline-green"
           size="lg"
           className={`w-full ${NO_GLOW}`}
-          onClick={() => undefined}
+          onClick={onNewChat}
         >
           <span className="inline-flex items-center justify-center gap-2">
             <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor" aria-hidden="true">
