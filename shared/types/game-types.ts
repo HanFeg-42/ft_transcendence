@@ -53,7 +53,7 @@ export interface GameOverPayload {
 }
 
 export type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
-export type GameStatus = "waiting" | "playing" | "won" | "lost";
+export type GameStatus = "waiting" | "playing" | "won" | "lost" | "finished";
 
 export interface Tile {
   x: number;
@@ -69,6 +69,7 @@ export interface Player {
   step: number;
   lives: number;
   score: number;
+  connected: boolean;
 }
 export interface Chaser {
   id: number;

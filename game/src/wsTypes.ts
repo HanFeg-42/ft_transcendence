@@ -17,6 +17,8 @@ const gameRooms = new Map<string, Set<WebSocket>>();
 const activeLoops = new Map<string, NodeJS.Timeout>();
 const pendingStarts = new Map<string, NodeJS.Timeout>();
 const START_DELAY_MS = 3000;
+const abandonTimers = new Map<string, NodeJS.Timeout>();
+const ABANDON_DELAY_MS = 30000;
 
 // Send a message to every socket currently in a given room
 // Send a message to every socket currently in a given room
@@ -92,6 +94,13 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       ws.close(1008, "Room full");
       return;
     }
+    const rejoining = existing?.players.find((p) => p.id === userId);
+    if (rejoining) rejoining.connected = true;
+    const timeoutId = abandonTimers.get(gameId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      abandonTimers.delete(gameId);
+    }
     if (!gameRooms.has(gameId)) {
       gameRooms.set(gameId, new Set());
     }
@@ -108,7 +117,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         state.status = "playing";
 
         const loopId = setInterval(() => {
-          tick(state);
+          if (state.players.every((p) => p.connected)) tick(state);
           broadcast(gameId, GameEvents.GAME_STATE, state);
           if (state.status !== "playing") {
             activeLoops.delete(gameId);
@@ -185,7 +194,25 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
       }
       if (state.players.length === 0) endSession(gameId);
     }
-    if (sockets.size === 0) gameRooms.delete(gameId);
+    if (state?.status === "playing") {
+      const player = state.players.find((p) => p.id === userId);
+      if (player) player.connected = false;
+    }
+    if (sockets.size === 0) {
+      if (state?.status !== "playing") gameRooms.delete(gameId);
+      else {
+        const timeoutId = setTimeout(() => {
+          const loopId = activeLoops.get(gameId);
+          if (loopId) clearInterval(loopId);
+          activeLoops.delete(gameId);
+          abandonTimers.delete(gameId);
+          gameRooms.delete(gameId);
+          endSession(gameId);
+        }, ABANDON_DELAY_MS);
+
+        abandonTimers.set(gameId, timeoutId);
+      }
+    }
   }
 }
 

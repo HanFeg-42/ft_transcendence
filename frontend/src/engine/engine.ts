@@ -14,27 +14,7 @@ import {
 } from "./maze";
 import { stepPlayer, stepChaser, ahead } from "./movement";
 
-const CENTER_OFFSET = 4;
 const TICKS_PER_SECOND = 30;
-
-export const addPlayer = (playerId: string, state: GameState) => {
-  if (state.players.length >= 2 || state.players[0].id == playerId) return;
-
-  const spawn: Tile = findSpawn();
-  state.players[0].spawn = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
-  state.players[0].tile = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
-
-  state.players.push({
-    id: playerId,
-    spawn: { x: spawn.x + CENTER_OFFSET, y: spawn.y },
-    tile: { x: spawn.x + CENTER_OFFSET, y: spawn.y },
-    dir: null,
-    nextDir: null,
-    step: 0,
-    lives: 3,
-    score: 0,
-  });
-};
 
 export const createGame = (
   playerId: string,
@@ -50,6 +30,7 @@ export const createGame = (
       step: 0,
       lives: 3,
       score: 0,
+      connected: true
     },
   ];
 

@@ -143,11 +143,9 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
             width={WIDTH * TILE_SIZE}
             height={HEIGHT * TILE_SIZE}
           />
-          {(state.status === "won" || state.status === "lost") && (
+          {state.status === "finished" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
-              <Badge variant={state.status === "won" ? "green" : "red"}>
-                {state.status === "won" ? "You Win!" : "Game Over"}
-              </Badge>
+              <Badge variant={"red"}>Game over!</Badge>
             </div>
           )}
         </div>

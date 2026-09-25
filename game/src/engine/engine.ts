@@ -33,6 +33,7 @@ export const addPlayer = (playerId: string, state: GameState) => {
     step: 0,
     lives: 3,
     score: 0,
+    connected: true
   });
 };
 
@@ -52,6 +53,7 @@ export const createGame = (
       step: 0,
       lives: 3,
       score: 0,
+      connected: true
     },
   ];
 
@@ -160,12 +162,12 @@ export const tick = (state: GameState) => {
     stepChaser(chaser);
   });
   if (!state.pellets.flat().some((hasPellet) => hasPellet))
-    state.status = "won";
+    state.status = "finished";
   else if (
     state.players.some((player) => player.lives <= 0) ||
     state.timeRemaining <= 0
   )
-    state.status = "lost";
+    state.status = "finished";
   else if (state.tick % TICKS_PER_SECOND == 0) {
     state.timeRemaining--;
   }
