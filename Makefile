@@ -1,6 +1,6 @@
 NAME = pacova
 DOCKER_COMPOSE = docker compose
-SERVICES = frontend api-gateway auth game
+SERVICES = frontend api-gateway auth game chat user
 
 
 all: build up migrate
@@ -17,6 +17,8 @@ up:
 # Apply Prisma migrations
 migrate:
 	$(DOCKER_COMPOSE) exec auth npx prisma migrate deploy
+	$(DOCKER_COMPOSE) exec chat npx prisma migrate deploy
+
 
 # Stop running containers
 down:

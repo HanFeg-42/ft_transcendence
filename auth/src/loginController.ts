@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import jwt from "jsonwebtoken";
+import { createSession } from "./sessionTokens";
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
@@ -18,7 +19,7 @@ export async function login(req: Request, res: Response) {
     },
   });
 
-  if (!user) {
+  if (!user || !user.passwordHash) {
     return res.status(401).json({
       error: "Invalid email or password",
     });
@@ -36,32 +37,54 @@ export async function login(req: Request, res: Response) {
 
   if (!jwtSecret) {
     console.error("JWT_SECRET is not configured");
-
     return res.status(500).json({
       error: "Something went wrong",
     });
   }
 
-  // create jwt
-  const token = jwt.sign(
-    {
-      userId: user.id,
-    },
-    jwtSecret,
-    {
-      expiresIn: "1h",
-      algorithm: "HS256",
-    },
-  );
+  // If 2FA is enabled, do NOT issue the normal auth token yet
+  if (user.twoFactorEnabled) {
+    const challengeSecret = process.env.TWO_FACTOR_CHALLENGE_SECRET;
 
-  //return token with res
+    if (!challengeSecret) {
+      console.error("TWO_FACTOR_CHALLENGE_SECRET is not configured");
+
+      return res.status(500).json({
+        error: "Something went wrong",
+      });
+    }
+
+    const challengeToken = jwt.sign(
+      {
+        userId: user.id,
+        purpose: "2fa",
+      },
+      challengeSecret,
+      {
+        expiresIn: "5m",
+        algorithm: "HS256",
+      },
+    );
+
+    return res.status(200).json({
+      message: "2FA verification required",
+      requiresTwoFactor: true,
+      challengeToken,
+    });
+  }
+
+  // Normal login for users without 2FA
+  const token = createSession(res, user.id);
+
   return res.status(200).json({
     message: "Login successful",
+    requiresTwoFactor: false,
     token,
     user: {
       id: user.id,
       username: user.username,
       email: user.email,
+      twoFactorEnabled: user.twoFactorEnabled,
     },
   });
 }
