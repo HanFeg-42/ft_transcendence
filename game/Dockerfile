@@ -9,4 +9,4 @@ COPY game/ .
 RUN npx prisma generate
 
 EXPOSE 3002
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]

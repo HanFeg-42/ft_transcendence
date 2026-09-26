@@ -10,7 +10,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth"]
 }
 
 model User {
@@ -25,8 +24,6 @@ model User {
   createdAt    DateTime @default(now())
 
   twoFactorRecoveryCodes TwoFactorRecoveryCode[]
-
-  @@schema("auth")
 }
 
 model TwoFactorRecoveryCode {
@@ -39,5 +36,4 @@ model TwoFactorRecoveryCode {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@schema("auth")
 }
