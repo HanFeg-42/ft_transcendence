@@ -6,6 +6,7 @@ RUN npm ci
 
 COPY shared/types ../shared/types
 COPY user/ .
+RUN npx prisma generate
 
 EXPOSE 3004
 CMD ["npm", "start"]

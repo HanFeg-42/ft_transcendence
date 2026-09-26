@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,16 +5,17 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["user"]
 }
 
+model Profile {
+  userId      Int       @id
+  displayName String?
+  bio         String    @default("")
+  avatarUrl   String?
+  statusText  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  username  String   @unique
-  avatar    String?  @default("https://api.dicebear.com/7.x/bottts/svg?seed=default")
-  bio       String?  @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@schema("user")
 }
