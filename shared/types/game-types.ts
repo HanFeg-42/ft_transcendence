@@ -5,26 +5,21 @@
 
 // Every message sent across the WebSocket pipe uses a standard Envelope format:
 // {
-  // "event": "<WHAT_HAPPENED>",//
-  // "data":  { "<THE_PAYLOAD_DETAILS>" }
+// "event": "<WHAT_HAPPENED>",//
+// "data":  { "<THE_PAYLOAD_DETAILS>" }
 // }
-
-
 
 // --- Event names -----------------------------------------------------
 //A central list of every action that can happen over the WebSocket pipe
 export const GameEvents = {
-  JOIN_GAME: "joinGame",         // client -> server: join a match
-  GAME_START: "gameStart",       // server -> client: match found, starting
-  PLAYER_INPUT: "playerInput",   // client -> server: movement/direction
-  GAME_STATE: "gameState",       // server -> client: authoritative state tick
-  GAME_OVER: "gameOver",         // server -> client: match ended
+  JOIN_GAME: "joinGame", // client -> server: join a match
+  GAME_START: "gameStart", // server -> client: match found, starting
+  PLAYER_INPUT: "playerInput", // client -> server: movement/direction
+  GAME_STATE: "gameState", // server -> client: authoritative state tick
+  GAME_OVER: "gameOver", // server -> client: match ended
 } as const;
 
-export type GameEvent = typeof GameEvents[keyof typeof GameEvents];
-
-
-
+export type GameEvent = (typeof GameEvents)[keyof typeof GameEvents];
 
 // --- Payload shapes ----------------------------------------------------
 //1.Data sent by the client when joining a match
@@ -36,27 +31,57 @@ export interface JoinGamePayload {
 //2.Data sent when a player presses an arrow key
 export interface PlayerInputPayload {
   gameId: string;
-  direction: "up" | "down" | "left" | "right";
+  direction: Direction;
 }
 
 // Adjust to your actual Pac-Man state: player positions, pellets, ghosts, score, etc.
 //3.Data sent repeatedly by the server (usually 20–60 times per second) containing the positions of Pac-Man, ghosts, score, and game ticks
-export interface GameStatePayload {
-  players: {
-    id: string;
-    username: string;
-    x: number;
-    y: number;
-    score: number;
-  }[];
-  pellets: { x: number; y: number }[];
-  tick: number;
-}
-
+// export interface GameStatePayload {
+//   tick: number;
+//   status: GameStatus;
+//   players: Player[];
+//   chasers: Chaser[];
+//   pellets: boolean[][];
+//   timeRemaining: number;
+// }
 
 //4.Data sent when the match finishes
 export interface GameOverPayload {
   gameId: string;
   winnerId: string;
   finalScores: Record<string, number>;
+}
+
+export type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
+export type GameStatus = "waiting" | "playing" | "won" | "lost";
+
+export interface Tile {
+  x: number;
+  y: number;
+}
+
+export interface Player {
+  id: string;
+  spawn: Tile;
+  tile: Tile;
+  dir: Direction | null;
+  nextDir: Direction | null;
+  step: number;
+  lives: number;
+  score: number;
+}
+export interface Chaser {
+  id: number;
+  spawn: Tile;
+  tile: Tile;
+  dir: Direction | null;
+  step: number;
+}
+export interface GameState {
+  tick: number;
+  status: GameStatus;
+  players: Player[];
+  chasers: Chaser[];
+  pellets: boolean[][];
+  timeRemaining: number;
 }
