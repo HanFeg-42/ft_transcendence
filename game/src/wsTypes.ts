@@ -8,7 +8,7 @@ import {
   JoinGamePayload,
 } from "../../shared/types/game-types";
 import { endSession, getSession, joinSession } from "./gameSessions";
-import { applyInput, tick, removePlayer } from "./engine/engine";
+import { applyInput, tick, removePlayer, finishMatch } from "./engine/engine";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so
@@ -19,7 +19,8 @@ const pendingStarts = new Map<string, NodeJS.Timeout>();
 const START_DELAY_MS = 3000;
 const abandonTimers = new Map<string, NodeJS.Timeout>();
 const ABANDON_DELAY_MS = 30000;
-
+const forfeitTimers = new Map<string, NodeJS.Timeout>();
+const FORFEIT_DELAY_MS = 15000;
 // Send a message to every socket currently in a given room
 // Send a message to every socket currently in a given room
 function broadcast(gameId: string, eventName: string, data: unknown) {
@@ -95,10 +96,17 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       return;
     }
     const rejoining = existing?.players.find((p) => p.id === userId);
-    if (rejoining) rejoining.connected = true;
-    const timeoutId = abandonTimers.get(gameId);
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+    if (rejoining) {
+      rejoining.connected = true;
+      const forfeitId = forfeitTimers.get(gameId);
+      if (forfeitId) {
+        clearTimeout(forfeitId);
+        forfeitTimers.delete(gameId);
+      }
+    }
+    const abandonId = abandonTimers.get(gameId);
+    if (abandonId) {
+      clearTimeout(abandonId);
       abandonTimers.delete(gameId);
     }
     if (!gameRooms.has(gameId)) {
@@ -112,7 +120,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     if (state.players.length === 2) {
       if (activeLoops.has(gameId) || pendingStarts.has(gameId)) return;
 
-      const timeoutId = setTimeout(() => {
+      const startId = setTimeout(() => {
         pendingStarts.delete(gameId);
         state.status = "playing";
 
@@ -130,7 +138,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         activeLoops.set(gameId, loopId);
       }, START_DELAY_MS);
 
-      pendingStarts.set(gameId, timeoutId);
+      pendingStarts.set(gameId, startId);
     }
 
     console.log(`[GAME-SERVICE] Client ${userId} joined room ${gameId}`);
@@ -155,23 +163,6 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       );
       return;
     }
-
-    //Game engine calculates new position, pellets eaten, tick count...
-    // const updatedState: GameState = {
-    //   players: [{ id: "p1", username: "playerAA", x: 10, y: 12, score: 100 }],
-    //   pellets: [{ x: 5, y: 5 }],
-    //   tick: 42,
-    // };
-
-    // broadcast(input.gameId, GameEvents.GAME_STATE, updatedState);
-
-    // Convert response object into text string and send back down the pipe
-    // ws.send(
-    //   JSON.stringify({
-    //     event: GameEvents.GAME_STATE,
-    //     data: updatedState
-    //   })
-    // );
   }
 }
 
@@ -187,9 +178,9 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
     if (state?.status === "waiting") {
       removePlayer(userId, state);
       broadcast(gameId, GameEvents.GAME_STATE, state);
-      const timeoutId = pendingStarts.get(gameId);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      const startId = pendingStarts.get(gameId);
+      if (startId) {
+        clearTimeout(startId);
         pendingStarts.delete(gameId);
       }
       if (state.players.length === 0) endSession(gameId);
@@ -197,11 +188,23 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
     if (state?.status === "playing") {
       const player = state.players.find((p) => p.id === userId);
       if (player) player.connected = false;
+      if (sockets.size > 0 && !forfeitTimers.has(gameId)) {
+        const forfeitId = setTimeout(() => {
+          forfeitTimers.delete(gameId);
+          finishMatch(state, state.players.find((p) => p.connected)?.id);
+        }, FORFEIT_DELAY_MS);
+        forfeitTimers.set(gameId, forfeitId);
+      }
     }
     if (sockets.size === 0) {
       if (state?.status !== "playing") gameRooms.delete(gameId);
       else {
-        const timeoutId = setTimeout(() => {
+        const forfeitId = forfeitTimers.get(gameId);
+        if (gameId) {
+          clearTimeout(forfeitId);
+          forfeitTimers.delete(gameId);
+        }
+        const abandonId = setTimeout(() => {
           const loopId = activeLoops.get(gameId);
           if (loopId) clearInterval(loopId);
           activeLoops.delete(gameId);
@@ -210,7 +213,7 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
           endSession(gameId);
         }, ABANDON_DELAY_MS);
 
-        abandonTimers.set(gameId, timeoutId);
+        abandonTimers.set(gameId, abandonId);
       }
     }
   }

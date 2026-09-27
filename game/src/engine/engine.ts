@@ -33,11 +33,12 @@ export const addPlayer = (playerId: string, state: GameState) => {
     step: 0,
     lives: 3,
     score: 0,
-    connected: true
+    connected: true,
   });
 };
 
-export const removePlayer = (playerId: string, state: GameState) => state.players = state.players.filter( (p) => p.id !== playerId);
+export const removePlayer = (playerId: string, state: GameState) =>
+  (state.players = state.players.filter((p) => p.id !== playerId));
 
 export const createGame = (
   playerId: string,
@@ -53,7 +54,7 @@ export const createGame = (
       step: 0,
       lives: 3,
       score: 0,
-      connected: true
+      connected: true,
     },
   ];
 
@@ -134,6 +135,18 @@ const handlePlayerDeath = (player: Player, state: GameState) => {
   });
 };
 
+const getWinnerId = (state: GameState) => {
+  const [a, b] = state.players;
+  if (b.lives <= 0 && a.lives > 0) return a.id;
+  if (a.lives <= 0 && b.lives > 0) return b.id;
+  return a.score > b.score ? a.id : b.score > a.score ? b.id : undefined;
+};
+
+export const finishMatch = (state: GameState, winnerId?: string) => {
+  state.winnerId = winnerId;
+  state.status = "finished";
+};
+
 export const tick = (state: GameState) => {
   state.tick++;
 
@@ -161,13 +174,13 @@ export const tick = (state: GameState) => {
     if (chaser.step == 0) pickChaserDirection(chaser, state);
     stepChaser(chaser);
   });
-  if (!state.pellets.flat().some((hasPellet) => hasPellet))
-    state.status = "finished";
-  else if (
+  if (!state.pellets.flat().some((hasPellet) => hasPellet)) {
+    finishMatch(state, getWinnerId(state));
+  } else if (
     state.players.some((player) => player.lives <= 0) ||
     state.timeRemaining <= 0
   )
-    state.status = "finished";
+    finishMatch(state, getWinnerId(state));
   else if (state.tick % TICKS_PER_SECOND == 0) {
     state.timeRemaining--;
   }

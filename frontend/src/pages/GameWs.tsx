@@ -4,19 +4,13 @@ import Input from "../components/ui/Input";
 import PixelButton from "../components/ui/PixelButton";
 import { useState } from "react";
 
-// const TEST_TOKEN =
-//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4OTg2MTAzNiwiZXhwIjoxNzg5ODY0NjM2fQ.6dh0QOHILRk2dOSqwD78tSkh89TUlhGcI1liKUlV7qA";
-
 import { useEffect, useRef } from "react";
-import { MAZE, WIDTH, HEIGHT } from "../engine/maze";
-import type {
-  GameState,
-  Direction,
-  Tile,
-} from "../../../shared/types/game-types";
-import { ahead, TICKS_PER_TILE } from "../engine/movement";
+import { WIDTH, HEIGHT } from "../engine/maze";
+import type { Direction } from "../../../shared/types/game-types";
+// import { ahead, TICKS_PER_TILE } from "../engine/movement";
 import ArenaBackground from "../components/ui/ArenaBackground";
 import Badge from "../components/ui/Badge";
+import { draw } from "../utils/render";
 
 const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
@@ -34,52 +28,29 @@ const KEY_MAP: Record<string, Direction> = {
   ArrowRight: "RIGHT",
 };
 
-const getDrawPosition = (
-  tile: Tile,
-  dir: Direction | null,
-  step: number,
-): Tile => {
-  if (!dir) return { x: tile.x * TILE_SIZE, y: tile.y * TILE_SIZE };
-  const target = ahead(tile, dir);
-  const progress = step / TICKS_PER_TILE;
+const Countdown = ({ seconds }: { seconds: number }) => {
+  const [remaining, setRemaining] = useState<number>(seconds);
 
-  return {
-    x: (tile.x + (target.x - tile.x) * progress) * TILE_SIZE,
-    y: (tile.y + (target.y - tile.y) * progress) * TILE_SIZE,
-  };
-};
-const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, TILE_SIZE * WIDTH, TILE_SIZE * HEIGHT);
-  for (let y = 0; y < HEIGHT; y++) {
-    for (let x = 0; x < WIDTH; x++) {
-      if (MAZE[y][x] == "#") {
-        ctx.fillStyle = "purple";
-        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-      } else if (state.pellets[y][x]) {
-        ctx.fillStyle = "yellow";
-        ctx.fillRect(
-          x * TILE_SIZE + TILE_SIZE / 3,
-          y * TILE_SIZE + TILE_SIZE / 3,
-          TILE_SIZE / 3,
-          TILE_SIZE / 3,
-        );
-      }
-    }
-  }
-  ctx.fillStyle = "red";
-  state.chasers.forEach((chaser) => {
-    const pos = getDrawPosition(chaser.tile, chaser.dir, chaser.step);
-    ctx.fillRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE);
-  });
-  ctx.fillStyle = "blue";
-  state.players.forEach((player) => {
-    const pos = getDrawPosition(player.tile, player.dir, player.step);
-    ctx.fillRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE);
-  });
+  useEffect(() => {
+    let secondsLeft = remaining;
+    const interval = setInterval(() => {
+      secondsLeft--;
+      setRemaining(secondsLeft);
+      if (secondsLeft <= 0) clearInterval(interval);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span>{remaining}</span>;
 };
 
-const GameRoom = ({ gameId }: { gameId: string }) => {
+const GameRoom = ({
+  gameId,
+  onFullRoom,
+}: {
+  gameId: string;
+  onFullRoom: (message: string) => void;
+}) => {
   const { user, token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,6 +58,7 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
   const {
     gameState: state,
     // isConnected,
+    isRoomFull,
     sendPlayerInput,
   } = useGameSocket(url, gameId, user?.username ?? "guest");
 
@@ -99,7 +71,6 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
@@ -109,59 +80,94 @@ const GameRoom = ({ gameId }: { gameId: string }) => {
 
     draw(ctx, state);
   }, [state]);
-
-  if (!state) return <p>Joining the room {gameId}</p>;
+  useEffect(() => {
+    if (isRoomFull) {
+      onFullRoom("This room is full, try another one");
+    }
+  }, [isRoomFull]);
+  if (!state)
+    return (
+      <p className="font-vt323 text-2xl text-pacova-pink text-center mt-10">
+        Joining the room {gameId}
+      </p>
+    );
   if (state.status === "waiting")
     return (
-      <div>
-        <p>Room {gameId}</p>
+      <div className="flex flex-col items-center gap-3 font-vt323 text-pacova-pink text-xl mt-10">
+        <p className="text-2xl">Room {gameId}</p>
         {state.players.map((p, i) => (
           <p key={p.id}>Player {i + 1} joined</p>
         ))}
         {state.players.length === 2 ? (
-          <p>Starting the game</p>
+          <p>
+            Starting in <Countdown seconds={3} />
+          </p>
         ) : (
           <p>Waiting for another player...</p>
         )}
       </div>
     );
 
+  const myId = String(user?.id);
+  const opponent = state.players.find((p) => p.id !== myId);
+  const isOpponentAway = state.status === "playing" && !opponent?.connected;
+
   return (
-    <ArenaBackground>
-      <div className="flex-1 flex-col flex items-center justify-center gap-4">
-        <div className="flex gap-4 w-152 justify-between">
-          <Badge variant="yellow">timeRemaining: {state.timeRemaining} </Badge>
-          {state.players.map((p, index) => (
-            <Badge variant="green">
-              Player{index + 1} score: {p.score} lives: {p.lives}
-            </Badge>
-          ))}
-        </div>
-        <div className="relative">
-          <canvas
-            ref={canvasRef}
-            width={WIDTH * TILE_SIZE}
-            height={HEIGHT * TILE_SIZE}
-          />
-          {state.status === "finished" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
-              <Badge variant={"red"}>Game over!</Badge>
-            </div>
-          )}
-        </div>
+    <div className="flex-1 flex-col flex items-center justify-center gap-4">
+      <div className="flex gap-4 w-152 justify-between">
+        <Badge variant="yellow">timeRemaining: {state.timeRemaining} </Badge>
+        {state.players.map((p, index) => (
+          <Badge variant="green">
+            Player{index + 1} score: {p.score} lives: {p.lives}
+          </Badge>
+        ))}
       </div>
-    </ArenaBackground>
+      <div className="relative">
+        <canvas
+          ref={canvasRef}
+          width={WIDTH * TILE_SIZE}
+          height={HEIGHT * TILE_SIZE}
+        />
+        {state.status === "finished" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
+            <Badge variant={"yellow"}>
+              {state.winnerId === undefined
+                ? "Draw"
+                : state.winnerId === String(user?.id)
+                  ? "You won"
+                  : "You lost!"}
+            </Badge>
+          </div>
+        )}
+        {isOpponentAway && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
+            <Badge variant="yellow">
+              {"Opponent disconnected, Forfeit in "}
+              <Countdown seconds={15} />s
+            </Badge>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
 const GameWs = () => {
   const [gameRoom, setGameRoom] = useState<string | null>(null);
   const [roomInput, setRoomInput] = useState<string>("");
+  const [joinError, setJoinError] = useState<string | null>(null);
+
+  const handleJoinError = (message: string) => {
+    setGameRoom(null);
+    setRoomInput("");
+    setJoinError(message);
+  };
 
   if (!gameRoom)
     return (
       <ArenaBackground>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          {joinError && <Badge variant="red">{joinError}</Badge>}
           <Input
             placeholder="Enter room name"
             value={roomInput}
@@ -174,6 +180,10 @@ const GameWs = () => {
         </div>
       </ArenaBackground>
     );
-  return <GameRoom gameId={gameRoom} />;
+  return (
+    <ArenaBackground>
+      <GameRoom gameId={gameRoom} onFullRoom={handleJoinError} />
+    </ArenaBackground>
+  );
 };
 export default GameWs;

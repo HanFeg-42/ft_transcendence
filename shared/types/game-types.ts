@@ -85,4 +85,5 @@ export interface GameState {
   chasers: Chaser[];
   pellets: boolean[][];
   timeRemaining: number;
+  winnerId?: string;
 }
