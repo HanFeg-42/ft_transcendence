@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 // Import shared WebSocket contract rules (event names and payload shapes)
 import { GameEvents } from '../../../shared/types/game-types';
-import type { PlayerInputPayload } from '../../../shared/types/game-types';
+import type { PlayerInputPayload, Direction } from '../../../shared/types/game-types';
+import type { GameState } from '../../../shared/types/game-types';
 
 
 
 
-export function useGameSocket(url: string) {
+export function useGameSocket(url: string, gameId: string, username: string) {
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
+  const [gameState, setGameState] = useState<GameState | null>(null);
 
   useEffect(() => {
     // 1. Establish connection to the backend server
@@ -19,7 +21,7 @@ export function useGameSocket(url: string) {
     ws.onopen = () => {
       console.log('[GAME-CLIENT] Connected to server');
       setIsConnected(true);
-      ws.send(JSON.stringify({ event: GameEvents.JOIN_GAME, data: { gameId: 'game-1', username: 'test' } }));
+      ws.send(JSON.stringify({ event: GameEvents.JOIN_GAME, data: { gameId, username } }));
 
     };
 
@@ -59,7 +61,7 @@ export function useGameSocket(url: string) {
     // Check if incoming packet matches game state update
     if (packet.event === GameEvents.GAME_STATE) {
       console.log('[GAME-CLIENT] Game state update received:', packet.data);
-
+      setGameState(packet.data);
       // Render updated positions, score, pellets...
     }
   }
@@ -78,7 +80,7 @@ export function useGameSocket(url: string) {
 
 
   // Send player movement input to the backend
-  function sendPlayerInput(direction: 'up' | 'down' | 'left' | 'right') {
+  function sendPlayerInput(direction: Direction) {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
       console.warn('[GAME-CLIENT] Cannot send input, socket not connected');
       return;
@@ -86,7 +88,7 @@ export function useGameSocket(url: string) {
 
     // 1. Create the payload matching PlayerInputPayload interface
     const payload: PlayerInputPayload = {
-      gameId: 'game-1',
+      gameId: gameId,
       direction: direction
     };
 
@@ -100,5 +102,5 @@ export function useGameSocket(url: string) {
     );
   }
 
-  return { isConnected, sendPlayerInput };
+  return { isConnected, sendPlayerInput, gameState };
 }

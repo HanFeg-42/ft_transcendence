@@ -28,11 +28,12 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
+        <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
       {/* <Route path="/Design" element={<Design />} /> */}
       <Route path="/ProfilePage" element={<Profile />} />
-      <Route path="/ws-game" element={<GameWs />} /> {/* TEMP */}
+      {/* <Route path="/ws-game" element={<GameWs />} />  */}
     </Routes>
   );
 }
