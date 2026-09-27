@@ -12,7 +12,6 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import Design from './pages/Design'
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
-import ChatWs from "./pages/ChatWs"; // TEMP
 
 /** Renders the application's route configuration. */
 function App() {
@@ -21,7 +20,6 @@ function App() {
       <Route path="/" element={<Welcome />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/game" element={<Game />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
@@ -29,12 +27,10 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
+        <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
       {/* <Route path="/Design" element={<Design />} /> */}
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/ws-game" element={<GameWs />} /> {/* TEMP */}
-      <Route path="/ws-chat" element={<ChatWs />} /> {/* TEMP */}
     </Routes>
   );
 }

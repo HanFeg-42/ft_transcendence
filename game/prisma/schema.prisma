@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["game"]
+}
+
+model Match {
+  id               BigInt    @id @default(autoincrement())
+  mode             String    @default("1v1")
+  status           String    @default("pending")
+  mazeSeed         String?
+  timeLimitSeconds Int       @default(360)
+  startedAt        DateTime?
+  endedAt          DateTime?
+  winnerUserId     Int?
+  createdAt        DateTime  @default(now())
+
+  participants MatchParticipant[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@schema("game")
+}
+
+model MatchParticipant {
+  id             BigInt    @id @default(autoincrement())
+  matchId        BigInt
+  userId         Int
+  slot           Int
+  result         String?
+  score          Int       @default(0)
+  livesRemaining Int       @default(3)
+  joinedAt       DateTime  @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, slot])
+  @@unique([matchId, userId])
+  @@index([userId, joinedAt])
+  @@schema("game")
+}

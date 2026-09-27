@@ -30,3 +30,18 @@ export interface ChatTypingEvent {
   sender_id: number;
   receiver_id: number;
 }
+
+
+
+
+// --- Envelopes ----------------------------------------------------------
+// Ties each event name to its payload shape so both sides can switch on
+// `event` and get real type narrowing on `data`, instead of casting.
+
+export type ChatClientMessage =
+  | { event: typeof ChatEvents.MESSAGE; data: ChatMessageOutgoing };
+  // TYPING intentionally omitted here until it's actually built
+
+export type ChatServerMessage =
+  | { event: typeof ChatEvents.MESSAGE; data: ChatMessageIncoming }
+  | { event: typeof ChatEvents.TYPING; data: ChatTypingEvent };

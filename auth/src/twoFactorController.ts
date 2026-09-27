@@ -20,13 +20,13 @@ export async function setupTwoFactor(req: Request, res: Response) {
     });
   }
 
-const secret = generateSecret();
+  const secret = generateSecret();
 
-const otpauthUrl = generateURI({
-  issuer: "Pacova",
-  label: user.email,
-  secret,
-});
+  const otpauthUrl = generateURI({
+    issuer: "Pacova",
+    label: user.email,
+    secret,
+  });
 
   const qrCode = await QRCode.toDataURL(otpauthUrl);
 
@@ -91,5 +91,35 @@ export async function confirmTwoFactor(req: Request, res: Response) {
 
   return res.status(200).json({
     message: "2FA enabled successfully",
+  });
+}
+
+export async function disableTwoFactor(req: Request, res: Response) {
+  const userId = (req as AuthenticatedRequest).userId;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    return res.status(404).json({
+      error: "User not found",
+    });
+  }
+
+  await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+    },
+  });
+
+  return res.status(200).json({
+    message: "2FA disabled successfully",
   });
 }

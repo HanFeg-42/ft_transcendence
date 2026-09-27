@@ -6,6 +6,7 @@ RUN npm ci
 
 COPY shared/types ../shared/types
 COPY game/ .
+RUN npx prisma generate
 
 EXPOSE 3002
 CMD ["npm", "start"]

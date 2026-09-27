@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { verify } from "otplib";
-
 import { prisma } from "./prisma";
+import { createSession } from "./sessionTokens";
 
 type TwoFactorChallengePayload = {
   userId: number;
@@ -19,9 +19,10 @@ export async function verifyTwoFactorLogin(req: Request, res: Response) {
   }
 
   const jwtSecret = process.env.JWT_SECRET;
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
   const challengeSecret = process.env.TWO_FACTOR_CHALLENGE_SECRET;
 
-  if (!jwtSecret || !challengeSecret) {
+  if (!jwtSecret || !refreshSecret || !challengeSecret) {
     console.error("JWT secrets are not configured");
 
     return res.status(500).json({
@@ -74,26 +75,17 @@ export async function verifyTwoFactorLogin(req: Request, res: Response) {
 
     // 4. Both factors succeeded.
     // Now we can finally issue the normal authentication JWT.
-    const token = jwt.sign(
-      {
-        userId: user.id,
-      },
-      jwtSecret,
-      {
-        expiresIn: "1h",
-        algorithm: "HS256",
-      },
-    );
+    const token = createSession(res, user.id);
 
     return res.status(200).json({
       message: "Login successful",
       token,
-user: {
-  id: user.id,
-  username: user.username,
-  email: user.email,
-  twoFactorEnabled: user.twoFactorEnabled,
-},
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        twoFactorEnabled: user.twoFactorEnabled,
+      },
     });
   } catch {
     return res.status(401).json({

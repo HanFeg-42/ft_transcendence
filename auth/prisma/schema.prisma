@@ -10,7 +10,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("AUTH_DATABASE_URL")
   schemas  = ["auth"]
 }
 
@@ -23,7 +22,22 @@ model User {
   avatar           String?
   twoFactorEnabled Boolean  @default(false)
   twoFactorSecret  String?
-  createdAt        DateTime @default(now())
+  createdAt    DateTime @default(now())
 
+  twoFactorRecoveryCodes TwoFactorRecoveryCode[]
+
+  @@schema("auth")
+}
+
+model TwoFactorRecoveryCode {
+  id        BigInt    @id @default(autoincrement())
+  userId    Int
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@schema("auth")
 }

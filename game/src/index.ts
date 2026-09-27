@@ -1,6 +1,5 @@
 import express from "express";
 import http from "http";
-import { WebSocketServer } from "ws";
 import { setupWebSocket } from './wsTypes';
 
 const app = express(); //application / request handling logic

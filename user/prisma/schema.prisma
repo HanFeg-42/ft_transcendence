@@ -1,34 +1,21 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth", "user"]
-}
-
-/// Table gérée par le service auth — déclarée ici en lecture seule
-/// uniquement pour que Prisma sache créer la clé étrangère et
-/// pour pouvoir faire des jointures (afficher username/email). (profile.user.username)
-
-model User {
-  id       Int      @id
-  username String
-  email    String
-  avatar   String?
-  @@schema("auth")
+  schemas  = ["user"]
 }
 
 model Profile {
-  userId      Int      @id
-  user        User     @relation(fields: [userId], references: [id])
+  userId      Int       @id
   displayName String?
-  bio         String?  @default("")
-  avatarUrl   String?  @default("https://api.dicebear.com/7.x/bottts/svg?seed=default")
-  statusText  String?  @default("Ready to play")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  bio         String    @default("")
+  avatarUrl   String?
+  statusText  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@schema("user")
 }

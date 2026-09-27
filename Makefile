@@ -17,6 +17,10 @@ up:
 # Apply Prisma migrations
 migrate:
 	$(DOCKER_COMPOSE) exec auth npx prisma migrate deploy
+	$(DOCKER_COMPOSE) exec chat npx prisma migrate deploy
+	$(DOCKER_COMPOSE) exec user npx prisma migrate deploy
+	$(DOCKER_COMPOSE) exec game npx prisma migrate deploy
+
 
 # Stop running containers
 down:
