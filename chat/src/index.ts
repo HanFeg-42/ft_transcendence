@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import { setupWebSocket } from './wsTypes.js';
+import { setupWebSocket } from './ws/websocket';
 import messagesRouter from './routes/messages';
 import blocksRouter from './routes/blocks';
 

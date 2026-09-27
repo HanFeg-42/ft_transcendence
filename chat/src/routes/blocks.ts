@@ -3,9 +3,11 @@ import { prisma } from '../prisma';
 
 const router = Router();
 
+
+//1. Blocking a User (POST /blocks/:blockedId)
 router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
   const blockerId = Number(req.headers['x-user-id']);
-  const blockedId = Number(req.params.blockedId);
+  const blockedId = Number(req.params.blockedId);//Extracts URL path parameters. In /blocks/15,
 
   if (!blockerId) return res.status(401).json({ error: 'Missing identity' });
   if (!blockedId || blockedId === blockerId) return res.status(400).json({ error: 'Invalid blockedId' });
@@ -19,6 +21,8 @@ router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
   res.status(201).json({ blocked: true });
 });
 
+
+// 2. Unblocking a User (DELETE /blocks/:blockedId)
 router.delete('/blocks/:blockedId', async (req: Request, res: Response) => {
   const blockerId = Number(req.headers['x-user-id']);
   const blockedId = Number(req.params.blockedId);
@@ -30,8 +34,9 @@ router.delete('/blocks/:blockedId', async (req: Request, res: Response) => {
   res.json({ blocked: false });
 });
 
-// Lets the frontend know, for a given friend, whether YOU blocked them
-// or THEY blocked you — the UI needs both to decide what to show.
+
+
+// 3. Checking Block Status (GET /blocks/status/:friendId)
 router.get('/blocks/status/:friendId', async (req: Request, res: Response) => {
   const userId = Number(req.headers['x-user-id']);
   const friendId = Number(req.params.friendId);

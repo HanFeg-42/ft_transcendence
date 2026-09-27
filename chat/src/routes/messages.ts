@@ -3,6 +3,8 @@ import { prisma } from '../prisma';
 
 const router = Router();
 
+
+// 1. Fetching Chat History (GET /messages/:friendId)
 router.get('/messages/:friendId', async (req: Request, res: Response) => {
   const userId = Number(req.headers['x-user-id']);
   const friendId = Number(req.params.friendId);
@@ -39,6 +41,33 @@ router.get('/messages/:friendId', async (req: Request, res: Response) => {
   }));
 
   res.json(messages);
+});
+
+
+
+
+// 2. Clearing a Conversation (DELETE /messages/:friendId)
+router.delete('/messages/:friendId', async (req: Request, res: Response) => {
+  const userId = Number(req.headers['x-user-id']);
+  const friendId = Number(req.params.friendId);
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Missing identity' });
+  }
+  if (!friendId || Number.isNaN(friendId)) {
+    return res.status(400).json({ error: 'Invalid friendId' });
+  }
+
+  await prisma.message.deleteMany({
+    where: {
+      OR: [
+        { senderId: userId, receiverId: friendId },
+        { senderId: friendId, receiverId: userId },
+      ],
+    },
+  });
+
+  res.json({ cleared: true });
 });
 
 export default router;

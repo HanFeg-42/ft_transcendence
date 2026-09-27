@@ -26,7 +26,7 @@ export interface ChatMessageIncoming {
   created_at: string; // ISO string
 }
 
-// Optional: "typing" indicator payload, if that feature gets added.
+// Optional: "typing" indicator payload
 export interface ChatTypingEvent {
   sender_id: number;
   receiver_id: number;

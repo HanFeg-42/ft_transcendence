@@ -14,6 +14,10 @@ interface ConversationHeaderProps {
   onClearConversation: () => void;
 }
 
+// Which confirm panel (if any) the menu is currently showing instead of the
+// option list — 'block' for block/unblock, 'delete' for delete conversation.
+type ConfirmMode = 'block' | 'delete' | null;
+
 export default function ConversationHeader({
   friend,
   isFriendOnline,
@@ -24,15 +28,12 @@ export default function ConversationHeader({
   onClearConversation,
 }: ConversationHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  // When true, the menu shows a Y/N confirm instead of the option list —
-  // blocking now lives inside the menu, so it needs its own "are you sure"
-  // step instead of firing instantly on a single click like before.
-  const [confirmingBlock, setConfirmingBlock] = useState(false);
+  const [confirmMode, setConfirmMode] = useState<ConfirmMode>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const closeMenu = () => {
     setMenuOpen(false);
-    setConfirmingBlock(false);
+    setConfirmMode(null);
   };
 
   // Close on outside click or Escape.
@@ -56,15 +57,19 @@ export default function ConversationHeader({
     };
   }, [menuOpen]);
 
-  // Friend switched while the menu was open (e.g. a sidebar click behind
-  // it) — close it rather than leave a stale menu open over a new
-  // conversation.
+  // Friend switched while the menu was open — close it rather than leave a
+  // stale menu open over a new conversation.
   useEffect(() => {
     closeMenu();
   }, [friend.id]);
 
   const handleConfirmBlock = () => {
     onToggleBlock();
+    closeMenu();
+  };
+
+  const handleConfirmDelete = () => {
+    onClearConversation();
     closeMenu();
   };
 
@@ -107,11 +112,11 @@ export default function ConversationHeader({
         {menuOpen && (
           <div
             role="menu"
-            className="absolute right-0 top-full mt-2 w-56 bg-pacova-surface border-2 border-pacova-green-dark pixel-corners-3step shadow-neon-green z-20 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-64 bg-pacova-surface border-2 border-pacova-green-dark pixel-corners-3step shadow-neon-green z-20 overflow-hidden"
           >
             <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
 
-            {confirmingBlock ? (
+            {confirmMode === 'block' && (
               <div className="relative p-4 flex flex-col items-center gap-3">
                 <p className="font-vt323 text-white text-lg text-center uppercase">
                   {blockStatus.iBlockedThem ? 'Unblock this user?' : 'Block this user?'}
@@ -120,12 +125,33 @@ export default function ConversationHeader({
                   <PixelButton variant="danger-red" size="sm" onClick={handleConfirmBlock}>
                     Yes
                   </PixelButton>
-                  <PixelButton variant="outline-green" size="sm" onClick={() => setConfirmingBlock(false)}>
+                  <PixelButton variant="outline-green" size="sm" onClick={() => setConfirmMode(null)}>
                     No
                   </PixelButton>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {confirmMode === 'delete' && (
+              <div className="relative p-4 flex flex-col items-center gap-2">
+                <p className="font-vt323 text-red-500 text-lg text-center uppercase leading-tight">
+                  ⚠ Delete for both players?
+                </p>
+                <p className="font-vt323 text-gray-300 text-base text-center leading-tight mb-1">
+                  This wipes the chat for {friend.username} too. No respawn.
+                </p>
+                <div className="flex gap-3">
+                  <PixelButton variant="danger-red" size="sm" onClick={handleConfirmDelete}>
+                    Yes
+                  </PixelButton>
+                  <PixelButton variant="outline-green" size="sm" onClick={() => setConfirmMode(null)}>
+                    No
+                  </PixelButton>
+                </div>
+              </div>
+            )}
+
+            {confirmMode === null && (
               <ul className="relative py-1">
                 {/* Profile lookup needs user_db, which doesn't exist yet —
                     kept visible but disabled instead of just missing. */}
@@ -133,10 +159,10 @@ export default function ConversationHeader({
                   <button
                     type="button"
                     disabled
-                    className="w-full text-left px-4 py-2 font-vt323 text-base uppercase text-gray-500 cursor-not-allowed flex items-center justify-between"
+                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-gray-500 cursor-not-allowed flex items-center justify-between"
                   >
                     View Profile
-                    <span className="text-xs normal-case">Soon</span>
+                    <span className="text-sm normal-case">Soon</span>
                   </button>
                 </li>
                 <li>
@@ -147,7 +173,7 @@ export default function ConversationHeader({
                       onToggleMute();
                       closeMenu();
                     }}
-                    className="w-full text-left px-4 py-2 font-vt323 text-base uppercase text-pacova-green hover:bg-pacova-green/10"
+                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-pacova-green hover:bg-pacova-green/10"
                   >
                     {isMuted ? 'Unmute Notifications' : 'Mute Notifications'}
                   </button>
@@ -156,21 +182,18 @@ export default function ConversationHeader({
                   <button
                     type="button"
                     role="menuitem"
-                    onClick={() => {
-                      onClearConversation();
-                      closeMenu();
-                    }}
-                    className="w-full text-left px-4 py-2 font-vt323 text-base uppercase text-pacova-green hover:bg-pacova-green/10"
+                    onClick={() => setConfirmMode('delete')}
+                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-red-500 hover:bg-red-500/10"
                   >
-                    Clear Conversation
+                    Delete Conversation
                   </button>
                 </li>
                 <li>
                   <button
                     type="button"
                     role="menuitem"
-                    onClick={() => setConfirmingBlock(true)}
-                    className="w-full text-left px-4 py-2 font-vt323 text-base uppercase text-red-500 hover:bg-red-500/10"
+                    onClick={() => setConfirmMode('block')}
+                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-red-500 hover:bg-red-500/10"
                   >
                     {blockStatus.iBlockedThem ? 'Unblock User' : 'Block User'}
                   </button>
