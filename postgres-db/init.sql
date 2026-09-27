@@ -1,13 +1,4 @@
--- SQL file Postgres automatically runs the first time its container starts.
--- Pacova uses one physical database (pacova), with each service owning its
--- own PostgreSQL schema inside it: auth, user, chat, game.
--- Schemas themselves are created by each service's first Prisma migration,
--- not here — this file only needs to make sure the database exists.
-CREATE DATABASE pacova;
-
-\connect pacova
-
-CREATE SCHEMA IF NOT EXISTS auth;
-CREATE SCHEMA IF NOT EXISTS chat;
-CREATE SCHEMA IF NOT EXISTS game;
-CREATE SCHEMA IF NOT EXISTS "user";
+CREATE DATABASE auth_db;
+CREATE DATABASE user_db;
+CREATE DATABASE chat_db;
+CREATE DATABASE game_db;

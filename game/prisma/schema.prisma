@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["game"]
 }
 
 model Match {
@@ -23,7 +22,6 @@ model Match {
 
   @@index([status])
   @@index([createdAt])
-  @@schema("game")
 }
 
 model MatchParticipant {
@@ -41,5 +39,4 @@ model MatchParticipant {
   @@unique([matchId, slot])
   @@unique([matchId, userId])
   @@index([userId, joinedAt])
-  @@schema("game")
 }

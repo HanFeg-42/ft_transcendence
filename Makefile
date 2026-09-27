@@ -3,7 +3,7 @@ DOCKER_COMPOSE = docker compose
 SERVICES = frontend api-gateway auth game chat user
 
 
-all: build up migrate
+all: build up
 
 # Build Docker images
 build:
@@ -17,17 +17,16 @@ up:
 # Apply Prisma migrations
 migrate:
 	$(DOCKER_COMPOSE) exec auth npx prisma migrate deploy
-	$(DOCKER_COMPOSE) exec chat npx prisma migrate deploy
 	$(DOCKER_COMPOSE) exec user npx prisma migrate deploy
+	$(DOCKER_COMPOSE) exec chat npx prisma migrate deploy
 	$(DOCKER_COMPOSE) exec game npx prisma migrate deploy
-
 
 # Stop running containers
 down:
 	$(DOCKER_COMPOSE) down
 
 # Restart containers
-restart: down up
+restart: down build up
 
 # View running containers status
 status:
@@ -47,9 +46,9 @@ fclean: clean
 # 	@echo "Cleaning up local node_modules and Docker cache..."
 # 	@for dir in $(SERVICES); do \
 # 		rm -rf $$dir/node_modules; \
-	done
+# 	done
 
 
-re: fclean build up migrate
+re: fclean build up
 
 .PHONY: all build up down restart status logs clean fclean migrate re

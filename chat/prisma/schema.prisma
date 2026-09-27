@@ -8,7 +8,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["chat"]
 }
 
 model Message {
@@ -19,7 +18,6 @@ model Message {
   createdAt     DateTime @default(now())
 
   @@index([senderId, receiverId, createdAt])
-  @@schema("chat")
 }
 
 model BlockedUser {
@@ -29,7 +27,6 @@ model BlockedUser {
   createdAt DateTime @default(now())
 
   @@unique([blockerId, blockedId])
-  @@schema("chat")
 }
 
 model FriendRequest {
@@ -42,7 +39,6 @@ model FriendRequest {
 
   @@unique([requesterId, addresseeId])
   @@index([addresseeId, status])
-  @@schema("chat")
 }
 
 model Friendship {
@@ -54,7 +50,6 @@ model Friendship {
   @@unique([userLowId, userHighId])
   @@index([userLowId])
   @@index([userHighId])
-  @@schema("chat")
 }
 
 model Notification {
@@ -66,5 +61,4 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead, createdAt])
-  @@schema("chat")
 }

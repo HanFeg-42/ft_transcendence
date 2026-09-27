@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["user"]
 }
 
 model Profile {
@@ -16,6 +15,4 @@ model Profile {
   statusText  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  @@schema("user")
 }
