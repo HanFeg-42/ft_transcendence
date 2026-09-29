@@ -3,7 +3,6 @@ import { prisma } from '../prisma';
 
 const router = Router();
 
-// Extraire proprement l'ID utilisateur injecté par l'API Gateway
 function getUserIdFromHeader(req: Request): number | null {
   const userId = req.headers['x-user-id'];
   if (!userId) return null;
@@ -11,7 +10,27 @@ function getUserIdFromHeader(req: Request): number | null {
   return isNaN(id) ? null : id;
 }
 
-// GET /profile/me - Profil de l'utilisateur connecté
+// Helper : récupère ou crée le Profile
+async function getOrCreateProfile(userId: number) {
+  let profile = await prisma.profile.findUnique({
+    where: { userId },
+  });
+
+  if (!profile) {
+    profile = await prisma.profile.create({
+      data: {
+        userId,
+        displayName: `Player${userId}`,
+        bio: '',
+        statusText: 'Ready to play',
+      },
+    });
+  }
+
+  return profile;
+}
+
+// GET /profile/me
 router.get('/me', async (req: Request, res: Response) => {
   const userId = getUserIdFromHeader(req);
   if (!userId) {
@@ -19,30 +38,26 @@ router.get('/me', async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await prisma.profile.findUnique({
-      where: { userId },
-      select: { userId: true, displayName: true, avatarUrl: true, bio: true, statusText: true },
-    });
-
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const user = await getOrCreateProfile(userId);
 
     return res.json({
       id: user.userId,
       username: user.displayName,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
-      statusText: user.statusText || user.bio || 'Ready to play',
+      statusText: user.statusText || 'Ready to play',
       level: 1,
       currentXp: 500,
       maxXp: 1000,
       stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
     });
   } catch (err: any) {
+    console.error('[USER] getMyProfile error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
 
-// GET /profile/:id - Consulter le profil public d'un autre joueur
+// GET /profile/:id
 router.get('/:id', async (req: Request, res: Response) => {
   const userId = parseInt(req.params.id, 10);
   if (isNaN(userId)) {
@@ -50,12 +65,7 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await prisma.profile.findUnique({
-      where: { userId },
-      select: { userId: true, displayName: true, avatarUrl: true, bio: true, statusText: true },
-    });
-
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const user = await getOrCreateProfile(userId);
 
     return res.json({
       id: user.userId,
@@ -69,7 +79,7 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// PATCH /profile/me - Mettre à jour son propre profil
+// PATCH /profile/me
 router.patch('/me', async (req: Request, res: Response) => {
   const userId = getUserIdFromHeader(req);
   if (!userId) {
@@ -80,33 +90,36 @@ router.patch('/me', async (req: Request, res: Response) => {
     const { username, avatar, bio } = req.body;
 
     if (username) {
-      const existingUser = await prisma.profile.findFirst({
-        where: {
-          displayName: username,
-          NOT: { userId },
-        },
+      const existing = await prisma.profile.findFirst({
+        where: { displayName: username, NOT: { userId } },
       });
-      if (existingUser) {
+      if (existing) {
         return res.status(400).json({ error: 'Username already taken' });
       }
     }
 
-    const updatedUser = await prisma.profile.update({
+    const updated = await prisma.profile.upsert({
       where: { userId },
-      data: {
+      update: {
         ...(username && { displayName: username }),
         ...(avatar && { avatarUrl: avatar }),
         ...(bio !== undefined && { bio }),
       },
-      select: { userId: true, displayName: true, avatarUrl: true, bio: true, statusText: true },
+      create: {
+        userId,
+        displayName: username || `Player${userId}`,
+        avatarUrl: avatar,
+        bio: bio || '',
+        statusText: 'Ready to play',
+      },
     });
 
     return res.json({
-      id: updatedUser.userId,
-      username: updatedUser.displayName,
-      avatarUrl: updatedUser.avatarUrl,
-      bio: updatedUser.bio,
-      statusText: updatedUser.statusText || 'Ready to play',
+      id: updated.userId,
+      username: updated.displayName,
+      avatarUrl: updated.avatarUrl,
+      bio: updated.bio,
+      statusText: updated.statusText || 'Ready to play',
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });

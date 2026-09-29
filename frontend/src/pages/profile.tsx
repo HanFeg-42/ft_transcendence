@@ -91,7 +91,7 @@ export default function Profile() { // 2. Nom de composant en Majuscule
           ) : (
             <ProfileCard
               username={profile?.username}
-              avatarUrl={profile?.avatar}
+              avatarUrl={profile?.avatarUrl}
               statusText={profile?.statusText || 'Ready to play'}
               level={profile?.level ?? 1}
               currentXp={profile?.currentXp ?? 0}

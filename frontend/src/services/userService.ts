@@ -2,7 +2,7 @@ const API_URL = '/api/users';
 
 export interface ProfileData {
   username: string;
-  avatar?: string;
+  avatarUrl?: string;
   statusText?: string;
   level?: number;
   currentXp?: number;
