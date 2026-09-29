@@ -7,6 +7,7 @@ import { login } from "./loginController";
 import { authenticateToken } from "./authMiddleware";
 import type { AuthenticatedRequest } from "./types/auth";
 import authRoutes from "./routes/auth.routes";
+import usersRoutes from './routes/users.routes';
 import { prisma } from "./prisma";
 import {
   setupTwoFactor,
@@ -45,6 +46,7 @@ app.post("/login", login);
 app.post("/refresh", refreshSession);
 app.post("/logout", logoutSession);
 app.use("/42", authRoutes); // express va comparer le rest de l URL avec les racine indique dans authRoutes()
+app.use('/users', usersRoutes);
 
 app.get("/me", authenticateToken, async (req, res) => {
   const userId = (req as AuthenticatedRequest).userId;

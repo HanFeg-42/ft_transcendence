@@ -12,21 +12,35 @@ function getUserIdFromHeader(req: Request): number | null {
 
 // Helper : récupère ou crée le Profile
 async function getOrCreateProfile(userId: number) {
-  let profile = await prisma.profile.findUnique({
-    where: { userId },
-  });
-
+  let profile = await prisma.profile.findUnique({ where: { userId } });
+  
   if (!profile) {
+    // Appel au service auth pour récupérer le username
+    let displayName = `Player${userId}`;  // fallback
+    try {
+      const authRes = await fetch(`http://auth:3001/users/${userId}`, {
+        headers: { 'x-user-id': userId.toString() },
+      });
+      
+      if (authRes.ok) {
+        const authUser = await authRes.json();
+        displayName = authUser.username;
+      }
+    } catch (err) {
+      console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
+      // On garde le fallback
+    }
+    
     profile = await prisma.profile.create({
       data: {
         userId,
-        displayName: `Player${userId}`,
+        displayName,
         bio: '',
         statusText: 'Ready to play',
       },
     });
   }
-
+  
   return profile;
 }
 
