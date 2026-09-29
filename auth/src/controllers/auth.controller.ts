@@ -1,8 +1,5 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
-import { prisma } from "../prisma";
-import { createSession } from "../sessionTokens";
+import { loginUser } from "../services/auth.service";
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
@@ -13,78 +10,47 @@ export async function login(req: Request, res: Response) {
     });
   }
 
-  const user = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
+  try {
+    const result = await loginUser(email, password, res);
 
-  if (!user || !user.passwordHash) {
-    return res.status(401).json({
-      error: "Invalid email or password",
+    if (result.requiresTwoFactor) {
+      return res.status(200).json({
+        message: "2FA verification required",
+        requiresTwoFactor: true,
+        challengeToken: result.challengeToken,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Login successful",
+      requiresTwoFactor: false,
+      token: result.token,
+      user: result.user,
     });
-  }
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "INVALID_CREDENTIALS") {
+        return res.status(401).json({
+          error: "Invalid email or password",
+        });
+      }
 
-  const passwordIsValid = await bcrypt.compare(password, user.passwordHash);
-  if (!passwordIsValid) {
-    return res.status(401).json({
-      error: "Invalid email or password",
-    });
-  }
+      if (
+        error.message === "JWT_SECRET_NOT_CONFIGURED" ||
+        error.message === "TWO_FACTOR_CHALLENGE_SECRET_NOT_CONFIGURED"
+      ) {
+        console.error(error.message);
 
-  //read JWT_SECRET
-  const jwtSecret = process.env.JWT_SECRET;
+        return res.status(500).json({
+          error: "Something went wrong",
+        });
+      }
+    }
 
-  if (!jwtSecret) {
-    console.error("JWT_SECRET is not configured");
+    console.error(error);
+
     return res.status(500).json({
       error: "Something went wrong",
     });
   }
-
-  // If 2FA is enabled, do NOT issue the normal auth token yet
-  if (user.twoFactorEnabled) {
-    const challengeSecret = process.env.TWO_FACTOR_CHALLENGE_SECRET;
-
-    if (!challengeSecret) {
-      console.error("TWO_FACTOR_CHALLENGE_SECRET is not configured");
-
-      return res.status(500).json({
-        error: "Something went wrong",
-      });
-    }
-
-    const challengeToken = jwt.sign(
-      {
-        userId: user.id,
-        purpose: "2fa",
-      },
-      challengeSecret,
-      {
-        expiresIn: "5m",
-        algorithm: "HS256",
-      },
-    );
-
-    return res.status(200).json({
-      message: "2FA verification required",
-      requiresTwoFactor: true,
-      challengeToken,
-    });
-  }
-
-  // Normal login for users without 2FA
-  const token = createSession(res, user.id);
-
-  return res.status(200).json({
-    message: "Login successful",
-    requiresTwoFactor: false,
-    token,
-    user: {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      twoFactorEnabled: user.twoFactorEnabled,
-    },
-  });
 }
