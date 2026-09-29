@@ -1,48 +1,33 @@
 import type { Request, Response } from "express";
-import QRCode from "qrcode";
-import { generateSecret, generateURI } from "otplib";
-import { prisma } from "../prisma";
 import type { AuthenticatedRequest } from "../types/auth";
 import { verify } from "otplib";
+import { prisma } from "../prisma";
+import {
+  setupTwoFactor as setupTwoFactorService,
+  confirmTwoFactor as confirmTwoFactorService,
+  disableTwoFactor as disableTwoFactorService,
+} from "../services/twoFactor.service";
 
 export async function setupTwoFactor(req: Request, res: Response) {
   const userId = (req as AuthenticatedRequest).userId;
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
+  try {
+    const result = await setupTwoFactorService(userId);
 
-  if (!user) {
-    return res.status(404).json({
-      error: "User not found",
+    return res.status(200).json(result);
+  } catch (error) {
+    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Something went wrong",
     });
   }
-
-  const secret = generateSecret();
-
-  const otpauthUrl = generateURI({
-    issuer: "Pacova",
-    label: user.email,
-    secret,
-  });
-
-  const qrCode = await QRCode.toDataURL(otpauthUrl);
-
-  await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      twoFactorSecret: secret,
-      twoFactorEnabled: false,
-    },
-  });
-
-  return res.status(200).json({
-    qrCode,
-  });
 }
 
 export async function confirmTwoFactor(req: Request, res: Response) {
@@ -55,71 +40,61 @@ export async function confirmTwoFactor(req: Request, res: Response) {
     });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
+  try {
+    await confirmTwoFactorService(userId, code);
 
-  if (!user) {
-    return res.status(404).json({
-      error: "User not found",
+    return res.status(200).json({
+      message: "2FA enabled successfully",
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "USER_NOT_FOUND") {
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+
+      if (error.message === "TWO_FACTOR_NOT_SETUP") {
+        return res.status(400).json({
+          error: "2FA setup has not been started",
+        });
+      }
+
+      if (error.message === "INVALID_2FA_CODE") {
+        return res.status(400).json({
+          error: "Invalid 2FA code",
+        });
+      }
+    }
+
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Something went wrong",
     });
   }
-
-  if (!user.twoFactorSecret) {
-    return res.status(400).json({
-      error: "2FA setup has not been started",
-    });
-  }
-
-  const result = await verify({
-    secret: user.twoFactorSecret,
-    token: code,
-  });
-
-  if (!result.valid) {
-    return res.status(400).json({
-      error: "Invalid 2FA code",
-    });
-  }
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      twoFactorEnabled: true,
-    },
-  });
-
-  return res.status(200).json({
-    message: "2FA enabled successfully",
-  });
 }
 
 export async function disableTwoFactor(req: Request, res: Response) {
   const userId = (req as AuthenticatedRequest).userId;
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
+  try {
+    await disableTwoFactorService(userId);
 
-  if (!user) {
-    return res.status(404).json({
-      error: "User not found",
+    return res.status(200).json({
+      message: "2FA disabled successfully",
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Something went wrong",
     });
   }
-
-  await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      twoFactorEnabled: false,
-      twoFactorSecret: null,
-    },
-  });
-
-  return res.status(200).json({
-    message: "2FA disabled successfully",
-  });
 }
