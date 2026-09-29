@@ -1,8 +1,5 @@
 import type { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { verify } from "otplib";
-import { prisma } from "../prisma";
-import { createSession } from "../sessionTokens";
+import { verifyTwoFactorLogin as verifyTwoFactorLoginService } from "../services/twoFactor.service";
 
 type TwoFactorChallengePayload = {
   userId: number;
@@ -18,78 +15,51 @@ export async function verifyTwoFactorLogin(req: Request, res: Response) {
     });
   }
 
-  const jwtSecret = process.env.JWT_SECRET;
-  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
-  const challengeSecret = process.env.TWO_FACTOR_CHALLENGE_SECRET;
-
-  if (!jwtSecret || !refreshSecret || !challengeSecret) {
-    console.error("JWT secrets are not configured");
-
-    return res.status(500).json({
-      error: "Something went wrong",
-    });
-  }
-
   try {
-    // 1. Verify the temporary token created after password login.
-    const decoded = jwt.verify(challengeToken, challengeSecret, {
-      algorithms: ["HS256"],
-    });
-
-    if (
-      typeof decoded === "string" ||
-      typeof decoded.userId !== "number" ||
-      decoded.purpose !== "2fa"
-    ) {
-      return res.status(401).json({
-        error: "Invalid 2FA challenge",
-      });
-    }
-
-    const challenge = decoded as TwoFactorChallengePayload;
-
-    // 2. Find the user whose password was already verified.
-    const user = await prisma.user.findUnique({
-      where: {
-        id: challenge.userId,
-      },
-    });
-
-    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
-      return res.status(401).json({
-        error: "Invalid 2FA challenge",
-      });
-    }
-
-    // 3. Verify the current authenticator code.
-    const result = await verify({
-      secret: user.twoFactorSecret,
-      token: code,
-    });
-
-    if (!result.valid) {
-      return res.status(401).json({
-        error: "Invalid 2FA code",
-      });
-    }
-
-    // 4. Both factors succeeded.
-    // Now we can finally issue the normal authentication JWT.
-    const token = createSession(res, user.id);
+    const result = await verifyTwoFactorLoginService(
+      challengeToken,
+      code,
+      res,
+    );
 
     return res.status(200).json({
       message: "Login successful",
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        twoFactorEnabled: user.twoFactorEnabled,
-      },
+      token: result.token,
+      user: result.user,
     });
-  } catch {
-    return res.status(401).json({
-      error: "Invalid or expired 2FA challenge",
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "AUTH_SECRETS_NOT_CONFIGURED") {
+        console.error("JWT secrets are not configured");
+
+        return res.status(500).json({
+          error: "Something went wrong",
+        });
+      }
+
+      if (error.message === "INVALID_2FA_CODE") {
+        return res.status(401).json({
+          error: "Invalid 2FA code",
+        });
+      }
+
+      if (
+        error.message === "INVALID_2FA_CHALLENGE" ||
+        error.message === "INVALID_OR_EXPIRED_2FA_CHALLENGE"
+      ) {
+        return res.status(401).json({
+          error:
+            error.message === "INVALID_OR_EXPIRED_2FA_CHALLENGE"
+              ? "Invalid or expired 2FA challenge"
+              : "Invalid 2FA challenge",
+        });
+      }
+    }
+
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Something went wrong",
     });
   }
 }
