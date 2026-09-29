@@ -7,7 +7,7 @@ import authRoutes from "./routes/auth.routes";
 import { login } from "./controllers/auth.controller";
 import { prisma } from "./prisma";
 import { register } from "./controllers/register.controller";
-import { authenticateToken } from "./authMiddleware";
+import { authenticateToken } from "./middleware/auth.middleware";
 import { verifyTwoFactorLogin } from "./controllers/twoFactorLogin.controller";
 import {
   refreshSession,
