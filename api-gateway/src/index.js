@@ -17,14 +17,13 @@ if (!JWT_SECRET) {
 app.set('trust proxy', 1);
 
 // rate limiter
-const limiter = rateLimit({
+const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' }
 });
-app.use(limiter);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', service: 'api-gateway' });
@@ -33,6 +32,7 @@ app.get('/health', (req, res) => {
 // REST proxies
 app.use(
   '/auth',
+  authLimiter,
   createProxyMiddleware({
     target: process.env.AUTH_SERVICE_URL || 'http://auth:3001',
     changeOrigin: true, //Changes HTTP host header of outgoing request to match target URL host

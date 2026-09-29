@@ -41,6 +41,10 @@ export function useChatSocket(url: string, currentUserId: number) {
     };
   }, [url]);
 
+
+const [presence, setPresence] = useState<Record<number, 'online' | 'offline'>>({});
+
+
   function handleMessage(event: MessageEvent) {
     let packet: ChatServerMessage;
     try {
@@ -57,6 +61,12 @@ export function useChatSocket(url: string, currentUserId: number) {
         setMessages((prev) => [...prev, message]);
         break;
       }
+
+    case ChatEvents.PRESENCE: {
+      const { user_id, status } = packet.data;
+      setPresence((prev) => ({ ...prev, [user_id]: status }));
+      break;
+    }
     }
   }
 
@@ -89,5 +99,5 @@ export function useChatSocket(url: string, currentUserId: number) {
     setMessages((prev) => [...prev, ownCopy]);
   }
 
-  return { isConnected, messages, sendMessage };
+  return { isConnected, messages, sendMessage, presence }; 
 }
