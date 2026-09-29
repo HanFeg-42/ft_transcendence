@@ -93,6 +93,9 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         receiver_id: saved.receiverId,
         content: saved.content,
         created_at: saved.createdAt.toISOString(),
+        read_at: saved.readAt ? saved.readAt.toISOString() : null,
+        kind: saved.kind as 'text' | 'game_invite' | 'system',
+        meta: saved.meta as ChatMessageIncoming['meta'],
       };
 
       const message: ChatServerMessage = { event: ChatEvents.MESSAGE, data: reply };
@@ -118,6 +121,60 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       }
       break;
     }
+
+    
+    case ChatEvents.READ: {
+  const outgoing = packet.data; // { sender_id: number } — "I read messages from this sender"
+  const friendId = outgoing.sender_id;
+  const currentUserId = Number(userId);
+
+  // 1. Check block status (don't send read receipts if blocked)
+  const isBlocked = await prisma.blockedUser.findFirst({
+    where: {
+      OR: [
+        { blockerId: friendId, blockedId: currentUserId },
+        { blockerId: currentUserId, blockedId: friendId },
+      ],
+    },
+  });
+
+  if (isBlocked) break;
+
+  const now = new Date();
+
+  // 2. Update all unread messages sent by friendId to currentUserId in the DB
+  await prisma.message.updateMany({
+    where: {
+      senderId: friendId,
+      receiverId: currentUserId,
+      readAt: null,
+    },
+    data: {
+      readAt: now,
+    },
+  });
+
+  // 3. Construct payload to notify friendId that currentUserId read their messages
+  const readEventMessage: ChatServerMessage = {
+    event: ChatEvents.READ,
+    data: {
+      reader_id: currentUserId,
+      read_at: now.toISOString(),
+    },
+  };
+  const payload = JSON.stringify(readEventMessage);
+
+  // 4. Forward event to friendId's active sockets so their UI turns green (✓✓) live
+  const friendSockets = onlineUsers.get(String(friendId));
+  if (friendSockets) {
+    for (const socket of friendSockets) {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(payload);
+      }
+    }
+  }
+  break;
+} 
   }
 }
 
