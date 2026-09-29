@@ -24,7 +24,7 @@ export default function Chat() {
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const { messages, sendMessage, presence } = useChatSocket(
-    user && token ? `wss://localhost/api/chat/ws?token=${token}` : '',
+    user && token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '',
     user ? Number(user.id) : 0
   );
 
@@ -219,7 +219,7 @@ export default function Chat() {
           onNewChat={() => setIsNewChatOpen(true)}
         />
 
-        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-[#050B1E] border-2 border-pacova-green-dark rounded-lg overflow-hidden">
+        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
           <ConversationHeader
             friend={selectedFriendLive}
             isFriendOnline={isFriendOnline}

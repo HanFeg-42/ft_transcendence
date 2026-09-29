@@ -21,6 +21,12 @@ async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   const sockets = onlineUsers.get(userId) ?? new Set<WebSocket>();
   sockets.add(ws);
   onlineUsers.set(userId, sockets);
+
+  ws.on('message', (rawData: RawData) => handleMessage(ws, rawData, userId));
+  ws.on('close', (code) => handleClose(ws, code, userId));
+  ws.on('error', (err) => handleError(ws, err));
+
+
   const partners = await getMessagePartners(userId);
 
   // Snapshot: tell THIS newly connected client who among their message
@@ -35,9 +41,7 @@ async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
     broadcastPresenceToPartners(partners, Number(userId), 'online');
   }
 
-  ws.on('message', (rawData: RawData) => handleMessage(ws, rawData, userId));
-  ws.on('close', (code) => handleClose(ws, code, userId));
-  ws.on('error', (err) => handleError(ws, err));
+
 }
 
 

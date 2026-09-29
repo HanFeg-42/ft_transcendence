@@ -85,7 +85,7 @@ export default function ConversationHeader({
           </span>
           <span
             className={`font-vt323 text-base uppercase tracking-wide ${
-              isFriendOnline ? 'text-pacova-green' : 'text-red-500'
+              isFriendOnline ? 'text-pacova-green' : 'text-gray-500'
             }`}
           >
             {isFriendOnline ? 'Online' : 'Offline'}
@@ -112,10 +112,8 @@ export default function ConversationHeader({
         {menuOpen && (
           <div
             role="menu"
-            className="absolute right-0 top-full mt-2 w-64 bg-pacova-surface border-2 border-pacova-green-dark pixel-corners-3step shadow-neon-green z-20 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-64 bg-pacova-surface border-2 border-pacova-green-dark rounded-lg z-20 overflow-hidden"
           >
-            <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
-
             {confirmMode === 'block' && (
               <div className="relative p-4 flex flex-col items-center gap-3">
                 <p className="font-vt323 text-white text-lg text-center uppercase">
