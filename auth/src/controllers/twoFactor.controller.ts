@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import QRCode from "qrcode";
 import { generateSecret, generateURI } from "otplib";
-import { prisma } from "./prisma";
-import type { AuthenticatedRequest } from "./types/auth";
+import { prisma } from "../prisma";
+import type { AuthenticatedRequest } from "../types/auth";
 import { verify } from "otplib";
 
 export async function setupTwoFactor(req: Request, res: Response) {

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import { Prisma } from "./generated/prisma/client";
-import { prisma } from "./prisma";
+import { Prisma } from "../generated/prisma/client";
+import { prisma } from "../prisma";
 
 export async function register(req: Request, res: Response) {
   const { username, email, password } = req.body;

@@ -1,8 +1,8 @@
-import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import { prisma } from "./prisma";
 import jwt from "jsonwebtoken";
-import { createSession } from "./sessionTokens";
+import type { Request, Response } from "express";
+import { prisma } from "../prisma";
+import { createSession } from "../sessionTokens";
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;

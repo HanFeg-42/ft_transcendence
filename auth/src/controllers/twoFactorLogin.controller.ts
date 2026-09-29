@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { verify } from "otplib";
-import { prisma } from "./prisma";
-import { createSession } from "./sessionTokens";
+import { prisma } from "../prisma";
+import { createSession } from "../sessionTokens";
 
 type TwoFactorChallengePayload = {
   userId: number;

@@ -1,8 +1,7 @@
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
-import { prisma } from "./prisma";
-import { clearRefreshCookie, createSession } from "./sessionTokens";
+import { prisma } from "../prisma";
+import { clearRefreshCookie, createSession } from "../sessionTokens";
 
 type RefreshTokenPayload = {
   userId: number;
