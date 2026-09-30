@@ -9,7 +9,6 @@ interface ConversationHeaderProps {
   isFriendOnline: boolean;
   blockStatus: BlockStatus;
   onToggleBlock: () => void;
-  isTyping: boolean;
 }
 
 // Which confirm panel (if any) the menu is currently showing instead of the
@@ -19,7 +18,6 @@ type ConfirmMode = 'block' | null;
 export default function ConversationHeader({
   friend,
   isFriendOnline,
-  isTyping,
   blockStatus,
   onToggleBlock,
 }: ConversationHeaderProps) {
@@ -76,16 +74,12 @@ export default function ConversationHeader({
             {friend.username}
           </span>
           <span
-  className={`font-vt323 text-base uppercase tracking-wide ${
-    isTyping
-      ? 'text-pacova-pink animate-pulse'
-      : isFriendOnline
-        ? 'text-pacova-green'
-        : 'text-gray-500'
-  }`}
->
-  {isTyping ? 'Typing...' : isFriendOnline ? 'Online' : 'Offline'}
-</span>
+            className={`font-vt323 text-base uppercase tracking-wide ${
+              isFriendOnline ? 'text-pacova-green' : 'text-gray-500'
+            }`}
+          >
+            {isFriendOnline ? 'Online' : 'Offline'}
+          </span>
         </div>
       </div>
 

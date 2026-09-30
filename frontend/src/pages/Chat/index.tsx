@@ -181,7 +181,7 @@ useEffect(() => {
   // 3. Auto-Scrolling to Bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation.length, selectedFriend.id]);
+  }, [conversation.length, selectedFriend.id, typing[selectedFriend.id]]);
 
   return (
     <Background>
@@ -201,7 +201,6 @@ useEffect(() => {
             isFriendOnline={isFriendOnline}
             blockStatus={blockStatus}
             onToggleBlock={handleToggleBlock}
-            isTyping={Boolean(typing[selectedFriend.id])}
           />
 
           <MessageList
@@ -213,6 +212,7 @@ useEffect(() => {
             messagesEndRef={messagesEndRef}
             dividerCutoff={dividerCutoff}
             friendReadAt={readAt[selectedFriend.id] ?? null}
+            isTyping={Boolean(typing[selectedFriend.id])}
           />
 
           <MessageInput draft={draft} onDraftChange={handleDraftChange} onSend={handleSend} disabled={isBlockedEitherWay} />
