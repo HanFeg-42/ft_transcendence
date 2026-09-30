@@ -6,7 +6,7 @@ RUN npm ci
 
 COPY shared/types ../shared/types
 COPY chat/ .
-RUN npx prisma generate
+RUN npx prisma generate 
 
 EXPOSE 3003
 CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
