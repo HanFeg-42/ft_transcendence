@@ -3,6 +3,27 @@ import { prisma } from '../prisma';
 
 const router = Router();
 
+// GET /users — Return public information for all users
+router.get('/', async (_req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+      },
+      orderBy: {
+        id: 'asc',
+      },
+    });
+
+    return res.json(users);
+  } catch (err: any) {
+    console.error('[AUTH] getUsers error:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /users/:id — Retourne les infos publiques d'un utilisateur
 router.get('/:id', async (req: Request, res: Response) => {
   const userId = parseInt(req.params.id, 10);
