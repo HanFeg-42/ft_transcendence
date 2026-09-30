@@ -9,23 +9,17 @@ interface ConversationHeaderProps {
   isFriendOnline: boolean;
   blockStatus: BlockStatus;
   onToggleBlock: () => void;
-  isMuted: boolean;
-  onToggleMute: () => void;
-  onClearConversation: () => void;
 }
 
 // Which confirm panel (if any) the menu is currently showing instead of the
-// option list — 'block' for block/unblock, 'delete' for delete conversation.
-type ConfirmMode = 'block' | 'delete' | null;
+// option list — 'block' for block/unblock
+type ConfirmMode = 'block' | null;
 
 export default function ConversationHeader({
   friend,
   isFriendOnline,
   blockStatus,
   onToggleBlock,
-  isMuted,
-  onToggleMute,
-  onClearConversation,
 }: ConversationHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<ConfirmMode>(null);
@@ -68,10 +62,6 @@ export default function ConversationHeader({
     closeMenu();
   };
 
-  const handleConfirmDelete = () => {
-    onClearConversation();
-    closeMenu();
-  };
 
   return (
     <div className="flex items-center justify-between gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative">
@@ -130,25 +120,6 @@ export default function ConversationHeader({
               </div>
             )}
 
-            {confirmMode === 'delete' && (
-              <div className="relative p-4 flex flex-col items-center gap-2">
-                <p className="font-vt323 text-red-500 text-lg text-center uppercase leading-tight">
-                  ⚠ Delete for both players?
-                </p>
-                <p className="font-vt323 text-gray-300 text-base text-center leading-tight mb-1">
-                  This wipes the chat for {friend.username} too. No respawn.
-                </p>
-                <div className="flex gap-3">
-                  <PixelButton variant="danger-red" size="sm" onClick={handleConfirmDelete}>
-                    Yes
-                  </PixelButton>
-                  <PixelButton variant="outline-green" size="sm" onClick={() => setConfirmMode(null)}>
-                    No
-                  </PixelButton>
-                </div>
-              </div>
-            )}
-
             {confirmMode === null && (
               <ul className="relative py-1">
                 {/* Profile lookup needs user_db, which doesn't exist yet —
@@ -161,29 +132,6 @@ export default function ConversationHeader({
                   >
                     View Profile
                     <span className="text-sm normal-case">Soon</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      onToggleMute();
-                      closeMenu();
-                    }}
-                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-pacova-green hover:bg-pacova-green/10"
-                  >
-                    {isMuted ? 'Unmute Notifications' : 'Mute Notifications'}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => setConfirmMode('delete')}
-                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-red-500 hover:bg-red-500/10"
-                  >
-                    Delete Conversation
                   </button>
                 </li>
                 <li>

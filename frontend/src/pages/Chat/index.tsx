@@ -34,14 +34,6 @@ export default function Chat() {
   const [draft, setDraft] = useState('');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showToast = (message: string, type: 'success' | 'error') => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast({ message, type });
-    toastTimeoutRef.current = setTimeout(() => setToast(null), 2500);
-  };
-  const [mutedIds, setMutedIds] = useState<Set<number>>(() => new Set());
-  const [clearedBefore, setClearedBefore] = useState<Record<number, string>>({});
 
 
 
@@ -55,12 +47,6 @@ export default function Chat() {
   // Effect 1: Restoring Preferences from localStorage
   useEffect(() => {
     if (!user) return;
-    try {
-      const rawMuted = localStorage.getItem(`pacova-muted-${user.id}`);
-      setMutedIds(new Set(rawMuted ? (JSON.parse(rawMuted) as number[]) : []));
-    } catch (err) {
-      console.warn('[CHAT] Failed to load muted friends from storage:', err);
-    }
     try {
       const rawSeen = localStorage.getItem(`pacova-lastseen-${user.id}`);
       lastSeenRef.current = rawSeen ? JSON.parse(rawSeen) : {};
@@ -117,43 +103,9 @@ export default function Chat() {
     setSelectedFriend(friend);
   };
 
-  const handleToggleMute = () => {
-    if (!user) return;
-    setMutedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(selectedFriend.id)) next.delete(selectedFriend.id);
-      else next.add(selectedFriend.id);
-      try {
-        localStorage.setItem(`pacova-muted-${user.id}`, JSON.stringify([...next]));
-      } catch (err) {
-        console.warn('[CHAT] Failed to persist muted friends:', err);
-      }
-      return next;
-    });
-  };
+ 
 
   
-
-  // 1. Clearing Conversations via REST API (handleClearConversation)
-  const handleClearConversation = () => {
-    if (!token) return;
-    const friendId = selectedFriend.id;
-
-    fetch(`/api/chat/messages/${friendId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        // Optimistic: hide immediately rather than waiting on a refetch.
-        setClearedBefore((prev) => ({ ...prev, [friendId]: new Date().toISOString() }));
-        showToast('CONVERSATION DELETED', 'success');
-      })
-      .catch((err) => {
-        console.error('[CHAT] Failed to clear conversation:', err);
-        showToast('DELETE FAILED', 'error');
-      });
-  };
 
   const visibleFriends = user ? MOCK_FRIENDS.filter((friend) => friend.id !== Number(user.id)) : MOCK_FRIENDS;
 
@@ -191,15 +143,11 @@ export default function Chat() {
   let conversation = [...historyMessages, ...liveForFriend].filter(
     (message, index, all) => all.findIndex((m) => m.id === message.id) === index
   );
-  const cutoff = clearedBefore[selectedFriend.id];
-  if (cutoff) {
-    conversation = conversation.filter((message) => message.created_at > cutoff);
-  }
 
 
 
   const isBlockedEitherWay = blockStatus.iBlockedThem || blockStatus.theyBlockedMe;
-  const isMutedSelected = mutedIds.has(selectedFriend.id);
+  // const isMutedSelected = mutedIds.has(selectedFriend.id);
 
 
   // 3. Auto-Scrolling to Bottom
@@ -225,9 +173,6 @@ export default function Chat() {
             isFriendOnline={isFriendOnline}
             blockStatus={blockStatus}
             onToggleBlock={handleToggleBlock}
-            isMuted={isMutedSelected}
-            onToggleMute={handleToggleMute}
-            onClearConversation={handleClearConversation}
           />
 
           <MessageList
