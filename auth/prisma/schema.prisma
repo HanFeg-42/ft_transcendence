@@ -13,13 +13,27 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  email        String   @unique
-  passwordHash String?
-  fortyTwoId   Int?     @unique // Champ optionnel pour l'ID 42
-  avatar       String?  // Champ optionnel pour l'URL de l'image
+  id               Int      @id @default(autoincrement())
+  username         String   @unique
+  email            String   @unique
+  passwordHash     String?
+  fortyTwoId       Int?     @unique
+  avatar           String?
   twoFactorEnabled Boolean  @default(false)
   twoFactorSecret  String?
   createdAt    DateTime @default(now())
+
+  twoFactorRecoveryCodes TwoFactorRecoveryCode[]
+}
+
+model TwoFactorRecoveryCode {
+  id        BigInt    @id @default(autoincrement())
+  userId    Int
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

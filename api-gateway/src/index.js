@@ -46,6 +46,24 @@ app.use(
 );
 
 app.use(
+  '/users', 
+  authenticateToken,
+  createProxyMiddleware({
+    target: process.env.USER_SERVICE_URL || 'http://user:3004',
+    changeOrigin: true,
+    pathRewrite: { 
+      '^/users': '' 
+    },
+    on: {
+      error: (err, req, res) => {
+        console.error('[API-GATEWAY] User service error:', err.message);
+        if (!res.headersSent) res.status(502).json({ error: 'User service unreachable' });
+      }
+    }
+  })
+);
+
+app.use(
   '/game',
   authenticateToken,
   createProxyMiddleware({
@@ -70,6 +88,21 @@ app.use(
       error: (err, req, res) => {
         console.error('[API-GATEWAY] Chat service error:', err.message);
         if (!res.headersSent) res.status(502).json({ error: 'Chat service unreachable' });
+      }
+    }
+  })
+);
+
+app.use(
+  '/user',
+  authenticateToken,
+  createProxyMiddleware({
+    target: process.env.USER_SERVICE_URL || 'http://user:3004',
+    changeOrigin: true,
+    on: {
+      error: (err, req, res) => {
+        console.error('[API-GATEWAY] User service error:', err.message);
+        if (!res.headersSent) res.status(502).json({ error: 'User service unreachable' });
       }
     }
   })
