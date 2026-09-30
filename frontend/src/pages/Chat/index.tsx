@@ -23,10 +23,28 @@ export default function Chat() {
   // 1. Hooks & Global Authentication Context
   const { token, user } = useAuth();
   const navigate = useNavigate();
-  const { messages, sendMessage, presence } = useChatSocket(
+  const { messages, sendMessage, presence, typing, readAt, sendRead, sendTyping } = useChatSocket(
     user && token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '',
     user ? Number(user.id) : 0
   );
+
+  const lastTypingSentRef = useRef<Record<number, number>>({});
+
+
+  const handleDraftChange = (value: string) => {
+  setDraft(value);
+
+  if (!value.trim()) return;
+
+  const friendId = selectedFriend.id;
+  const now = Date.now();
+  const lastSent = lastTypingSentRef.current[friendId] ?? 0;
+
+  if (now - lastSent > 2000) {
+    sendTyping(friendId);
+    lastTypingSentRef.current[friendId] = now;
+  }
+};
 
 
   // 2. Component State Management
@@ -42,8 +60,6 @@ export default function Chat() {
   const [dividerCutoff, setDividerCutoff] = useState<string | null>(null);
 
   const userReady = Boolean(user && token);
-
-
   // Effect 1: Restoring Preferences from localStorage
   useEffect(() => {
     if (!user) return;
@@ -144,7 +160,19 @@ export default function Chat() {
     (message, index, all) => all.findIndex((m) => m.id === message.id) === index
   );
 
+useEffect(() => {
+  if (!userReady) return;
+  if (document.visibilityState !== 'visible') return;
+  sendRead(selectedFriend.id);
+}, [selectedFriend.id, conversation.length, userReady]);
 
+useEffect(() => {
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') sendRead(selectedFriend.id);
+  };
+  document.addEventListener('visibilitychange', onVisible);
+  return () => document.removeEventListener('visibilitychange', onVisible);
+}, [selectedFriend.id]);
 
   const isBlockedEitherWay = blockStatus.iBlockedThem || blockStatus.theyBlockedMe;
   // const isMutedSelected = mutedIds.has(selectedFriend.id);
@@ -173,6 +201,7 @@ export default function Chat() {
             isFriendOnline={isFriendOnline}
             blockStatus={blockStatus}
             onToggleBlock={handleToggleBlock}
+            isTyping={Boolean(typing[selectedFriend.id])}
           />
 
           <MessageList
@@ -183,9 +212,10 @@ export default function Chat() {
             historyError={historyError}
             messagesEndRef={messagesEndRef}
             dividerCutoff={dividerCutoff}
+            friendReadAt={readAt[selectedFriend.id] ?? null}
           />
 
-          <MessageInput draft={draft} onDraftChange={setDraft} onSend={handleSend} disabled={isBlockedEitherWay} />
+          <MessageInput draft={draft} onDraftChange={handleDraftChange} onSend={handleSend} disabled={isBlockedEitherWay} />
         </section>
       </main>
 

@@ -16,6 +16,7 @@ export function useChatSocket(url: string, currentUserId: number) {
   // Step 1: Typing state management
   const [typing, setTyping] = useState<Record<number, boolean>>({});
   const typingTimeoutsRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  const [readAt, setReadAt] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (!url) return;
@@ -96,6 +97,12 @@ export function useChatSocket(url: string, currentUserId: number) {
         }, 3000);
         break;
       }
+
+      case ChatEvents.READ: {
+        const { reader_id, read_at } = packet.data;
+        setReadAt((prev) => ({ ...prev, [reader_id]: read_at }));
+        break;
+      }
     }
   }
 
@@ -127,6 +134,14 @@ export function useChatSocket(url: string, currentUserId: number) {
     setMessages((prev) => [...prev, ownCopy]);
   }
 
+  function sendTyping(receiver_id: number) {
+      sendJsonMessage({ event: ChatEvents.TYPING, data: { receiver_id } });
+  }
+
+  function sendRead(sender_id: number) {
+  sendJsonMessage({ event: ChatEvents.READ, data: { sender_id } });
+}
+
   // Helper function to send typed WebSocket events
   function sendJsonMessage(packet: ChatClientMessage) {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -134,5 +149,5 @@ export function useChatSocket(url: string, currentUserId: number) {
     }
   }
 
-  return { isConnected, messages, sendMessage, sendJsonMessage, presence, typing };
+  return { isConnected, messages, sendMessage, sendJsonMessage, presence, typing, readAt, sendRead, sendTyping };
 }
