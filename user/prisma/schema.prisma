@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -13,13 +8,37 @@ datasource db {
 }
 
 
+model Achievement {
+  id          String   @id            // "champion", "speedster", etc.
+  title       String                  // "CHAMPION"
+  description String                  // "Win 100 matches"
+  image       String                  // URL de l'image (ou nom de fichier)
+  borderColor String                  // "border-amber-400"
+  textColor   String                  // "text-amber-400"
+  createdAt   DateTime @default(now())
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  username  String   @unique
-  avatar    String?  @default("https://api.dicebear.com/7.x/bottts/svg?seed=default")
-  bio       String?  @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  userId        Int
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  progress      Int      @default(0)   // 0-100 (%)
+  unlocked      Boolean  @default(false)
+
+  user        Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+}
+
+model Profile {
+  userId      Int       @id
+  displayName String?
+  bio         String    @default("")
+  avatarUrl   String?
+  statusText  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
