@@ -1,8 +1,11 @@
-import type { Tile, Direction, GameState } from "../../../shared/types/game-types";
+import type {
+  Tile,
+  Direction,
+  GameState,
+} from "../../../shared/types/game-types";
 import { TICKS_PER_TILE } from "../engine/movement";
 import { ahead } from "../engine/movement";
 import { MAZE, WIDTH, HEIGHT } from "../engine/maze";
-
 
 const TILE_SIZE = 32;
 
@@ -30,17 +33,25 @@ export const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       } else if (state.pellets[y][x]) {
         ctx.fillStyle = "yellow";
-        ctx.fillRect(
-          x * TILE_SIZE + TILE_SIZE / 3,
-          y * TILE_SIZE + TILE_SIZE / 3,
-          TILE_SIZE / 3,
-          TILE_SIZE / 3,
-        );
+        if (MAZE[y][x] == "o")
+          ctx.fillRect(
+            x * TILE_SIZE + TILE_SIZE / 3,
+            y * TILE_SIZE + TILE_SIZE / 3,
+            TILE_SIZE / 2,
+            TILE_SIZE / 2,
+          );
+        else
+          ctx.fillRect(
+            x * TILE_SIZE + TILE_SIZE / 3,
+            y * TILE_SIZE + TILE_SIZE / 3,
+            TILE_SIZE / 3,
+            TILE_SIZE / 3,
+          );
       }
     }
   }
-  ctx.fillStyle = "red";
   state.chasers.forEach((chaser) => {
+    ctx.fillStyle = state.vulnerableTimer && !chaser.isEaten ? "grey" : "red";
     const pos = getDrawPosition(chaser.tile, chaser.dir, chaser.step);
     ctx.fillRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE);
   });

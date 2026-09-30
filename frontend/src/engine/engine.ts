@@ -30,7 +30,7 @@ export const createGame = (
       step: 0,
       lives: 3,
       score: 0,
-      connected: true
+      connected: true,
     },
   ];
 
@@ -41,6 +41,7 @@ export const createGame = (
       tile,
       dir: null,
       step: 0,
+      isEaten: false,
     };
   });
   return {
@@ -50,6 +51,7 @@ export const createGame = (
     chasers,
     pellets: parsePellets(),
     timeRemaining: timeLimit,
+    vulnerableTimer: 0,
   };
 };
 
@@ -66,30 +68,44 @@ export const applyInput = (
   if (player) player.nextDir = dir;
 };
 
+const isTileFree = (state: GameState, target: Tile, chaser: Chaser) => {
+  if (isWall(target)) return false;
+
+  return !state.chasers.some((other) => {
+    if (other.id == chaser.id) return false;
+    if (tilesAreEqual(other.tile, target)) return true;
+    const otherTarget = other.dir ? ahead(other.tile, other.dir) : null;
+
+    return otherTarget && tilesAreEqual(target, otherTarget);
+  });
+};
+
+const nearestPlayerDistance = (target: Tile, players: Player[]) => {
+  return Math.min(
+    ...players.map(
+      (p) => Math.abs(p.tile.x - target.x) + Math.abs(p.tile.y - target.y),
+    ),
+  );
+};
+
 const pickChaserDirection = (chaser: Chaser, state: GameState) => {
-  let bestDistance = Infinity;
+  const isFrightened = state.vulnerableTimer && !chaser.isEaten;
+  let bestDistance = isFrightened ? -Infinity : Infinity;
   let bestDir = null;
 
   const directions: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
-  const validDirections = directions.filter((dir: Direction) => {
-    const next = ahead(chaser.tile, dir);
-    if (isWall(next)) return false;
-    return !state.chasers.some((other) => {
-      if (other.id == chaser.id) return false;
-      const otherTarget = other.dir ? ahead(other.tile, other.dir) : other.tile;
-      return tilesAreEqual(next, otherTarget);
-    });
-  });
+  const validDirections = directions.filter((dir) =>
+    isTileFree(state, ahead(chaser.tile, dir), chaser),
+  );
 
-  for (const player of state.players) {
-    for (const dir of validDirections) {
-      const target = ahead(chaser.tile, dir);
-      const distance =
-        Math.abs(player.tile.x - target.x) + Math.abs(player.tile.y - target.y);
-      if (distance < bestDistance) {
-        bestDir = dir;
-        bestDistance = distance;
-      }
+  for (const dir of validDirections) {
+    const distance = nearestPlayerDistance(
+      ahead(chaser.tile, dir),
+      state.players,
+    );
+    if (isFrightened ? distance > bestDistance : distance < bestDistance) {
+      bestDir = dir;
+      bestDistance = distance;
     }
   }
   chaser.dir = bestDir;
@@ -109,6 +125,7 @@ const handlePlayerDeath = (player: Player, state: GameState) => {
     c.dir = null;
     c.step = 0;
   });
+  state.vulnerableTimer = 0;
 };
 
 export const tick = (state: GameState) => {
@@ -118,20 +135,30 @@ export const tick = (state: GameState) => {
     stepPlayer(player);
 
     if (state.pellets[player.tile.y][player.tile.x]) {
-      player.score += MAZE[player.tile.y][player.tile.x] == "o" ? 50 : 10;
+      const isPowerPellet = MAZE[player.tile.y][player.tile.x] == "o";
+      player.score += isPowerPellet ? 50 : 10;
       state.pellets[player.tile.y][player.tile.x] = false;
+      if (isPowerPellet) {
+        state.vulnerableTimer = 300;
+        state.chasers.forEach((c) => (c.isEaten = false));
+      }
     }
-    if (
-      state.chasers.some(
-        (chaser) =>
-          tilesAreEqual(player.tile, chaser.tile) ||
-          (chaser.dir &&
-            tilesAreEqual(player.tile, ahead(chaser.tile, chaser.dir))) ||
-          (player.dir &&
-            tilesAreEqual(ahead(player.tile, player.dir), chaser.tile)),
-      )
-    ) {
-      handlePlayerDeath(player, state);
+    const touchedChaser = state.chasers.find(
+      (chaser) =>
+        tilesAreEqual(player.tile, chaser.tile) ||
+        (chaser.dir &&
+          tilesAreEqual(player.tile, ahead(chaser.tile, chaser.dir))) ||
+        (player.dir &&
+          tilesAreEqual(ahead(player.tile, player.dir), chaser.tile)),
+    );
+    if (touchedChaser) {
+      if (state.vulnerableTimer && !touchedChaser.isEaten) {
+        touchedChaser.isEaten = true;
+        touchedChaser.dir = null;
+        touchedChaser.tile = touchedChaser.spawn;
+        touchedChaser.step = 0;
+        player.score += 200;
+      } else handlePlayerDeath(player, state);
     }
   });
   state.chasers.forEach((chaser) => {
@@ -148,4 +175,5 @@ export const tick = (state: GameState) => {
   else if (state.tick % TICKS_PER_SECOND == 0) {
     state.timeRemaining--;
   }
+  if (state.vulnerableTimer) state.vulnerableTimer--;
 };

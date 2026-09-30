@@ -77,6 +77,7 @@ export interface Chaser {
   tile: Tile;
   dir: Direction | null;
   step: number;
+  isEaten: boolean;
 }
 export interface GameState {
   tick: number;
@@ -86,4 +87,5 @@ export interface GameState {
   pellets: boolean[][];
   timeRemaining: number;
   winnerId?: string;
+  vulnerableTimer: number;
 }
