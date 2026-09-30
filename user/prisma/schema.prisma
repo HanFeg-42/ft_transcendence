@@ -41,4 +41,7 @@ model Profile {
   statusText  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  achievements UserAchievement[]
 }
+
