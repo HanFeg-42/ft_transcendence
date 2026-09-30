@@ -51,9 +51,6 @@ app.use(
   createProxyMiddleware({
     target: process.env.USER_SERVICE_URL || 'http://user:3004',
     changeOrigin: true,
-    pathRewrite: { 
-      '^/users': '' 
-    },
     on: {
       error: (err, req, res) => {
         console.error('[API-GATEWAY] User service error:', err.message);
