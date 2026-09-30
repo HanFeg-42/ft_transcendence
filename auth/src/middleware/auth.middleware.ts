@@ -37,7 +37,11 @@ export function authenticateToken(
       algorithms: ["HS256"],
     });
 
-    if (typeof decoded === "string" || typeof decoded.userId !== "number") {
+    if (
+      typeof decoded === "string" ||
+      typeof decoded.userId !== "number" ||
+      decoded.purpose !== "access"
+    ) {
       return res.status(401).json({
         error: "Invalid token",
       });
