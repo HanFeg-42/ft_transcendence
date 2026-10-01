@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Background from '../components/ui/Background';
 import Navbar from '../components/ui/Navbar';
 import ProfileCard from '../components/ui/ProfileCard';
@@ -5,6 +6,8 @@ import GameUI from '../components/ui/GameUI';
 import Card from '../components/ui/Card';
 import { ICONS } from '../utils/icons';
 import { useNavigate } from 'react-router-dom';
+import { getMyProfile, type ProfileData } from '../services/userService';
+import { useAuth } from '../context/AuthContext'; // 1. Importer useAuth
 
 import championImg from '../assets/achievement/champion.png';
 import cherrysImg from '../assets/achievement/cherrys.png';
@@ -22,17 +25,43 @@ const routeMap: Record<string, string> = {
 };
 
 const ACHIEVEMENTS_DATA = [
-  { id: 'champion', title: 'CHAMPION', description: 'Win 100 matches', image: championImg },
-  { id: 'ghost-hunter', title: 'GHOST HUNTER', description: 'Defeat 50 ghosts', image: ghostHanterImg },
-  { id: 'cherry-collector', title: 'CHERRY COLLECTOR', description: 'Collect 200 cherries', image: cherrysImg },
-  { id: 'speedster', title: 'SPEEDSTER', description: 'Win 10 matches in a row', image: speederImg },
-  { id: 'pac-maniac', title: 'PAC-MANIAC', description: 'Play 500 matches', image: pacManiacImg },
-  { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', image: tournamentImg },
+  { id: 'champion', title: 'CHAMPION', description: 'Win 100 matches', image: championImg, borderColor: 'border-amber-400', textColor: 'text-amber-400' },
+  { id: 'ghost-hunter', title: 'GHOST HUNTER', description: 'Defeat 50 ghosts', image: ghostHanterImg, borderColor: 'border-pink-500', textColor: 'text-pink-500' },
+  { id: 'cherry-collector', title: 'CHERRY COLLECTOR', description: 'Collect 200 cherries', image: cherrysImg, borderColor: 'border-red-500', textColor: 'text-red-500' },
+  { id: 'speedster', title: 'SPEEDSTER', description: 'Win 10 matches in a row', image: speederImg, borderColor: 'border-yellow-400', textColor: 'text-yellow-400' },
+  { id: 'pac-maniac', title: 'PAC-MANIAC', description: 'Play 500 matches', image: pacManiacImg, borderColor: 'border-cyan-400', textColor: 'text-cyan-400' },
+  { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', image: tournamentImg, borderColor: 'border-purple-500', textColor: 'text-purple-500' },
 ];
 
 /** Renders the responsive user profile dashboard. */
-export default function ProfilePage() {
+export default function Profile() { // 2. Nom de composant en Majuscule
   const navigate = useNavigate();
+  const { token } = useAuth(); // 3. Extraire le token du contexte React
+
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Si aucun token n'est présent dans le contexte React
+    if (!token) {
+      console.warn('Aucun token JWT disponible dans useAuth()');
+      setLoading(false);
+      return;
+    }
+
+    // Appel de getMyProfile en transmettant le token JWT
+    getMyProfile(token)
+      .then((data) => {
+        setProfile(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Erreur chargement profil:', err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [token]); // 4. Se déclenche dès que le token est disponible
 
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
@@ -45,35 +74,41 @@ export default function ProfilePage() {
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
-        {/* COLONNE GAUCHE : Profil sans conteneur superflu autour */}
+        {/* COLONNE GAUCHE : Profil */}
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col">
-          <ProfileCard
-            username="NOUSS"
-            statusText="Ready to play"
-            level={24}
-            currentXp={2350}
-            maxXp={3000}
-            stats={{
-              matchesPlayed: 243,
-              wins: 176,
-              losses: 67,
-              winRate: 72,
-            }}
-          />
+          {loading ? (
+            <Card variant="gray" className="w-full h-full flex items-center justify-center p-8">
+              <span className="font-pixelify text-pacova-green text-lg animate-pulse">
+                LOADING DATA...
+              </span>
+            </Card>
+          ) : error ? (
+            <Card variant="gray" className="w-full h-full flex items-center justify-center p-8 text-center">
+              <span className="font-pixelify text-red-500 text-sm">
+                FAILED TO LOAD PROFILE
+              </span>
+            </Card>
+          ) : (
+            <ProfileCard
+              username={profile?.username}
+              avatarUrl={profile?.avatarUrl}
+              statusText={profile?.statusText || 'Ready to play'}
+              level={profile?.level ?? 1}
+              currentXp={profile?.currentXp ?? 0}
+              maxXp={profile?.maxXp ?? 1000}
+              stats={profile?.stats}
+            />
+          )}
         </div>
 
-        {/* COLONNE DROITE : Match History, Rank en haut & Achievements en bas */}
+        {/* COLONNE DROITE : Match History, Rank & Achievements */}
         <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
           
-          {/* Ligne du Haut : Match History et Current Rank s'alignent parfaitement sur la hauteur */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch flex-1">
-            
-            {/* Match History */}
             <div className="md:col-span-2 flex flex-col h-full">
               <GameUI />
             </div>
 
-            {/* Current Rank */}
             <div className="md:col-span-1 flex h-full">
               <Card variant="gray" className="w-full h-full flex flex-col justify-between items-center text-center p-5 bg-pacova-surface/60 backdrop-blur-sm">
                 <span className="font-pixelify text-xl text-pacova-green uppercase tracking-widest self-start">
@@ -84,7 +119,7 @@ export default function ProfilePage() {
                   <img 
                     src={ICONS.diamond} 
                     alt="Diamond Rank" 
-                    className="w-20 h-20 object-contain image-rendering-pixelated drop-shadow-[0_0_15px_rgba(243,32,119,0.6)] animate-pulse"
+                    className="w-20 h-20 object-contain image-rendering-pixelated drop-shadow-[0_0_15px_rgba(243,32,119,0.6)] animate-pulse motion-reduce:transition-none"
                   />
                   <h3 className="font-pixelify text-xl text-pacova-gray uppercase tracking-wide drop-shadow-[0_0_8px_rgba(142,214,3,0.4)]">
                     DIAMOND II
@@ -103,20 +138,16 @@ export default function ProfilePage() {
                 </div>
               </Card>
             </div>
-
           </div>
 
-            {/* Ligne du Bas : Achievements Cards indépendantes et immersives */}
+          {/* Achievements */}
           <div className="w-full flex flex-col gap-4 mt-4">
-            {/* Titre de section épuré sans grand conteneur */}
             <span className="font-pixelify text-xl text-pacova-pink uppercase tracking-widest block pl-1">
               ▼ ACHIEVEMENTS
             </span>
 
-            {/* Grille de cartes individuelles inspirée de votre modèle Figma */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {ACHIEVEMENTS_DATA.map((item) => (
-                /* 💡 On réutilise votre composant <Card> individuellement avec la variante 'gray' ou 'pink' */
                 <Card 
                   key={item.id} 
                   variant="gray" 
@@ -126,7 +157,6 @@ export default function ProfilePage() {
                             transform hover:scale-105 transition-all duration-300 ease-out 
                             min-h-[190px] cursor-pointer"
                 >
-                  {/* 1. L'image du succès prend une place maximale en haut */}
                   <div className="w-full flex-1 flex items-center justify-center mb-2">
                     <img 
                       src={item.image} 
@@ -136,7 +166,6 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  {/* 2. Les informations textuelles écrites à l'intérieur, en bas de la carte */}
                   <div className="w-full space-y-1.5 mt-auto">
                     <h4 className="font-pixelify text-xs sm:text-sm text-yellow-400 font-bold uppercase tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                       {item.title}
@@ -149,7 +178,6 @@ export default function ProfilePage() {
               ))}
             </div>
           </div>
-
 
         </div>
 
