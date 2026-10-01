@@ -51,9 +51,7 @@ app.use(
   createProxyMiddleware({
     target: process.env.AUTH_SERVICE_URL || 'http://auth:3001',
     changeOrigin: true,
-    pathRewrite: {
-      '^/directory': '/users',
-    },
+    pathRewrite: (path) => `/users${path}`,
     on: {
       error: (err, req, res) => {
         console.error('[API-GATEWAY] Auth directory error:', err.message);
