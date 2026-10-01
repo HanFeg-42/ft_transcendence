@@ -23,9 +23,15 @@ export default function Chat() {
   // 1. Hooks & Global Authentication Context
   const { token, user } = useAuth();
   const navigate = useNavigate();
+  const [selectedFriend, setSelectedFriend] = useState(MOCK_FRIENDS[0]);
+  const openFriendIdRef = useRef<number | null>(null);
+  useEffect(() => {
+  openFriendIdRef.current = selectedFriend.id;
+  }, [selectedFriend.id]);
+
   const { messages, sendMessage, presence, typing, readAt, sendRead, sendTyping } = useChatSocket(
     user && token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '',
-    user ? Number(user.id) : 0
+    user ? Number(user.id) : 0, openFriendIdRef
   );
 
   const lastTypingSentRef = useRef<Record<number, number>>({});
@@ -48,7 +54,7 @@ export default function Chat() {
 
 
   // 2. Component State Management
-  const [selectedFriend, setSelectedFriend] = useState(MOCK_FRIENDS[0]);
+  
   const [draft, setDraft] = useState('');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);

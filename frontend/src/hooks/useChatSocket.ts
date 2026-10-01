@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { ChatEvents } from '../../../shared/types/chat-types';
 import type { 
   ChatMessageOutgoing, 
@@ -7,13 +8,15 @@ import type {
   ChatServerMessage 
 } from '../../../shared/types/chat-types';
 
-export function useChatSocket(url: string, currentUserId: number) {
+export function useChatSocket(url: string, currentUserId: number,
+  openFriendIdRef: React.RefObject<number | null>,
+) {
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [messages, setMessages] = useState<ChatMessageIncoming[]>([]);
   const [presence, setPresence] = useState<Record<number, 'online' | 'offline'>>({});
   
-  // Step 1: Typing state management
+  
   const [typing, setTyping] = useState<Record<number, boolean>>({});
   const typingTimeoutsRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const [readAt, setReadAt] = useState<Record<number, string>>({});
@@ -71,6 +74,19 @@ export function useChatSocket(url: string, currentUserId: number) {
           delete typingTimeoutsRef.current[senderId];
         }
         setTyping((prev) => ({ ...prev, [senderId]: false }));
+
+          if (
+            message.sender_id === openFriendIdRef.current &&
+            document.visibilityState === 'visible'
+          ) {
+            sendJsonMessage({
+              event: ChatEvents.READ,
+              data: {
+                sender_id: message.sender_id,
+              },
+            });
+          }
+
         break;
       }
 
