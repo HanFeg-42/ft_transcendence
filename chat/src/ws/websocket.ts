@@ -206,6 +206,95 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       break;
     }
 
+
+
+    case ChatEvents.GAME_INVITE: {
+      const { receiver_id } = packet.data;
+      const senderId = Number(userId);
+
+      const isBlocked = await prisma.blockedUser.findFirst({
+        where: {
+          OR: [
+            { blockerId: receiver_id, blockedId: senderId },
+            { blockerId: senderId, blockedId: receiver_id },
+          ],
+        },
+      });
+      if (isBlocked) break;
+
+      const saved = await prisma.message.create({
+        data: {
+          senderId,
+          receiverId: receiver_id,
+          content: 'Game invite',
+          kind: 'game_invite',
+          meta: { gameId: crypto.randomUUID(), status: 'pending' },
+        },
+      });
+
+      const reply: ChatMessageIncoming = {
+        id: saved.id, sender_id: saved.senderId, receiver_id: saved.receiverId,
+        content: saved.content, created_at: saved.createdAt.toISOString(),
+        read_at: null, kind: 'game_invite',
+        meta: saved.meta as ChatMessageIncoming['meta'],
+      };
+      const payload = JSON.stringify({ event: ChatEvents.GAME_INVITE, data: reply });
+
+      // sender needs the real id/gameId back too, not just the receiver
+      for (const [id, sockets] of [[String(receiver_id), onlineUsers.get(String(receiver_id))], [userId, onlineUsers.get(userId)]] as const) {
+        if (!sockets) continue;
+        for (const socket of sockets) if (socket.readyState === WebSocket.OPEN) socket.send(payload);
+      }
+      break;
+    }
+
+    case ChatEvents.GAME_INVITE_REPLY: {
+      const { message_id, accept } = packet.data;
+      const currentUserId = Number(userId);
+
+      const invite = await prisma.message.findUnique({ where: { id: message_id } });
+      if (!invite || invite.receiverId !== currentUserId || invite.kind !== 'game_invite') break;
+      const meta = invite.meta as { gameId?: string; status?: string } | null;
+      if (!meta || meta.status !== 'pending') break; // already answered — ignore
+
+      const nextStatus = accept ? 'accepted' : 'declined';
+      const updated = await prisma.message.update({
+        where: { id: message_id },
+        data: { meta: { ...meta, status: nextStatus } },
+      });
+
+      const system = await prisma.message.create({
+        data: {
+          senderId: currentUserId, receiverId: invite.senderId,
+          content: accept ? 'Invite accepted' : 'Invite declined',
+          kind: 'system',
+        },
+      });
+
+      const packets = [
+        { event: ChatEvents.GAME_INVITE_REPLY, data: {
+            id: updated.id, sender_id: updated.senderId, receiver_id: updated.receiverId,
+            content: updated.content, created_at: updated.createdAt.toISOString(),
+            read_at: null, kind: 'game_invite', meta: updated.meta,
+          } as ChatMessageIncoming },
+        { event: ChatEvents.MESSAGE, data: {
+            id: system.id, sender_id: system.senderId, receiver_id: system.receiverId,
+            content: system.content, created_at: system.createdAt.toISOString(),
+            read_at: null, kind: 'system', meta: null,
+          } as ChatMessageIncoming },
+      ];
+
+      for (const uid of [String(invite.senderId), String(currentUserId)]) {
+        const sockets = onlineUsers.get(uid);
+        if (!sockets) continue;
+        for (const p of packets) {
+          const payload = JSON.stringify(p);
+          for (const socket of sockets) if (socket.readyState === WebSocket.OPEN) socket.send(payload);
+        }
+      }
+      break;
+    }
+
     }
 }
 

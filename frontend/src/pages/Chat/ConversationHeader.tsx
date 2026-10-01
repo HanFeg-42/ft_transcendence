@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../../components/ui/Avatar';
 import PixelButton from '../../components/ui/PixelButton';
+import PacManIcon from './PacManIcon';
 import { NO_GLOW } from './constants';
 import type { Friend, BlockStatus } from './types';
 
@@ -9,6 +10,8 @@ interface ConversationHeaderProps {
   isFriendOnline: boolean;
   blockStatus: BlockStatus;
   onToggleBlock: () => void;
+  onInviteClick: () => void;
+  inviteDisabled: boolean;
 }
 
 // Which confirm panel (if any) the menu is currently showing instead of the
@@ -20,6 +23,8 @@ export default function ConversationHeader({
   isFriendOnline,
   blockStatus,
   onToggleBlock,
+  onInviteClick,
+  inviteDisabled,
 }: ConversationHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<ConfirmMode>(null);
@@ -62,12 +67,11 @@ export default function ConversationHeader({
     closeMenu();
   };
 
-
   return (
-    <div className="flex items-center justify-between gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative">
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative">
       <div className="flex items-center gap-3 min-w-0">
         <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-          <Avatar iconName={friend.icon} size="sm" status={friend.status} />
+          <Avatar iconName={friend.icon} size="sm" />
         </span>
         <div className="min-w-0">
           <span className="font-pixelify text-white text-lg uppercase block truncate">
@@ -82,6 +86,16 @@ export default function ConversationHeader({
           </span>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={onInviteClick}
+        disabled={inviteDisabled}
+        className={`justify-self-center flex items-center gap-2 px-4 py-1.5 rounded-full border-2 border-amber-400/70 bg-black/60 font-pixelify text-amber-300 text-sm uppercase tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.5)] hover:brightness-125 disabled:opacity-30 disabled:cursor-not-allowed transition-all ${NO_GLOW ? '' : ''}`}
+      >
+        <PacManIcon className="w-5 h-5" />
+        Invite to Play
+      </button>
 
       <div ref={menuRef} className="relative">
         <button

@@ -119,6 +119,19 @@ export function useChatSocket(url: string, currentUserId: number,
         setReadAt((prev) => ({ ...prev, [reader_id]: read_at }));
         break;
       }
+
+
+      case ChatEvents.GAME_INVITE: {
+        setMessages((prev) => [...prev, packet.data]);
+        break;
+      }
+      case ChatEvents.GAME_INVITE_REPLY: {
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === packet.data.id);
+          return exists ? prev.map((m) => (m.id === packet.data.id ? packet.data : m)) : [...prev, packet.data];
+        });
+        break;
+      }
     }
   }
 
@@ -158,6 +171,14 @@ export function useChatSocket(url: string, currentUserId: number,
   sendJsonMessage({ event: ChatEvents.READ, data: { sender_id } });
 }
 
+
+function sendInvite(receiver_id: number) {
+  sendJsonMessage({ event: ChatEvents.GAME_INVITE, data: { receiver_id } });
+}
+function sendInviteReply(message_id: number, accept: boolean) {
+  sendJsonMessage({ event: ChatEvents.GAME_INVITE_REPLY, data: { message_id, accept } });
+}
+
   // Helper function to send typed WebSocket events
   function sendJsonMessage(packet: ChatClientMessage) {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -165,5 +186,6 @@ export function useChatSocket(url: string, currentUserId: number,
     }
   }
 
-  return { isConnected, messages, sendMessage, sendJsonMessage, presence, typing, readAt, sendRead, sendTyping };
+  return { isConnected, messages, sendMessage, sendJsonMessage,
+     presence, typing, readAt, sendRead, sendTyping, sendInvite, sendInviteReply};
 }

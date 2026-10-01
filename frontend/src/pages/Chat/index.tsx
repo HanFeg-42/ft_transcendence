@@ -29,7 +29,8 @@ export default function Chat() {
   openFriendIdRef.current = selectedFriend.id;
   }, [selectedFriend.id]);
 
-  const { messages, sendMessage, presence, typing, readAt, sendRead, sendTyping } = useChatSocket(
+  const { messages, sendMessage, presence, typing, readAt,
+     sendRead, sendTyping, sendInvite, sendInviteReply  } = useChatSocket(
     user && token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '',
     user ? Number(user.id) : 0, openFriendIdRef
   );
@@ -54,12 +55,10 @@ export default function Chat() {
 
 
   // 2. Component State Management
-  
+
   const [draft, setDraft] = useState('');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-
 
   // 3. Unread Messages & Last-Seen Divider (useRef)
   const lastSeenRef = useRef<Record<number, string>>({});
@@ -166,6 +165,10 @@ export default function Chat() {
     (message, index, all) => all.findIndex((m) => m.id === message.id) === index
   );
 
+  const pendingInvite = [...conversation]
+    .reverse()
+    .find((m) => m.kind === 'game_invite' && m.meta?.status === 'pending') ?? null;
+
 useEffect(() => {
   if (!userReady) return;
   if (document.visibilityState !== 'visible') return;
@@ -207,6 +210,8 @@ useEffect(() => {
             isFriendOnline={isFriendOnline}
             blockStatus={blockStatus}
             onToggleBlock={handleToggleBlock}
+            onInviteClick={() => sendInvite(selectedFriend.id)}
+            inviteDisabled={isBlockedEitherWay || Boolean(pendingInvite)}
           />
 
           <MessageList
@@ -219,6 +224,10 @@ useEffect(() => {
             dividerCutoff={dividerCutoff}
             friendReadAt={readAt[selectedFriend.id] ?? null}
             isTyping={Boolean(typing[selectedFriend.id])}
+            pendingInvite={pendingInvite}
+            onSend={() => sendInvite(selectedFriend.id)}
+            onAccept={() => pendingInvite && sendInviteReply(pendingInvite.id, true)}
+            onDecline={() => pendingInvite && sendInviteReply(pendingInvite.id, false)}
           />
 
           <MessageInput draft={draft} onDraftChange={handleDraftChange} onSend={handleSend} disabled={isBlockedEitherWay} />
