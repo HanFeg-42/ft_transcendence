@@ -46,6 +46,24 @@ app.use(
 );
 
 app.use(
+  '/directory',
+  authenticateToken,
+  createProxyMiddleware({
+    target: process.env.AUTH_SERVICE_URL || 'http://auth:3001',
+    changeOrigin: true,
+    pathRewrite: (path) => `/users${path}`,
+    on: {
+      error: (err, req, res) => {
+        console.error('[API-GATEWAY] Auth directory error:', err.message);
+        if (!res.headersSent) {
+          res.status(502).json({ error: 'Auth service unreachable' });
+        }
+      }
+    }
+  })
+);
+
+app.use(
   '/users', 
   authenticateToken,
   createProxyMiddleware({

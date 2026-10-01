@@ -1,3 +1,21 @@
-understand profile.ts 
-  const [error, setError] = useState<string | null>(null);
-- how user data is loaded
+- understanding schema (give the curent schema to deepseek) 
+- complete acheivements code with dpsk
+- fix PATCH
+
+
+
+
+   Profile (Enfant)                 Achievement (Trophée)
+   ┌──────────────┐                 ┌──────────────┐
+   │ userId: 1    │                 │ id: "hello"  │
+   │ name: Alice  │                 │ title: "..." │
+   └──────┬───────┘                 └──────┬───────┘
+          │                                │
+          │         UserAchievement        │
+          │      ┌──────────────────┐      │
+          └─────►│ userId: 1        │◄─────┘
+                 │ achievementId:   │
+                 │   "hello"        │
+                 │ unlocked: true   │
+                 │ progress: 100    │
+                 └──────────────────┘

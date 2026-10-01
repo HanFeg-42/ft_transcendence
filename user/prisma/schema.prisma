@@ -36,10 +36,11 @@ model UserAchievement {
   achievementId String
   unlocked      Boolean  @default(false)
   progress      Int      @default(0)
-  unlockedAt    DateTime @default(now())
+  unlockedAt    DateTime?
 
   user        Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
   achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
 
-  @@id([userId, achievementId])
+  @@id([userId, achievementId]) //PK
 }
+
