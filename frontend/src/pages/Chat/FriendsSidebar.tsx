@@ -13,7 +13,7 @@ interface FriendsSidebarProps {
 
 export default function FriendsSidebar({ friends, selectedFriend, onSelectFriend, onNewChat }: FriendsSidebarProps) {
   return (
-    <div className="w-[22rem] shrink-0 min-h-0 flex flex-col bg-[#050B1E] border-2 border-pacova-green-dark rounded-lg overflow-hidden">
+    <div className="w-[22rem] shrink-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
       <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider text-center px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
         <PacManIcon className="w-7 h-7 shrink-0" />
         Friends
@@ -30,7 +30,7 @@ export default function FriendsSidebar({ friends, selectedFriend, onSelectFriend
               className={`flex items-center gap-3 px-3 py-3 rounded-md border-2 transition-colors text-left ${NO_GLOW} ${
                 isSelected
                   ? friend.status === 'offline'
-                    ? 'border-red-500'
+                    ? 'border-gray-500'
                     : 'border-pacova-green'
                   : 'border-transparent hover:border-pacova-gray'
               }`}
@@ -47,7 +47,7 @@ export default function FriendsSidebar({ friends, selectedFriend, onSelectFriend
                     ? 'bg-pacova-green'
                     : friend.status === 'busy'
                       ? 'bg-pacova-pink-dark'
-                      : 'bg-red-500'
+                      : 'bg-gray-500'
                 }`}
                 aria-label={friend.status}
               />

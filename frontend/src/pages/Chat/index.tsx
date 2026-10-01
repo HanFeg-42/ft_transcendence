@@ -23,44 +23,51 @@ export default function Chat() {
   // 1. Hooks & Global Authentication Context
   const { token, user } = useAuth();
   const navigate = useNavigate();
-  const { messages, sendMessage, presence } = useChatSocket(
-    user && token ? `wss://localhost/api/chat/ws?token=${token}` : '',
-    user ? Number(user.id) : 0
+  const [selectedFriend, setSelectedFriend] = useState(MOCK_FRIENDS[0]);
+  const openFriendIdRef = useRef<number | null>(null);
+  useEffect(() => {
+  openFriendIdRef.current = selectedFriend.id;
+  }, [selectedFriend.id]);
+
+  const { messages, sendMessage, presence, typing, readAt,
+     sendRead, sendTyping, sendInvite, sendInviteReply  } = useChatSocket(
+    user && token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '',
+    user ? Number(user.id) : 0, openFriendIdRef
   );
+
+  const lastTypingSentRef = useRef<Record<number, number>>({});
+
+
+  const handleDraftChange = (value: string) => {
+  setDraft(value);
+
+  if (!value.trim()) return;
+
+  const friendId = selectedFriend.id;
+  const now = Date.now();
+  const lastSent = lastTypingSentRef.current[friendId] ?? 0;
+
+  if (now - lastSent > 2000) {
+    sendTyping(friendId);
+    lastTypingSentRef.current[friendId] = now;
+  }
+};
 
 
   // 2. Component State Management
-  const [selectedFriend, setSelectedFriend] = useState(MOCK_FRIENDS[0]);
+
   const [draft, setDraft] = useState('');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showToast = (message: string, type: 'success' | 'error') => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast({ message, type });
-    toastTimeoutRef.current = setTimeout(() => setToast(null), 2500);
-  };
-  const [mutedIds, setMutedIds] = useState<Set<number>>(() => new Set());
-  const [clearedBefore, setClearedBefore] = useState<Record<number, string>>({});
-
-
 
   // 3. Unread Messages & Last-Seen Divider (useRef)
   const lastSeenRef = useRef<Record<number, string>>({});
   const [dividerCutoff, setDividerCutoff] = useState<string | null>(null);
 
   const userReady = Boolean(user && token);
-
-
   // Effect 1: Restoring Preferences from localStorage
   useEffect(() => {
     if (!user) return;
-    try {
-      const rawMuted = localStorage.getItem(`pacova-muted-${user.id}`);
-      setMutedIds(new Set(rawMuted ? (JSON.parse(rawMuted) as number[]) : []));
-    } catch (err) {
-      console.warn('[CHAT] Failed to load muted friends from storage:', err);
-    }
     try {
       const rawSeen = localStorage.getItem(`pacova-lastseen-${user.id}`);
       lastSeenRef.current = rawSeen ? JSON.parse(rawSeen) : {};
@@ -117,43 +124,9 @@ export default function Chat() {
     setSelectedFriend(friend);
   };
 
-  const handleToggleMute = () => {
-    if (!user) return;
-    setMutedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(selectedFriend.id)) next.delete(selectedFriend.id);
-      else next.add(selectedFriend.id);
-      try {
-        localStorage.setItem(`pacova-muted-${user.id}`, JSON.stringify([...next]));
-      } catch (err) {
-        console.warn('[CHAT] Failed to persist muted friends:', err);
-      }
-      return next;
-    });
-  };
+ 
 
   
-
-  // 1. Clearing Conversations via REST API (handleClearConversation)
-  const handleClearConversation = () => {
-    if (!token) return;
-    const friendId = selectedFriend.id;
-
-    fetch(`/api/chat/messages/${friendId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        // Optimistic: hide immediately rather than waiting on a refetch.
-        setClearedBefore((prev) => ({ ...prev, [friendId]: new Date().toISOString() }));
-        showToast('CONVERSATION DELETED', 'success');
-      })
-      .catch((err) => {
-        console.error('[CHAT] Failed to clear conversation:', err);
-        showToast('DELETE FAILED', 'error');
-      });
-  };
 
   const visibleFriends = user ? MOCK_FRIENDS.filter((friend) => friend.id !== Number(user.id)) : MOCK_FRIENDS;
 
@@ -191,21 +164,33 @@ export default function Chat() {
   let conversation = [...historyMessages, ...liveForFriend].filter(
     (message, index, all) => all.findIndex((m) => m.id === message.id) === index
   );
-  const cutoff = clearedBefore[selectedFriend.id];
-  if (cutoff) {
-    conversation = conversation.filter((message) => message.created_at > cutoff);
-  }
 
+  const pendingInvite = [...conversation]
+    .reverse()
+    .find((m) => m.kind === 'game_invite' && m.meta?.status === 'pending') ?? null;
 
+useEffect(() => {
+  if (!userReady) return;
+  if (document.visibilityState !== 'visible') return;
+  sendRead(selectedFriend.id);
+}, [selectedFriend.id, conversation.length, userReady]);
+
+useEffect(() => {
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') sendRead(selectedFriend.id);
+  };
+  document.addEventListener('visibilitychange', onVisible);
+  return () => document.removeEventListener('visibilitychange', onVisible);
+}, [selectedFriend.id]);
 
   const isBlockedEitherWay = blockStatus.iBlockedThem || blockStatus.theyBlockedMe;
-  const isMutedSelected = mutedIds.has(selectedFriend.id);
+  // const isMutedSelected = mutedIds.has(selectedFriend.id);
 
 
   // 3. Auto-Scrolling to Bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation.length, selectedFriend.id]);
+  }, [conversation.length, selectedFriend.id, typing[selectedFriend.id]]);
 
   return (
     <Background>
@@ -219,15 +204,14 @@ export default function Chat() {
           onNewChat={() => setIsNewChatOpen(true)}
         />
 
-        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-[#050B1E] border-2 border-pacova-green-dark rounded-lg overflow-hidden">
+        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
           <ConversationHeader
             friend={selectedFriendLive}
             isFriendOnline={isFriendOnline}
             blockStatus={blockStatus}
             onToggleBlock={handleToggleBlock}
-            isMuted={isMutedSelected}
-            onToggleMute={handleToggleMute}
-            onClearConversation={handleClearConversation}
+            onInviteClick={() => sendInvite(selectedFriend.id)}
+            inviteDisabled={isBlockedEitherWay || Boolean(pendingInvite)}
           />
 
           <MessageList
@@ -238,9 +222,15 @@ export default function Chat() {
             historyError={historyError}
             messagesEndRef={messagesEndRef}
             dividerCutoff={dividerCutoff}
+            friendReadAt={readAt[selectedFriend.id] ?? null}
+            isTyping={Boolean(typing[selectedFriend.id])}
+            pendingInvite={pendingInvite}
+            onSend={() => sendInvite(selectedFriend.id)}
+            onAccept={() => pendingInvite && sendInviteReply(pendingInvite.id, true)}
+            onDecline={() => pendingInvite && sendInviteReply(pendingInvite.id, false)}
           />
 
-          <MessageInput draft={draft} onDraftChange={setDraft} onSend={handleSend} disabled={isBlockedEitherWay} />
+          <MessageInput draft={draft} onDraftChange={handleDraftChange} onSend={handleSend} disabled={isBlockedEitherWay} />
         </section>
       </main>
 

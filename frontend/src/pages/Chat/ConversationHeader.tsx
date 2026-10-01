@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../../components/ui/Avatar';
 import PixelButton from '../../components/ui/PixelButton';
+import PacManIcon from './PacManIcon';
 import { NO_GLOW } from './constants';
 import type { Friend, BlockStatus } from './types';
 
@@ -9,23 +10,21 @@ interface ConversationHeaderProps {
   isFriendOnline: boolean;
   blockStatus: BlockStatus;
   onToggleBlock: () => void;
-  isMuted: boolean;
-  onToggleMute: () => void;
-  onClearConversation: () => void;
+  onInviteClick: () => void;
+  inviteDisabled: boolean;
 }
 
 // Which confirm panel (if any) the menu is currently showing instead of the
-// option list — 'block' for block/unblock, 'delete' for delete conversation.
-type ConfirmMode = 'block' | 'delete' | null;
+// option list — 'block' for block/unblock
+type ConfirmMode = 'block' | null;
 
 export default function ConversationHeader({
   friend,
   isFriendOnline,
   blockStatus,
   onToggleBlock,
-  isMuted,
-  onToggleMute,
-  onClearConversation,
+  onInviteClick,
+  inviteDisabled,
 }: ConversationHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<ConfirmMode>(null);
@@ -68,16 +67,11 @@ export default function ConversationHeader({
     closeMenu();
   };
 
-  const handleConfirmDelete = () => {
-    onClearConversation();
-    closeMenu();
-  };
-
   return (
-    <div className="flex items-center justify-between gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative">
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative">
       <div className="flex items-center gap-3 min-w-0">
         <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-          <Avatar iconName={friend.icon} size="sm" status={friend.status} />
+          <Avatar iconName={friend.icon} size="sm" />
         </span>
         <div className="min-w-0">
           <span className="font-pixelify text-white text-lg uppercase block truncate">
@@ -85,13 +79,23 @@ export default function ConversationHeader({
           </span>
           <span
             className={`font-vt323 text-base uppercase tracking-wide ${
-              isFriendOnline ? 'text-pacova-green' : 'text-red-500'
+              isFriendOnline ? 'text-pacova-green' : 'text-gray-500'
             }`}
           >
             {isFriendOnline ? 'Online' : 'Offline'}
           </span>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={onInviteClick}
+        disabled={inviteDisabled}
+        className={`justify-self-center flex items-center gap-2 px-4 py-1.5 rounded-full border-2 border-amber-400/70 bg-black/60 font-pixelify text-amber-300 text-sm uppercase tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.5)] hover:brightness-125 disabled:opacity-30 disabled:cursor-not-allowed transition-all ${NO_GLOW ? '' : ''}`}
+      >
+        <PacManIcon className="w-5 h-5" />
+        Invite to Play
+      </button>
 
       <div ref={menuRef} className="relative">
         <button
@@ -112,10 +116,8 @@ export default function ConversationHeader({
         {menuOpen && (
           <div
             role="menu"
-            className="absolute right-0 top-full mt-2 w-64 bg-pacova-surface border-2 border-pacova-green-dark pixel-corners-3step shadow-neon-green z-20 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-64 bg-pacova-surface border-2 border-pacova-green-dark rounded-lg z-20 overflow-hidden"
           >
-            <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
-
             {confirmMode === 'block' && (
               <div className="relative p-4 flex flex-col items-center gap-3">
                 <p className="font-vt323 text-white text-lg text-center uppercase">
@@ -123,25 +125,6 @@ export default function ConversationHeader({
                 </p>
                 <div className="flex gap-3">
                   <PixelButton variant="danger-red" size="sm" onClick={handleConfirmBlock}>
-                    Yes
-                  </PixelButton>
-                  <PixelButton variant="outline-green" size="sm" onClick={() => setConfirmMode(null)}>
-                    No
-                  </PixelButton>
-                </div>
-              </div>
-            )}
-
-            {confirmMode === 'delete' && (
-              <div className="relative p-4 flex flex-col items-center gap-2">
-                <p className="font-vt323 text-red-500 text-lg text-center uppercase leading-tight">
-                  ⚠ Delete for both players?
-                </p>
-                <p className="font-vt323 text-gray-300 text-base text-center leading-tight mb-1">
-                  This wipes the chat for {friend.username} too. No respawn.
-                </p>
-                <div className="flex gap-3">
-                  <PixelButton variant="danger-red" size="sm" onClick={handleConfirmDelete}>
                     Yes
                   </PixelButton>
                   <PixelButton variant="outline-green" size="sm" onClick={() => setConfirmMode(null)}>
@@ -163,29 +146,6 @@ export default function ConversationHeader({
                   >
                     View Profile
                     <span className="text-sm normal-case">Soon</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      onToggleMute();
-                      closeMenu();
-                    }}
-                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-pacova-green hover:bg-pacova-green/10"
-                  >
-                    {isMuted ? 'Unmute Notifications' : 'Mute Notifications'}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => setConfirmMode('delete')}
-                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-red-500 hover:bg-red-500/10"
-                  >
-                    Delete Conversation
                   </button>
                 </li>
                 <li>
