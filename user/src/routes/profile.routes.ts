@@ -118,12 +118,40 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
+    const achievements = await prisma.achievement.findMany({
+      include: {
+        users: {
+          where: { userId },
+          select: { unlocked: true, progress: true, unlockedAt: true },
+        },
+      },
+    });
+
+    const formattedAchievements = achievements.map((a) => {
+      const userProgress = a.users[0];
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        image: a.image,
+        borderColor: a.borderColor,
+        textColor: a.textColor,
+        unlocked: userProgress?.unlocked ?? false,
+        progress: userProgress?.progress ?? 0,
+      };
+    });
+
     return res.json({
       id: user.userId,
       username: user.displayName,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       statusText: user.statusText || 'Ready to play',
+      level: 1,
+      currentXp: 500,
+      maxXp: 1000,
+      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
+      achievements: formattedAchievements,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
