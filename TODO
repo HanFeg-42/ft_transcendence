@@ -19,3 +19,5 @@
                  │ unlocked: true   │
                  │ progress: 100    │
                  └──────────────────┘
+
+docker compose exec user npx tsx prisma/seed.ts

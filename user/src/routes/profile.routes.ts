@@ -15,8 +15,8 @@ async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
   
   if (!profile) {
-    // Appel au service auth pour récupérer le username
-    let displayName = `Player${userId}`;  // fallback
+    let displayName = `Player${userId}`;
+    let avatarUrl = null;  // in case of fail
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
         headers: { 'x-user-id': userId.toString() },
@@ -25,22 +25,35 @@ async function getOrCreateProfile(userId: number) {
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
+        avatarUrl = authUser.avatar ?? null;
       }
     } catch (err) {
       console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
-      // On garde le fallback
     }
     
     profile = await prisma.profile.create({
       data: {
         userId,
         displayName,
+        avatarUrl,
         bio: '',
         statusText: 'Ready to play',
       },
     });
-  }
   
+  
+    const achievements = await prisma.achievement.findMany();
+    await prisma.userAchievement.createMany({
+      data: achievements.map((a) => ({
+        userId,
+        achievementId: a.id,
+        progress: 0,
+        unlocked: false,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
   return profile;
 }
 
@@ -54,6 +67,29 @@ router.get('/me', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
+    const achievements = await prisma.achievement.findMany({
+      include: {
+        users: {
+          where: { userId },
+          select: { unlocked: true, progress: true, unlockedAt: true },
+        },
+      },
+    });
+
+    const formattedAchievements = achievements.map((a) => {
+      const userProgress = a.users[0];
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        image: a.image,
+        borderColor: a.borderColor,
+        textColor: a.textColor,
+        unlocked: userProgress?.unlocked ?? false,
+        progress: userProgress?.progress ?? 0,
+      };
+    });
+
     return res.json({
       id: user.userId,
       username: user.displayName,
@@ -64,6 +100,7 @@ router.get('/me', async (req: Request, res: Response) => {
       currentXp: 500,
       maxXp: 1000,
       stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
+      achievements: formattedAchievements,
     });
   } catch (err: any) {
     console.error('[USER] getMyProfile error:', err);

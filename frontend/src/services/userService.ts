@@ -1,8 +1,21 @@
 const API_URL = '/api/users';
 
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  borderColor: string;
+  textColor: string;
+  unlocked: boolean;
+  progress: number;
+}
+
 export interface ProfileData {
+  id?: number;
   username: string;
   avatarUrl?: string;
+  bio?: string;
   statusText?: string;
   level?: number;
   currentXp?: number;
@@ -13,6 +26,7 @@ export interface ProfileData {
     losses: number;
     winRate: number;
   };
+  achievements?: Achievement[];
 }
 
 export async function getMyProfile(token: string): Promise<ProfileData> {
