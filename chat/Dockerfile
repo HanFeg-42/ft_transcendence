@@ -9,4 +9,4 @@ COPY chat/ .
 RUN npx prisma generate 
 
 EXPOSE 3003
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]

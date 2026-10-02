@@ -2,19 +2,23 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-import { register } from "./registerController";
-import { login } from "./loginController";
-import { authenticateToken } from "./authMiddleware";
 import type { AuthenticatedRequest } from "./types/auth";
 import authRoutes from "./routes/auth.routes";
+import usersRoutes from './routes/users.routes';
+import { login } from "./controllers/auth.controller";
 import { prisma } from "./prisma";
+import { register } from "./controllers/register.controller";
+import { authenticateToken } from "./middleware/auth.middleware";
+import { verifyTwoFactorLogin } from "./controllers/twoFactorLogin.controller";
+import {
+  refreshSession,
+  logoutSession,
+} from "./controllers/session.controller";
 import {
   setupTwoFactor,
   confirmTwoFactor,
   disableTwoFactor,
-} from "./twoFactorController";
-import { verifyTwoFactorLogin } from "./2faLoginController";
-import { refreshSession, logoutSession } from "./sessionController";
+} from "./controllers/twoFactor.controller";
 
 const app = express();
 
@@ -45,6 +49,7 @@ app.post("/login", login);
 app.post("/refresh", refreshSession);
 app.post("/logout", logoutSession);
 app.use("/42", authRoutes); // express va comparer le rest de l URL avec les racine indique dans authRoutes()
+app.use('/users', usersRoutes);
 
 app.get("/me", authenticateToken, async (req, res) => {
   const userId = (req as AuthenticatedRequest).userId;

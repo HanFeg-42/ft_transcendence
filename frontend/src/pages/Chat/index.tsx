@@ -24,7 +24,7 @@ export default function Chat() {
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const { messages, sendMessage, presence } = useChatSocket(
-    user && token ? `wss://localhost/api/chat/ws?token=${token}` : '',
+    user && token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '',
     user ? Number(user.id) : 0
   );
 

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import type { AuthenticatedRequest } from "./types/auth";
+import type { AuthenticatedRequest } from "../types/auth";
 
 export function authenticateToken(
   req: Request,
@@ -37,7 +37,11 @@ export function authenticateToken(
       algorithms: ["HS256"],
     });
 
-    if (typeof decoded === "string" || typeof decoded.userId !== "number") {
+    if (
+      typeof decoded === "string" ||
+      typeof decoded.userId !== "number" ||
+      decoded.purpose !== "access"
+    ) {
       return res.status(401).json({
         error: "Invalid token",
       });

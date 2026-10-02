@@ -1,7 +1,5 @@
 import type { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import { Prisma } from "./generated/prisma/client";
-import { prisma } from "./prisma";
+import { registerUser } from "../services/auth.service";
 
 export async function register(req: Request, res: Response) {
   const { username, email, password } = req.body;
@@ -30,31 +28,15 @@ export async function register(req: Request, res: Response) {
     });
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
-
   try {
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        passwordHash,
-      },
-    });
+    const user = await registerUser(username, email, password);
 
     return res.status(201).json({
       message: "User registered successfully",
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
+      user,
     });
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
+    if (error instanceof Error && error.message === "USER_ALREADY_EXISTS") {
       return res.status(409).json({
         error: "username or email already exists",
       });
