@@ -16,6 +16,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
   const [avatarUrl, setAvatarUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Remplir les champs quand la modal s'ouvre
   useEffect(() => {
@@ -54,6 +55,39 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
       setError(err.message || 'Failed to save');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError('File too large (max 2 MB)');
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const token = localStorage.getItem('access_token');
+      const res = await fetch('/api/users/profile/avatar', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      setAvatarUrl(data.avatarUrl);
+    } catch (err: any) {
+      setError(err.message || 'Upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -98,6 +132,36 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
                           font-vt323 text-lg text-white focus:outline-none focus:border-pacova-green"
                 placeholder="https://..."
               />
+
+              <div className="mt-2 text-center">
+                <span className="font-vt323 text-xs text-gray-400">— OR —</span>
+              </div>
+
+              <div className="mt-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                  className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 
+                            file:bg-pacova-green file:text-black hover:file:bg-pacova-green/80"
+                />
+                {uploading && (
+                  <span className="font-vt323 text-xs text-pacova-green block mt-1">
+                    Uploading...
+                  </span>
+                )}
+              </div>
+
+              {/* Aperçu */}
+              {avatarUrl && (
+                <img
+                  src={avatarUrl}
+                  alt="avatar preview"
+                  className="w-20 h-20 rounded-full mt-2 object-cover border-2 border-pacova-green/40"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              )}
             </div>
 
             {/* Bio */}

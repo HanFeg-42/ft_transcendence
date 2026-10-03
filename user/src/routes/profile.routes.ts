@@ -1,5 +1,35 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../prisma';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+
+
+
+const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const userId = getUserIdFromHeader(req as Request);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `avatar_${userId}_${Date.now()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPEG, PNG, GIF, WEBP allowed'));
+  },
+});
 
 const router = Router();
 
@@ -226,5 +256,41 @@ router.patch('/me', async (req: Request, res: Response) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+router.post('/avatar', upload.single('avatar'), async (req: Request, res: Response) => {
+  const userId = getUserIdFromHeader(req);
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+  try {
+    await prisma.profile.update({
+      where: { userId },
+      data: { avatarUrl },
+    });
+
+    return res.json({ avatarUrl });
+  } catch (err: any) {
+    console.error('[USER] uploadAvatar error:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Objet créé par Multer :
+
+// {
+//   fieldname: 'avatar',
+//   originalname: 'photo.jpg',
+//   filename: 'avatar_1_1735689600000.jpg',
+//   path: '/app/user/uploads/avatars/avatar_1_xxx.jpg',
+//   size: 12345,
+//   mimetype: 'image/jpeg',
+// }
 
 export default router;

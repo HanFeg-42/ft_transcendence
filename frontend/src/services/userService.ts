@@ -45,9 +45,7 @@ export async function getMyProfile(token: string): Promise<ProfileData> {
   return response.json();
 }
 
-export async function updateMyProfile(data: Partial<ProfileData>): Promise<ProfileData> {
-  const token = localStorage.getItem('access_token');
-
+export async function updateMyProfile(token: string, data: Partial<ProfileData>): Promise<ProfileData> {
   const response = await fetch(`${API_URL}/profile/me`, {
     method: 'PATCH',
     headers: {
@@ -58,7 +56,7 @@ export async function updateMyProfile(data: Partial<ProfileData>): Promise<Profi
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || 'Erreur lors de la mise à jour');
   }
 
