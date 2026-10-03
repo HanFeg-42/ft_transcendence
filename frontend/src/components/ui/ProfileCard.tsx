@@ -27,6 +27,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   maxXp = 3000,
   avatarUrl,
   stats = { matchesPlayed: 243, wins: 176, losses: 67, winRate: 72 },
+   onEditClick,
 }) => {
   const xpPercentage = Math.min(100, Math.round((currentXp / maxXp) * 100));
 

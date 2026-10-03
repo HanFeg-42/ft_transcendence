@@ -70,6 +70,12 @@ export default function Profile() { // 2. Nom de composant en Majuscule
     if (path) navigate(path);
   };
 
+  const handleSave = async (data: { username?: string; bio?: string; avatar?: string }) => {
+    if (!token) throw new Error('No token');
+    const updated = await updateMyProfile(token, data);
+    setProfile(updated);   // ← met à jour l'UI
+  };
+
   return (
     <Background>
       <Navbar activeTab="PROFILE" onSelectTab={handleSelectTab} />
@@ -99,6 +105,7 @@ export default function Profile() { // 2. Nom de composant en Majuscule
               currentXp={profile?.currentXp ?? 0}
               maxXp={profile?.maxXp ?? 1000}
               stats={profile?.stats}
+              onEditClick={() => setIsEditOpen(true)} 
             />
           )}
         </div>
@@ -195,6 +202,13 @@ export default function Profile() { // 2. Nom de composant en Majuscule
         </div>
 
       </main>
+         {/* Modal */}
+      <EditProfileModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        profile={profile}
+        onSave={handleSave}
+      />
     </Background>
   );
 }

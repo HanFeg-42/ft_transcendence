@@ -177,20 +177,36 @@ router.patch('/me', async (req: Request, res: Response) => {
       }
     }
 
-    const updated = await prisma.profile.upsert({
+    const updated = await prisma.profile.update({
       where: { userId },
-      update: {
-        ...(username && { displayName: username }),
-        ...(avatar && { avatarUrl: avatar }),
+      data: {
+        ...(username !== undefined && { displayName: username || null }),
+        ...(avatar !== undefined && { avatarUrl: avatar || null }),
         ...(bio !== undefined && { bio }),
       },
-      create: {
-        userId,
-        displayName: username || `Player${userId}`,
-        avatarUrl: avatar,
-        bio: bio || '',
-        statusText: 'Ready to play',
+    });
+
+    const achievements = await prisma.achievement.findMany({
+      include: {
+        users: {
+          where: { userId },
+          select: { unlocked: true, progress: true, unlockedAt: true },
+        },
       },
+    });
+
+    const formattedAchievements = achievements.map((a) => {
+      const userProgress = a.users[0];
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        image: a.image,
+        borderColor: a.borderColor,
+        textColor: a.textColor,
+        unlocked: userProgress?.unlocked ?? false,
+        progress: userProgress?.progress ?? 0,
+      };
     });
 
     return res.json({
@@ -199,7 +215,13 @@ router.patch('/me', async (req: Request, res: Response) => {
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
       statusText: updated.statusText || 'Ready to play',
+      level: 1,
+      currentXp: 500,
+      maxXp: 1000,
+      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
+      achievements: formattedAchievements,
     });
+
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }

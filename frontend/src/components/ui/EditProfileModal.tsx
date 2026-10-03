@@ -130,7 +130,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
             <div className="flex gap-4 pt-2">
               <PixelButton
                 type="button"
-                variant="gray"
+                variant="olive-yellow"
                 size="sm"
                 onClick={onClose}
                 className="flex-1"
