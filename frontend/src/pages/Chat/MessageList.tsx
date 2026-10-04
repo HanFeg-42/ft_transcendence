@@ -19,9 +19,9 @@ interface MessageListProps {
   friendReadAt: string | null;
   isTyping: boolean;
   pendingInvite: HistoryMessage | null;
+  onSend: () => void;
   onAccept: () => void;
   onDecline: () => void;
-  onDismissSent: () => void;
 }
 
 export default function MessageList({
@@ -31,19 +31,19 @@ export default function MessageList({
   historyLoading,
   historyError,
   messagesEndRef,
-  dividerCutoff,
+  // dividerCutoff,
   friendReadAt,
   isTyping,
   pendingInvite,
+  // onSend,
   onAccept,
   onDecline,
-  onDismissSent,
 }: MessageListProps) {
   // ADDED: index of the first message that counts as "new" — the divider
   // renders right before it. -1 (via findIndex) means nothing qualifies.
-  const dividerIndex = dividerCutoff
-    ? conversation.findIndex((message) => message.created_at > dividerCutoff)
-    : -1;
+  // const dividerIndex = dividerCutoff
+  //   ? conversation.findIndex((message) => message.created_at > dividerCutoff)
+  //   : -1;
 
   const isReceiver = Boolean(pendingInvite && pendingInvite.receiver_id === currentUserId);
 
@@ -61,7 +61,7 @@ export default function MessageList({
       {!historyLoading && !historyError && conversation.length === 0 && (
         <p className="font-vt323 text-gray-600 text-lg text-center mt-8">No messages yet</p>
       )}
-      {conversation.map((message, index) => {
+      {conversation.map((message) => {
   const isOwn = message.sender_id === currentUserId;
 
   const isRead =
@@ -72,7 +72,7 @@ export default function MessageList({
   if (message.kind === 'system') {
     return (
       <div key={message.id} className="contents">
-        {index === dividerIndex && (
+        {/* {index === dividerIndex && (
           <div className="flex items-center gap-3 my-1" aria-label="New messages">
             <span className="flex-1 h-px bg-pacova-pink/50" />
             <span className="font-vt323 text-pacova-pink text-sm uppercase tracking-widest">
@@ -80,7 +80,7 @@ export default function MessageList({
             </span>
             <span className="flex-1 h-px bg-pacova-pink/50" />
           </div>
-        )}
+        )} */}
         <p className="font-vt323 text-gray-500 text-sm text-center uppercase tracking-wide">
           {message.content}
         </p>
@@ -94,7 +94,7 @@ export default function MessageList({
     if (message.meta?.status === 'pending') return null;
     return (
       <div key={message.id} className="contents">
-        {index === dividerIndex && (
+        {/* {index === dividerIndex && (
           <div className="flex items-center gap-3 my-1" aria-label="New messages">
             <span className="flex-1 h-px bg-pacova-pink/50" />
             <span className="font-vt323 text-pacova-pink text-sm uppercase tracking-widest">
@@ -102,7 +102,7 @@ export default function MessageList({
             </span>
             <span className="flex-1 h-px bg-pacova-pink/50" />
           </div>
-        )}
+        )} */}
         <p className="font-vt323 text-gray-500 text-sm text-center uppercase tracking-wide">
           Game invite {message.meta?.status}
         </p>
@@ -112,7 +112,7 @@ export default function MessageList({
 
   return (
     <div key={message.id} className="contents">
-      {index === dividerIndex && (
+      {/* {index === dividerIndex && (
         <div className="flex items-center gap-3 my-1" aria-label="New messages">
           <span className="flex-1 h-px bg-pacova-pink/50" />
           <span className="font-vt323 text-pacova-pink text-sm uppercase tracking-widest">
@@ -120,7 +120,7 @@ export default function MessageList({
           </span>
           <span className="flex-1 h-px bg-pacova-pink/50" />
         </div>
-      )}
+      )} */}
 
       <div
         className={`flex flex-col max-w-[80%] min-w-0 ${
@@ -185,18 +185,6 @@ export default function MessageList({
 {pendingInvite && (
   <div className="self-center w-full max-w-sm relative bg-pacova-surface border-2 border-pacova-green shadow-neon-green pixel-corners-3step p-5 text-center">
     <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
-    {!isReceiver && (
-      <button
-        type="button"
-        onClick={onDismissSent}
-        aria-label="Dismiss"
-        className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full border border-pacova-green/60 text-pacova-green hover:bg-pacova-green/10"
-      >
-        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-          <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />
-        </svg>
-      </button>
-    )}
     <div className="relative z-10 flex flex-col items-center gap-3">
       <div className="w-14 h-14 rounded-full bg-black/60 border-2 border-pacova-green flex items-center justify-center">
         <PacManIcon className="w-8 h-8" />
@@ -211,7 +199,7 @@ export default function MessageList({
           </>
         ) : (
           <>
-            Invitation sent to <span className="text-white">{selectedFriend.username}</span>
+            Waiting for <span className="text-white">{selectedFriend.username}</span>…
           </>
         )}
         <br />

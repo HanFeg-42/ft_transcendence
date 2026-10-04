@@ -12,6 +12,7 @@ import FriendsSidebar from './FriendsSidebar';
 import ConversationHeader from './ConversationHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import NewChatModal from './NewChatModal';
 import Toast from '../../components/ui/Toast';
 import type { Friend } from './types';
 
@@ -56,10 +57,8 @@ export default function Chat() {
   // 2. Component State Management
 
   const [draft, setDraft] = useState('');
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  // ADDED: invite ids the sender has dismissed from view — the invite is
-  // still pending on the server, this only hides the card locally.
-  const [dismissedInviteIds, setDismissedInviteIds] = useState<Set<number>>(new Set());
 
   // 3. Unread Messages & Last-Seen Divider (useRef)
   const lastSeenRef = useRef<Record<number, string>>({});
@@ -125,6 +124,10 @@ export default function Chat() {
     setSelectedFriend(friend);
   };
 
+ 
+
+  
+
   const visibleFriends = user ? MOCK_FRIENDS.filter((friend) => friend.id !== Number(user.id)) : MOCK_FRIENDS;
 
   const visibleFriendsLive = visibleFriends.map((friend) => ({
@@ -162,15 +165,9 @@ export default function Chat() {
     (message, index, all) => all.findIndex((m) => m.id === message.id) === index
   );
 
-  // The real pending invite from the server — used to block re-sending.
   const pendingInvite = [...conversation]
     .reverse()
     .find((m) => m.kind === 'game_invite' && m.meta?.status === 'pending') ?? null;
-
-  // What the sender actually sees — hidden once they close the "sent" card,
-  // even though the invite is still pending server-side.
-  const visiblePendingInvite =
-    pendingInvite && !dismissedInviteIds.has(pendingInvite.id) ? pendingInvite : null;
 
 useEffect(() => {
   if (!userReady) return;
@@ -187,6 +184,7 @@ useEffect(() => {
 }, [selectedFriend.id]);
 
   const isBlockedEitherWay = blockStatus.iBlockedThem || blockStatus.theyBlockedMe;
+  // const isMutedSelected = mutedIds.has(selectedFriend.id);
 
 
   // 3. Auto-Scrolling to Bottom
@@ -203,6 +201,7 @@ useEffect(() => {
           friends={visibleFriendsLive}
           selectedFriend={selectedFriendLive}
           onSelectFriend={handleSelectFriend}
+          onNewChat={() => setIsNewChatOpen(true)}
         />
 
         <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
@@ -225,19 +224,22 @@ useEffect(() => {
             dividerCutoff={dividerCutoff}
             friendReadAt={readAt[selectedFriend.id] ?? null}
             isTyping={Boolean(typing[selectedFriend.id])}
-            pendingInvite={visiblePendingInvite}
+            pendingInvite={pendingInvite}
+            onSend={() => sendInvite(selectedFriend.id)}
             onAccept={() => pendingInvite && sendInviteReply(pendingInvite.id, true)}
             onDecline={() => pendingInvite && sendInviteReply(pendingInvite.id, false)}
-            onDismissSent={() => {
-              if (pendingInvite) {
-                setDismissedInviteIds((prev) => new Set(prev).add(pendingInvite.id));
-              }
-            }}
           />
 
           <MessageInput draft={draft} onDraftChange={handleDraftChange} onSend={handleSend} disabled={isBlockedEitherWay} />
         </section>
       </main>
+
+      <NewChatModal
+        isOpen={isNewChatOpen}
+        onClose={() => setIsNewChatOpen(false)}
+        friends={visibleFriendsLive}
+        onSelectFriend={handleSelectFriend}
+      />
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </Background>
