@@ -116,7 +116,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const senderSockets = onlineUsers.get(userId);
       if (senderSockets) {
         for (const socket of senderSockets) {
-          if (socket !== ws && socket.readyState === WebSocket.OPEN) socket.send(payload);
+          // if (socket !== ws && socket.readyState === WebSocket.OPEN) socket.send(payload);
+          if (socket.readyState === WebSocket.OPEN) socket.send(payload);
         }
       }
       break;
