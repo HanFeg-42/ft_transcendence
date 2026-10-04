@@ -19,9 +19,9 @@ interface MessageListProps {
   friendReadAt: string | null;
   isTyping: boolean;
   pendingInvite: HistoryMessage | null;
-  onSend: () => void;
   onAccept: () => void;
   onDecline: () => void;
+  onDismissSent: () => void;
 }
 
 export default function MessageList({
@@ -35,9 +35,9 @@ export default function MessageList({
   friendReadAt,
   isTyping,
   pendingInvite,
-  // onSend,
   onAccept,
   onDecline,
+  onDismissSent,
 }: MessageListProps) {
   // ADDED: index of the first message that counts as "new" — the divider
   // renders right before it. -1 (via findIndex) means nothing qualifies.
@@ -185,6 +185,18 @@ export default function MessageList({
 {pendingInvite && (
   <div className="self-center w-full max-w-sm relative bg-pacova-surface border-2 border-pacova-green shadow-neon-green pixel-corners-3step p-5 text-center">
     <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
+    {!isReceiver && (
+      <button
+        type="button"
+        onClick={onDismissSent}
+        aria-label="Dismiss"
+        className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full border border-pacova-green/60 text-pacova-green hover:bg-pacova-green/10"
+      >
+        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+          <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />
+        </svg>
+      </button>
+    )}
     <div className="relative z-10 flex flex-col items-center gap-3">
       <div className="w-14 h-14 rounded-full bg-black/60 border-2 border-pacova-green flex items-center justify-center">
         <PacManIcon className="w-8 h-8" />
@@ -199,7 +211,7 @@ export default function MessageList({
           </>
         ) : (
           <>
-            Waiting for <span className="text-white">{selectedFriend.username}</span>…
+            Invitation sent to <span className="text-white">{selectedFriend.username}</span>
           </>
         )}
         <br />

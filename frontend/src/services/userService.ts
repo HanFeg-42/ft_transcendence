@@ -50,3 +50,20 @@ export async function updateMyProfile(data: Partial<ProfileData>): Promise<Profi
 
   return response.json();
 }
+
+
+export async function getProfile(id: number, token: string): Promise<ProfileData> {
+  const response = await fetch(`${API_URL}/profile/${id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Impossible de charger le profil');
+  }
+
+  return response.json();
+}
