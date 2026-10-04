@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import Background from '../components/ui/Background';
 import Navbar from '../components/ui/Navbar';
 import ProfileCard from '../components/ui/ProfileCard';
@@ -7,9 +6,8 @@ import GameUI from '../components/ui/GameUI';
 import Card from '../components/ui/Card';
 import { ICONS } from '../utils/icons';
 import { useNavigate } from 'react-router-dom';
-import { getMyProfile, updateMyProfile, type ProfileData } from '../services/userService';
-import { useAuth } from '../context/AuthContext';
-import EditProfileModal from '../components/ui/EditProfileModal';
+import { getMyProfile, type ProfileData } from '../services/userService';
+import { useAuth } from '../context/AuthContext'; // 1. Importer useAuth
 
 import championImg from '../assets/achievement/champion.png';
 import cherrysImg from '../assets/achievement/cherrys.png';
@@ -26,47 +24,48 @@ const routeMap: Record<string, string> = {
   SETTINGS: '/settings',
 };
 
-const ACHIEVEMENT_IMAGES: Record<string, string> = {
-  'champion': championImg,
-  'ghost-hunter': ghostHanterImg,
-  'cherry-collector': cherrysImg,
-  'speedster': speederImg,
-  'pac-maniac': pacManiacImg,
-  'tournament-player': tournamentImg,
-};
+const ACHIEVEMENTS_DATA = [
+  { id: 'champion', title: 'CHAMPION', description: 'Win 100 matches', image: championImg, borderColor: 'border-amber-400', textColor: 'text-amber-400' },
+  { id: 'ghost-hunter', title: 'GHOST HUNTER', description: 'Defeat 50 ghosts', image: ghostHanterImg, borderColor: 'border-pink-500', textColor: 'text-pink-500' },
+  { id: 'cherry-collector', title: 'CHERRY COLLECTOR', description: 'Collect 200 cherries', image: cherrysImg, borderColor: 'border-red-500', textColor: 'text-red-500' },
+  { id: 'speedster', title: 'SPEEDSTER', description: 'Win 10 matches in a row', image: speederImg, borderColor: 'border-yellow-400', textColor: 'text-yellow-400' },
+  { id: 'pac-maniac', title: 'PAC-MANIAC', description: 'Play 500 matches', image: pacManiacImg, borderColor: 'border-cyan-400', textColor: 'text-cyan-400' },
+  { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments', image: tournamentImg, borderColor: 'border-purple-500', textColor: 'text-purple-500' },
+];
 
 /** Renders the responsive user profile dashboard. */
 export default function Profile() { // 2. Nom de composant en Majuscule
   const navigate = useNavigate();
-  const { userId } = useParams();
   const { token } = useAuth(); // 3. Extraire le token du contexte React
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditOpen, setIsEditOpen] = useState(false);   // ← nouveau
 
   useEffect(() => {
-    if (!token) return;
+    // Si aucun token n'est présent dans le contexte React
+    if (!token) {
+      console.warn('Aucun token JWT disponible dans useAuth()');
+      setLoading(false);
+      return;
+    }
 
-    const fetchProfile = userId
-      ? getProfileById(token, parseInt(userId, 10))   // profil public
-      : getMyProfile(token);                          // profil perso
+    // Appel de getMyProfile en transmettant le token JWT
+    getMyProfile(token)
+      .then((data) => {
+        setProfile(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Erreur chargement profil:', err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [token]); // 4. Se déclenche dès que le token est disponible
 
-    fetchProfile
-      .then(setProfile)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [token, userId]);
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
     if (path) navigate(path);
-  };
-
-  const handleSave = async (data: { username?: string; bio?: string; avatar?: string }) => {
-    if (!token) throw new Error('No token');
-    const updated = await updateMyProfile(token, data);
-    setProfile(updated);   // ← met à jour l'UI
   };
 
   return (
@@ -98,7 +97,6 @@ export default function Profile() { // 2. Nom de composant en Majuscule
               currentXp={profile?.currentXp ?? 0}
               maxXp={profile?.maxXp ?? 1000}
               stats={profile?.stats}
-              onEditClick={() => setIsEditOpen(true)} 
             />
           )}
         </div>
@@ -149,43 +147,32 @@ export default function Profile() { // 2. Nom de composant en Majuscule
             </span>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {profile?.achievements?.map((item) => (
-                <Card
-                  key={item.id}
-                  variant="gray"
-                  className={`group flex flex-col items-center justify-between text-center p-4 
-                            bg-pacova-surface/80 border 
-                            ${item.unlocked ? item.borderColor : 'border-white/5 opacity-60'}
-                            hover:drop-shadow-${item.borderColor} transform hover:scale-105 transition-all duration-300 ease-out 
-                            min-h-[190px] cursor-pointer`}
+              {ACHIEVEMENTS_DATA.map((item) => (
+                <Card 
+                  key={item.id} 
+                  variant="gray" 
+                  className="group flex flex-col items-center justify-between text-center p-4 
+                            bg-pacova-surface/80 border border-white/5
+                            hover:border-yellow-500/40 hover:drop-shadow-[0_0_15px_rgba(234,179,8,0.25)]
+                            transform hover:scale-105 transition-all duration-300 ease-out 
+                            min-h-[190px] cursor-pointer"
                 >
                   <div className="w-full flex-1 flex items-center justify-center mb-2">
-                    <img
-                      src={ACHIEVEMENT_IMAGES[item.id]}
-                      alt={item.title}
-                      className={`w-20 h-20 sm:w-24 sm:h-24 object-contain image-rendering-pixelated
-                                ${item.unlocked ? '' : 'grayscale opacity-50'}
-                                group-hover:scale-110 transition-transform duration-300`}
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="w-20 h-20 sm:w-24 sm:h-24 object-contain image-rendering-pixelated
+                                drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] group-hover:scale-110 transition-transform duration-300"
                     />
                   </div>
 
                   <div className="w-full space-y-1.5 mt-auto">
-                    <h4 className={`font-pixelify text-xs sm:text-sm font-bold uppercase tracking-wider 
-                                  ${item.unlocked ? item.textColor : 'text-gray-500'}`}>
+                    <h4 className="font-pixelify text-xs sm:text-sm text-yellow-400 font-bold uppercase tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                       {item.title}
                     </h4>
                     <p className="font-vt323 text-xs sm:text-sm text-gray-300 leading-tight tracking-wide px-1">
                       {item.description}
                     </p>
-
-                    {item.progress > 0 && !item.unlocked && (
-                      <div className="w-full bg-black/60 rounded-full h-1.5 mt-2">
-                        <div
-                          className="h-full bg-pacova-green rounded-full transition-all duration-500"
-                          style={{ width: `${item.progress}%` }}
-                        />
-                      </div>
-                    )}
                   </div>
                 </Card>
               ))}
@@ -195,14 +182,6 @@ export default function Profile() { // 2. Nom de composant en Majuscule
         </div>
 
       </main>
-         {/* Modal */}
-      <EditProfileModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        profile={profile}
-        onSave={handleSave}
-        token={token}
-      />
     </Background>
   );
 }

@@ -27,12 +27,12 @@ export const Input: React.FC<InputProps> = ({
         <input
           className={`
           w-full
-          bg-black/10
+          bg-black/60
           border border-gray-700
           focus:border-pacova-pink
           text-white
           font-vt323
-          text-md sm:text-base
+          text-sm sm:text-base
           px-2.5 py-1.5 sm:px-3 sm:py-2
           rounded-md
           outline-none
