@@ -208,6 +208,7 @@ export default function Profile() { // 2. Nom de composant en Majuscule
         onClose={() => setIsEditOpen(false)}
         profile={profile}
         onSave={handleSave}
+        token={token}
       />
     </Background>
   );

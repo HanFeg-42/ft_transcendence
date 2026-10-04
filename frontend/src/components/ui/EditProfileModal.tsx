@@ -8,9 +8,10 @@ interface EditProfileModalProps {
   onClose: () => void;
   profile: ProfileData | null;
   onSave: (data: { username?: string; bio?: string; avatar?: string }) => Promise<void>;
+  token: string | null;
 }
 
-export default function EditProfileModal({ isOpen, onClose, profile, onSave }: EditProfileModalProps) {
+export default function EditProfileModal({ isOpen, onClose, profile, onSave, token }: EditProfileModalProps) {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -74,7 +75,6 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const token = localStorage.getItem('access_token');
       const res = await fetch('/api/users/profile/avatar', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },

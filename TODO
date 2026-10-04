@@ -23,3 +23,5 @@
 docker compose exec user npx tsx prisma/seed.ts
 
 i should continue edit profile button in profile.tsx
+
+merrge into fev
