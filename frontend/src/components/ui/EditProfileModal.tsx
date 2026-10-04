@@ -144,7 +144,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave, tok
                   onChange={handleFileChange}
                   disabled={uploading}
                   className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 
-                            file:bg-pacova-green file:text-black hover:file:bg-pacova-green/80"
+                            file:bg-pacova-green/80 file:text-black hover:file:bg-pacova-green/40"
                 />
                 {uploading && (
                   <span className="font-vt323 text-xs text-pacova-green block mt-1">
@@ -194,7 +194,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave, tok
             <div className="flex gap-4 pt-2">
               <PixelButton
                 type="button"
-                variant="olive-yellow"
+                variant="gray"
                 size="sm"
                 onClick={onClose}
                 className="flex-1"
@@ -204,7 +204,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave, tok
               </PixelButton>
               <PixelButton
                 type="submit"
-                variant="olive-yellow"
+                variant="gray"
                 size="sm"
                 className="flex-1"
                 disabled={saving}

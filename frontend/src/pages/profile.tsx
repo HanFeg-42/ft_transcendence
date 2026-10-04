@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import Background from '../components/ui/Background';
 import Navbar from '../components/ui/Navbar';
 import ProfileCard from '../components/ui/ProfileCard';
@@ -37,6 +38,7 @@ const ACHIEVEMENT_IMAGES: Record<string, string> = {
 /** Renders the responsive user profile dashboard. */
 export default function Profile() { // 2. Nom de composant en Majuscule
   const navigate = useNavigate();
+  const { userId } = useParams();
   const { token } = useAuth(); // 3. Extraire le token du contexte React
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -45,26 +47,17 @@ export default function Profile() { // 2. Nom de composant en Majuscule
   const [isEditOpen, setIsEditOpen] = useState(false);   // ← nouveau
 
   useEffect(() => {
-    // Si aucun token n'est présent dans le contexte React
-    if (!token) {
-      console.warn('Aucun token JWT disponible dans useAuth()');
-      setLoading(false);
-      return;
-    }
+    if (!token) return;
 
-    // Appel de getMyProfile en transmettant le token JWT
-    getMyProfile(token)
-      .then((data) => {
-        setProfile(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Erreur chargement profil:', err);
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [token]); // 4. Se déclenche dès que le token est disponible
+    const fetchProfile = userId
+      ? getProfileById(token, parseInt(userId, 10))   // profil public
+      : getMyProfile(token);                          // profil perso
 
+    fetchProfile
+      .then(setProfile)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [token, userId]);
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
     if (path) navigate(path);
