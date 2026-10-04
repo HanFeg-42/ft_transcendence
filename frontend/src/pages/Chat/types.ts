@@ -8,6 +8,9 @@ export interface HistoryMessage {
   receiver_id: number;
   content: string;
   created_at: string;
+  kind: 'text' | 'game_invite' | 'system';
+  read_at: string | null;
+  meta: { gameId?: string; status?: 'pending' | 'accepted' | 'declined' } | null;
 }
 
 export interface Friend {
