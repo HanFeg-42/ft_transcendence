@@ -8,6 +8,31 @@ datasource db {
 }
 
 
+model Achievement {
+  id          String   @id            // "champion", "speedster", etc.
+  title       String                  // "CHAMPION"
+  description String                  // "Win 100 matches"
+  image       String                  // URL de l'image (ou nom de fichier)
+  borderColor String                  // "border-amber-400"
+  textColor   String                  // "text-amber-400"
+  createdAt   DateTime @default(now())
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  userId        Int
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  progress      Int      @default(0)   // 0-100 (%)
+  unlocked      Boolean  @default(false)
+
+  user        Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+}
+
 model Profile {
   userId      Int       @id
   displayName String?
@@ -16,31 +41,6 @@ model Profile {
   statusText  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  
+
   achievements UserAchievement[]
 }
-
-model Achievement {
-  id          String   @id
-  title       String
-  description String
-  image       String
-  borderColor String
-  textColor   String
-  createdAt   DateTime @default(now())
-  users UserAchievement[]
-}
-
-model UserAchievement {
-  userId        Int
-  achievementId String
-  unlocked      Boolean  @default(false)
-  progress      Int      @default(0)
-  unlockedAt    DateTime?
-
-  user        Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-
-  @@id([userId, achievementId]) //PK
-}
-
