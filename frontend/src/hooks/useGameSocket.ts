@@ -7,7 +7,7 @@ import type {
 } from "../../../shared/types/game-types";
 import type { GameState } from "../../../shared/types/game-types";
 
-export function useGameSocket(url: string, gameId: string, username: string) {
+export function useGameSocket(url: string, gameId: string, username: string, mazeId?: string) {
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -25,7 +25,7 @@ export function useGameSocket(url: string, gameId: string, username: string) {
       ws.send(
         JSON.stringify({
           event: GameEvents.JOIN_GAME,
-          data: { gameId, username },
+          data: { gameId, username, mazeId},
         }),
       );
     };

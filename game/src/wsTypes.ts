@@ -85,7 +85,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
 
   // --- Join a room ---
   if (packet.event === GameEvents.JOIN_GAME) {
-    const { gameId }: JoinGamePayload = packet.data;
+    const { gameId, mazeId }: JoinGamePayload = packet.data;
     const existing = getSession(gameId);
     if (
       existing &&
@@ -114,7 +114,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     }
     gameRooms.get(gameId)!.add(ws);
 
-    const state: GameState = joinSession(gameId, userId);
+    const state: GameState = joinSession(gameId, userId, mazeId);
     broadcast(gameId, GameEvents.GAME_STATE, state);
 
     if (state.players.length === 2) {

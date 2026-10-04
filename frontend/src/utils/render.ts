@@ -3,9 +3,9 @@ import type {
   Direction,
   GameState,
 } from "../../../shared/types/game-types";
+import { MAZES } from "../engine/maze";
 import { TICKS_PER_TILE } from "../engine/movement";
 import { ahead } from "../engine/movement";
-import { MAZE, WIDTH, HEIGHT } from "../engine/maze";
 
 const TILE_SIZE = 32;
 
@@ -24,16 +24,19 @@ const getDrawPosition = (
   };
 };
 export const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
+  const maze = MAZES[state.mazeId];
+  const width = maze[0].length;
+  const height = maze.length;
   ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, TILE_SIZE * WIDTH, TILE_SIZE * HEIGHT);
-  for (let y = 0; y < HEIGHT; y++) {
-    for (let x = 0; x < WIDTH; x++) {
-      if (MAZE[y][x] == "#") {
+  ctx.fillRect(0, 0, TILE_SIZE * width, TILE_SIZE * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (maze[y][x] == "#") {
         ctx.fillStyle = "purple";
         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       } else if (state.pellets[y][x]) {
         ctx.fillStyle = "yellow";
-        if (MAZE[y][x] == "o")
+        if (maze[y][x] == "o")
           ctx.fillRect(
             x * TILE_SIZE + TILE_SIZE / 3,
             y * TILE_SIZE + TILE_SIZE / 3,

@@ -10,7 +10,8 @@ import {
   findSpawn,
   parsePellets,
   isWall,
-  MAZE,
+  DEFAULT_MAZE_ID,
+  MAZES,
 } from "./maze";
 import { stepPlayer, stepChaser, ahead } from "./movement";
 
@@ -18,9 +19,11 @@ const CENTER_OFFSET = 4;
 const TICKS_PER_SECOND = 30;
 
 export const addPlayer = (playerId: string, state: GameState) => {
+  const maze = MAZES[state.mazeId];
+
   if (state.players.length >= 2 || state.players[0].id == playerId) return;
 
-  const spawn: Tile = findSpawn();
+  const spawn: Tile = findSpawn(maze);
   state.players[0].spawn = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
   state.players[0].tile = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
 
@@ -43,12 +46,20 @@ export const removePlayer = (playerId: string, state: GameState) =>
 export const createGame = (
   playerId: string,
   timeLimit: number = 360,
+  mazeId: string = DEFAULT_MAZE_ID,
 ): GameState => {
+  if (!Object.keys(MAZES).includes(mazeId)) {
+    console.warn(`[GAME] Unknown map "${mazeId}", using "${DEFAULT_MAZE_ID}"`);
+    mazeId = DEFAULT_MAZE_ID;
+  }
+
+  const maze = MAZES[mazeId];
+
   const players: Player[] = [
     {
       id: playerId,
-      spawn: findSpawn(),
-      tile: findSpawn(),
+      spawn: findSpawn(maze),
+      tile: findSpawn(maze),
       dir: null,
       nextDir: null,
       step: 0,
@@ -58,7 +69,7 @@ export const createGame = (
     },
   ];
 
-  const chasers: Chaser[] = findChaserSpawns().map((tile, index) => {
+  const chasers: Chaser[] = findChaserSpawns(maze).map((tile, index) => {
     return {
       id: index,
       spawn: tile,
@@ -73,9 +84,10 @@ export const createGame = (
     status: "playing",
     players,
     chasers,
-    pellets: parsePellets(),
+    pellets: parsePellets(maze),
     timeRemaining: timeLimit,
     vulnerableTimer: 0,
+    mazeId,
   };
 };
 
@@ -93,7 +105,7 @@ export const applyInput = (
 };
 
 const isTileFree = (state: GameState, target: Tile, chaser: Chaser) => {
-  if (isWall(target)) return false;
+  if (isWall(MAZES[state.mazeId], target)) return false;
 
   return !state.chasers.some((other) => {
     if (other.id == chaser.id) return false;
@@ -165,13 +177,14 @@ export const finishMatch = (state: GameState, winnerId?: string) => {
 };
 
 export const tick = (state: GameState) => {
-  state.tick++;
+  const maze = MAZES[state.mazeId];
 
+  state.tick++;
   state.players.forEach((player) => {
-    stepPlayer(player);
+    stepPlayer(maze, player);
 
     if (state.pellets[player.tile.y][player.tile.x]) {
-      const isPowerPellet = MAZE[player.tile.y][player.tile.x] == "o";
+      const isPowerPellet = maze[player.tile.y][player.tile.x] == "o";
       player.score += isPowerPellet ? 50 : 10;
       state.pellets[player.tile.y][player.tile.x] = false;
       if (isPowerPellet) {

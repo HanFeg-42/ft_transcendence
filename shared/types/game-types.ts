@@ -26,6 +26,7 @@ export type GameEvent = (typeof GameEvents)[keyof typeof GameEvents];
 export interface JoinGamePayload {
   gameId: string;
   username: string;
+  mazeId?: string;
 }
 
 //2.Data sent when a player presses an arrow key
@@ -88,4 +89,5 @@ export interface GameState {
   timeRemaining: number;
   winnerId?: string;
   vulnerableTimer: number;
+  mazeId: string;
 }
