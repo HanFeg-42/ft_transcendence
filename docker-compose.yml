@@ -87,6 +87,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./user/uploads:/app/user/uploads
     networks:
       - pacova
 
