@@ -7,7 +7,7 @@ import GameUI from '../components/ui/GameUI';
 import Card from '../components/ui/Card';
 import { ICONS } from '../utils/icons';
 import { useNavigate } from 'react-router-dom';
-import { getMyProfile, updateMyProfile, type ProfileData } from '../services/userService';
+import { getMyProfile, updateMyProfile, getProfileById, type ProfileData } from '../services/userService';
 import { useAuth } from '../context/AuthContext';
 import EditProfileModal from '../components/ui/EditProfileModal';
 
