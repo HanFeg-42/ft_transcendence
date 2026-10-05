@@ -125,7 +125,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave, tok
                 Avatar URL
               </label>
               <input
-                type="url"
+                type="text"
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
                 className="w-full bg-black/60 border border-pacova-green/40 rounded px-4 py-2 
