@@ -3,6 +3,7 @@ import http from 'http';
 import { setupWebSocket } from './ws/websocket';
 import messagesRouter from './routes/messages';
 import blocksRouter from './routes/blocks';
+import notificationsRouter from './routes/notifications';
 
 const app = express(); // application / request handling logic
 const PORT = process.env.PORT || 3003;
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 3003;
 app.use(express.json());
 app.use(messagesRouter);
 app.use(blocksRouter);
+app.use(notificationsRouter);
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', service: 'chat' });
