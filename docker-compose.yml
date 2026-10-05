@@ -85,6 +85,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./user/uploads:/app/user/uploads
+      - ./user/prisma/migrations:/app/user/prisma/migrations
     networks:
       - pacova
 
