@@ -3,9 +3,9 @@ import type { GameState } from "../../shared/types/game-types";
 
 const sessions = new Map<string, GameState>();
 
-export const joinSession = (gameId: string, playerId: string) => {
+export const joinSession = (gameId: string, playerId: string, mazeId?: string) => {
   if (!sessions.has(gameId)) {
-    const state: GameState = createGame(playerId);
+    const state: GameState = createGame(playerId, 360,mazeId); // The player might be able to choose match duration later
     state.status = "waiting";
     sessions.set(gameId, state);
   } else addPlayer(playerId, sessions.get(gameId)!);
