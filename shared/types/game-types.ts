@@ -26,6 +26,7 @@ export type GameEvent = (typeof GameEvents)[keyof typeof GameEvents];
 export interface JoinGamePayload {
   gameId: string;
   username: string;
+  mazeId?: string;
 }
 
 //2.Data sent when a player presses an arrow key
@@ -53,7 +54,7 @@ export interface GameOverPayload {
 }
 
 export type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
-export type GameStatus = "waiting" | "playing" | "won" | "lost";
+export type GameStatus = "waiting" | "playing" | "won" | "lost" | "finished";
 
 export interface Tile {
   x: number;
@@ -69,6 +70,7 @@ export interface Player {
   step: number;
   lives: number;
   score: number;
+  connected: boolean;
 }
 export interface Chaser {
   id: number;
@@ -76,6 +78,7 @@ export interface Chaser {
   tile: Tile;
   dir: Direction | null;
   step: number;
+  isEaten: boolean;
 }
 export interface GameState {
   tick: number;
@@ -84,4 +87,7 @@ export interface GameState {
   chasers: Chaser[];
   pellets: boolean[][];
   timeRemaining: number;
+  winnerId?: string;
+  vulnerableTimer: number;
+  mazeId: string;
 }

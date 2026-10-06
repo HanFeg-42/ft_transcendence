@@ -1,8 +1,21 @@
 const API_URL = '/api/users';
 
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  borderColor: string;
+  textColor: string;
+  unlocked: boolean;
+  progress: number;
+}
+
 export interface ProfileData {
+  id?: number;
   username: string;
   avatarUrl?: string;
+  bio?: string;
   statusText?: string;
   level?: number;
   currentXp?: number;
@@ -13,6 +26,7 @@ export interface ProfileData {
     losses: number;
     winRate: number;
   };
+  achievements?: Achievement[];
 }
 
 export async function getMyProfile(token: string): Promise<ProfileData> {
@@ -31,9 +45,22 @@ export async function getMyProfile(token: string): Promise<ProfileData> {
   return response.json();
 }
 
-export async function updateMyProfile(data: Partial<ProfileData>): Promise<ProfileData> {
-  const token = localStorage.getItem('access_token');
+export async function getProfileById(token: string, userId: number): Promise<ProfileData> {
+  const response = await fetch(`${API_URL}/profile/${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
+  if (!response.ok) {
+    throw new Error('Impossible de charger le profil');
+  }
+
+  return response.json();
+}
+
+export async function updateMyProfile(token: string, data: Partial<ProfileData>): Promise<ProfileData> {
   const response = await fetch(`${API_URL}/profile/me`, {
     method: 'PATCH',
     headers: {
@@ -44,8 +71,25 @@ export async function updateMyProfile(data: Partial<ProfileData>): Promise<Profi
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || 'Erreur lors de la mise à jour');
+  }
+
+  return response.json();
+}
+
+
+export async function getProfile(id: number, token: string): Promise<ProfileData> {
+  const response = await fetch(`${API_URL}/profile/${id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Impossible de charger le profil');
   }
 
   return response.json();
