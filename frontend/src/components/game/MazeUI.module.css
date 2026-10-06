@@ -1,0 +1,116 @@
+/* frontend/src/game/ui/MazeUI.module.css */
+
+/* ═══════════════════════════════════════════
+   CONTENEUR PRINCIPAL
+   ═══════════════════════════════════════════ */
+.mazeContainer {
+    position: relative;
+    background-color: #000;
+    border: 4px solid #ff00ff;
+    box-shadow:
+        0 0 20px #ff00ff,
+        inset 0 0 20px rgba(255, 0, 255, 0.2);
+    border-radius: 12px;
+    margin: 0 auto;
+    /* ⭐ UN SEUL box-sizing : content-box pour que le border s'ajoute */
+    box-sizing: content-box;
+    /* ⭐ UN SEUL image-rendering */
+    image-rendering: pixelated;
+}
+
+/* ═══════════════════════════════════════════
+   MURS
+   ═══════════════════════════════════════════ */
+.wall {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid #ff00ff;
+    box-shadow:
+        0 0 8px #ff00ff,
+        inset 0 0 4px #ff00ff;
+    border-radius: 6px;
+    background: rgba(255, 0, 255, 0.05);
+}
+
+/* ═══════════════════════════════════════════
+   PELLETS
+   ═══════════════════════════════════════════ */
+.pellet {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background-color: #ffff99;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 6px #ffff99;
+}
+
+.powerPellet {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #ffcc00;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px #ffcc00, 0 0 20px #ffcc00;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: translate(-50%, -50%) scale(1); }
+    to   { transform: translate(-50%, -50%) scale(1.3); }
+}
+
+/* ═══════════════════════════════════════════
+   JOUEUR (Pac-Man) — CSS pixel-art
+   ═══════════════════════════════════════════ */
+.player {
+    position: absolute;
+    z-index: 10;
+    background-color: #ffff00;
+    border-radius: 50%;
+    box-shadow:
+        0 0 10px #ffff00,
+        0 0 20px #ffff00;
+    transform-origin: center center;
+    transition: transform 0.1s linear;
+    /* ⭐ Nécessaire pour positionner la bouche */
+    position: absolute;
+}
+
+/* ⭐ La bouche : un triangle NOIR qui recouvre la partie droite */
+.player::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    /* ⭐ Triangle noir qui part du centre */
+    clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+    /* ⭐ Animation de la bouche */
+    transform-origin: left center;
+    animation: chomp 0.4s infinite alternate;
+    background-color: #000;
+}
+
+@keyframes chomp {
+    from {
+        /* Bouche ouverte : triangle grand */
+        transform: scaleY(1);
+    }
+    to {
+        /* Bouche fermée : triangle écrasé */
+        transform: scaleY(0);
+    }
+}
+/* ═══════════════════════════════════════════
+   CHASERS (Fantômes) — SVG
+   ═══════════════════════════════════════════ */
+.chaser {
+    position: absolute;
+    z-index: 9;
+    pointer-events: none;
+    /* ⭐ Glow néon autour du fantôme (couleur héritée via SVG) */
+    filter: drop-shadow(0 0 6px currentColor);
+}
