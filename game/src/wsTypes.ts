@@ -9,6 +9,8 @@ import {
 } from "../../shared/types/game-types";
 import { endSession, getSession, joinSession } from "./gameSessions";
 import { applyInput, tick, removePlayer, finishMatch } from "./engine/engine";
+import { saveMatch } from "./matchHistory";
+import { reportResult } from "./reportResult";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so
@@ -123,11 +125,14 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const startId = setTimeout(() => {
         pendingStarts.delete(gameId);
         state.status = "playing";
+        const startedAt = new Date();
 
         const loopId = setInterval(() => {
           if (state.players.every((p) => p.connected)) tick(state);
           broadcast(gameId, GameEvents.GAME_STATE, state);
           if (state.status !== "playing") {
+            saveMatch(state, startedAt);
+            reportResult(state);
             activeLoops.delete(gameId);
             gameRooms.delete(gameId);
             endSession(gameId);
