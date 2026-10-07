@@ -1,37 +1,3 @@
-// PACOVA DESIGN SYSTEM
-
-// Colors
-// [ pink ][ green ][ purple ]
-
-// Typography
-// Heading
-// Body
-// Retro
-
-// Buttons
-// [ PLAY ]
-// [ START ]
-// [ CANCEL ]
-
-// Inputs
-// [ Username           ]
-
-// Cards
-// [ Player Card        ]
-
-// Badges
-// [ ONLINE ]
-
-// Avatars
-// [ 👤 ]
-
-// Modal
-// [ Example ]
-
-// Toast
-// [ Success message ]
-
-// ...
 
 import PixelButton from '../components/ui/PixelButton';
 

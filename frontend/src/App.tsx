@@ -8,8 +8,8 @@ import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Game from "./pages/Game";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-// import DesignSystem from './pages/DesignSystem'
-// import Design from './pages/Design'
+import DesignSystem from './pages/DesignSystem'
+// import {Design} from './pages/Design'
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
@@ -33,7 +33,7 @@ function App() {
         <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
       </Route>
       <Route path="/game-test" element={<GameTestPage />} />
-      {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
+      <Route path="/DesignSystem" element={<DesignSystem />} />
       {/* <Route path="/Design" element={<Design />} /> */}
     </Routes>
   );
