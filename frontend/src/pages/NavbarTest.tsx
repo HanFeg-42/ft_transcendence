@@ -1,8 +1,13 @@
 // import { useState } from "react"
+import Test, {nono} from '../components/ui/nouss'
 
-export function Design(a: number, b: number) :number
-{
-    return a+b
+export default function Navbar() {
+    return (
+        <div className="nav">
+            <div>hello word! {nono}</div>
+            <Test/>
+        </div>
+    )
 }
 
-console.log(Design(1,2));
+     
