@@ -31,7 +31,7 @@ export default function MessageList({
   historyLoading,
   historyError,
   messagesEndRef,
-  dividerCutoff,
+  // dividerCutoff,
   friendReadAt,
   isTyping,
   pendingInvite,
@@ -41,9 +41,9 @@ export default function MessageList({
 }: MessageListProps) {
   // ADDED: index of the first message that counts as "new" — the divider
   // renders right before it. -1 (via findIndex) means nothing qualifies.
-  const dividerIndex = dividerCutoff
-    ? conversation.findIndex((message) => message.created_at > dividerCutoff)
-    : -1;
+  // const dividerIndex = dividerCutoff
+  //   ? conversation.findIndex((message) => message.created_at > dividerCutoff)
+  //   : -1;
 
   const isReceiver = Boolean(pendingInvite && pendingInvite.receiver_id === currentUserId);
 
@@ -61,7 +61,7 @@ export default function MessageList({
       {!historyLoading && !historyError && conversation.length === 0 && (
         <p className="font-vt323 text-gray-600 text-lg text-center mt-8">No messages yet</p>
       )}
-      {conversation.map((message, index) => {
+      {conversation.map((message) => {
   const isOwn = message.sender_id === currentUserId;
 
   const isRead =
@@ -72,7 +72,7 @@ export default function MessageList({
   if (message.kind === 'system') {
     return (
       <div key={message.id} className="contents">
-        {index === dividerIndex && (
+        {/* {index === dividerIndex && (
           <div className="flex items-center gap-3 my-1" aria-label="New messages">
             <span className="flex-1 h-px bg-pacova-pink/50" />
             <span className="font-vt323 text-pacova-pink text-sm uppercase tracking-widest">
@@ -80,7 +80,7 @@ export default function MessageList({
             </span>
             <span className="flex-1 h-px bg-pacova-pink/50" />
           </div>
-        )}
+        )} */}
         <p className="font-vt323 text-gray-500 text-sm text-center uppercase tracking-wide">
           {message.content}
         </p>
@@ -94,7 +94,7 @@ export default function MessageList({
     if (message.meta?.status === 'pending') return null;
     return (
       <div key={message.id} className="contents">
-        {index === dividerIndex && (
+        {/* {index === dividerIndex && (
           <div className="flex items-center gap-3 my-1" aria-label="New messages">
             <span className="flex-1 h-px bg-pacova-pink/50" />
             <span className="font-vt323 text-pacova-pink text-sm uppercase tracking-widest">
@@ -102,7 +102,7 @@ export default function MessageList({
             </span>
             <span className="flex-1 h-px bg-pacova-pink/50" />
           </div>
-        )}
+        )} */}
         <p className="font-vt323 text-gray-500 text-sm text-center uppercase tracking-wide">
           Game invite {message.meta?.status}
         </p>
@@ -112,7 +112,7 @@ export default function MessageList({
 
   return (
     <div key={message.id} className="contents">
-      {index === dividerIndex && (
+      {/* {index === dividerIndex && (
         <div className="flex items-center gap-3 my-1" aria-label="New messages">
           <span className="flex-1 h-px bg-pacova-pink/50" />
           <span className="font-vt323 text-pacova-pink text-sm uppercase tracking-widest">
@@ -120,7 +120,7 @@ export default function MessageList({
           </span>
           <span className="flex-1 h-px bg-pacova-pink/50" />
         </div>
-      )}
+      )} */}
 
       <div
         className={`flex flex-col max-w-[80%] min-w-0 ${

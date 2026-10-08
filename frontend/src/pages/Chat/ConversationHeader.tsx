@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../../components/ui/Avatar';
 import PixelButton from '../../components/ui/PixelButton';
 import PacManIcon from './PacManIcon';
@@ -26,6 +27,7 @@ export default function ConversationHeader({
   onInviteClick,
   inviteDisabled,
 }: ConversationHeaderProps) {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<ConfirmMode>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -67,6 +69,11 @@ export default function ConversationHeader({
     closeMenu();
   };
 
+  const handleViewProfile = () => {
+    navigate(`/profile/${friend.id}`);
+    closeMenu();
+  };
+
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative">
       <div className="flex items-center gap-3 min-w-0">
@@ -97,7 +104,7 @@ export default function ConversationHeader({
         Invite to Play
       </button>
 
-      <div ref={menuRef} className="relative">
+      <div ref={menuRef} className="relative justify-self-end">
         <button
           type="button"
           aria-label="Chat options"
@@ -136,16 +143,14 @@ export default function ConversationHeader({
 
             {confirmMode === null && (
               <ul className="relative py-1">
-                {/* Profile lookup needs user_db, which doesn't exist yet —
-                    kept visible but disabled instead of just missing. */}
                 <li>
                   <button
                     type="button"
-                    disabled
-                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-gray-500 cursor-not-allowed flex items-center justify-between"
+                    role="menuitem"
+                    onClick={handleViewProfile}
+                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-pacova-green hover:bg-pacova-green/10"
                   >
                     View Profile
-                    <span className="text-sm normal-case">Soon</span>
                   </button>
                 </li>
                 <li>

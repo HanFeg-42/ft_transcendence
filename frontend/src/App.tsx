@@ -12,6 +12,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import Design from './pages/Design'
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
+import UserProfile from "./pages/UserProfile";
 
 /** Renders the application's route configuration. */
 function App() {
@@ -23,6 +24,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />

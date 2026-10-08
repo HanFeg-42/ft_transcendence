@@ -106,6 +106,7 @@ router.patch('/notifications/:id/read', async (req: Request, res: Response) => {
     where: {
       id,
       userId,
+      isRead: false,
     },
     data: {
       isRead: true,
