@@ -16,6 +16,8 @@ import {
   type Notification,
 } from "../services/notificationService";
 import { useAuth } from "./AuthContext";
+import { ChatEvents } from "../../../shared/types/chat-types";
+import type { ChatServerMessage } from "../../../shared/types/chat-types";
 
 interface NotificationContextValue {
   notifications: Notification[];
@@ -74,6 +76,70 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (requestId === refreshId.current) setLoading(false);
     }
   }, [token]);
+
+
+  useEffect(() => {
+    if (!token) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let reconnectDelay = 1000;
+    let disposed = false;
+
+    const connect = () => {
+      if (disposed) return;
+
+      const protocol =
+        window.location.protocol === "https:" ? "wss:" : "ws:";
+
+      const socket = new WebSocket(
+        `${protocol}//${window.location.host}/api/chat/ws?token=${encodeURIComponent(token)}`,
+      );
+      ws = socket;
+
+      socket.onopen = () => {
+        reconnectDelay = 1000;
+      };
+
+      socket.onmessage = (event) => {
+        let packet: ChatServerMessage;
+
+        try {
+          packet = JSON.parse(event.data) as ChatServerMessage;
+        } catch {
+          return;
+        }
+
+        if (packet.event === ChatEvents.NOTIFICATION) {
+          void refreshNotifications();
+        }
+      };
+
+      socket.onclose = () => {
+        if (disposed) return;
+
+        reconnectTimer = setTimeout(() => {
+          reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+          connect();
+        }, reconnectDelay);
+      };
+
+      socket.onerror = () => {
+        socket?.close();
+      };
+    };
+
+    connect();
+
+    return () => {
+      disposed = true;
+      if (reconnectTimer !== undefined) {
+        clearTimeout(reconnectTimer);
+      }
+      ws?.close();
+    };
+  }, [token, refreshNotifications]);
+
 
   useEffect(() => {
     if (token) {
