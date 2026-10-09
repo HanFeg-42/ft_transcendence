@@ -65,7 +65,23 @@ export function useChatSocket(url: string, currentUserId: number,
       case ChatEvents.MESSAGE: {
         const message = packet.data;
         console.log('[CHAT-CLIENT] Message received:', message);
-        setMessages((prev) => [...prev, message]);
+        // setMessages((prev) => [...prev, message]);
+
+          setMessages((prev) => {
+          // our own message echoed back with the server's real id/timestamps —
+          // replace the optimistic placeholder instead of duplicating it
+          if (message.sender_id === currentUserId) {
+            const i = prev.findIndex(
+              (m) => m.id < 0 && m.receiver_id === message.receiver_id && m.content === message.content
+            );
+            if (i !== -1) {
+              const next = [...prev];
+              next[i] = message;
+              return next;
+            }
+          }
+          return [...prev, message];
+        });
 
         // Clear typing indicator when a real message arrives from that user
         const senderId = message.sender_id;

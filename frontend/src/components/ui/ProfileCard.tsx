@@ -15,6 +15,8 @@ interface ProfileCardProps {
     losses: number;
     winRate: number;
   };
+  onEditClick?: () => void;
+
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -25,6 +27,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   maxXp = 3000,
   avatarUrl,
   stats = { matchesPlayed: 243, wins: 176, losses: 67, winRate: 72 },
+   onEditClick,
 }) => {
   const xpPercentage = Math.min(100, Math.round((currentXp / maxXp) * 100));
 
@@ -104,7 +107,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
       {/* 3. BAS : BOUTON ACTION (Ancré tout en bas avec mt-auto) */}
       <div className="w-full pt-4 mt-auto max-w-[90%] mb-2">
-        <PixelButton variant="olive-yellow" size="sm" className="w-full py-3 text-base tracking-widest">
+        <PixelButton variant="olive-yellow" size="sm" className="w-full py-3 text-base tracking-widest" onClick={onEditClick}>
           EDIT PROFILE
         </PixelButton>
       </div>
