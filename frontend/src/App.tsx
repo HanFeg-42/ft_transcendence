@@ -28,6 +28,8 @@ function App() {
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/chat" element={<Chat />} />
         
+        <Route path="/chat2" element={<Chatt />} /> {/* TEMP------ */}
+
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
@@ -35,7 +37,6 @@ function App() {
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
       {/* <Route path="/Design" element={<Design />} /> */}
-      <Route path="/chat2" element={<Chatt />} /> {/* TEMP------ */}
     </Routes>
   );
 }

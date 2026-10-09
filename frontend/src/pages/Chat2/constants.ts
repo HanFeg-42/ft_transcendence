@@ -1,5 +1,5 @@
 // Props = the data a parent gives to a child component.
-import type { Friend, Message } from './types';
+import type { Friend } from './types';
 
 
 export const MOCK_FRIENDS: Friend[] = [
@@ -8,13 +8,4 @@ export const MOCK_FRIENDS: Friend[] = [
   { id: 3, username: 'user3', status: 'online' },
 ];
 
-
-export const MOCK_MESSAGES: Message[] = [
-  { id: 1, sender_id: 2, receiver_id: 1, content: 'hello there', created_at: "2026-10-09T09:30:00Z"},
-  { id: 2, sender_id: 3, receiver_id: 1, content: 'hello there', created_at: "2026-10-09T09:30:00Z"},
-  { id: 3, sender_id: 2, receiver_id: 1, content: 'hello there', created_at: "2026-10-09T09:30:00Z"},
-  { id: 1, sender_id: 2, receiver_id: 1, content: 'hello there', created_at: "2026-10-09T09:30:00Z"},
-  { id: 2, sender_id: 1, receiver_id: 1, content: 'hello there', created_at: "2026-10-09T09:30:00Z"},
-  { id: 3, sender_id: 2, receiver_id: 1, content: 'hello there', created_at: "2026-10-09T09:30:00Z"},
-];
 
