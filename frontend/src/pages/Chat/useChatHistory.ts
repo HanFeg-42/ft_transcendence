@@ -14,7 +14,7 @@ export function useChatHistory(friendId: number, token: string | null, userReady
     let cancelled = false;
     setHistoryLoading(true);
     setHistoryError(null);
-
+``
     fetch(`/api/chat/messages/${friendId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })

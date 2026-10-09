@@ -20,8 +20,9 @@ export default function Chatt() {
 
   return (
     <div>
-      <FriendsSidebar friends={MOCK_FRIENDS} onSelectFriend={handleSelectFriend}/>
+      <FriendsSidebar friends={MOCK_FRIENDS} onSelectFriend={handleSelectFriend} selectedFriend={selectedFriend}/>
       <p>Chatting with:{selectedFriend.username}</p>
+      
     </div>
   )
 }
