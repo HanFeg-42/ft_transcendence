@@ -92,10 +92,14 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         },
       });
 
-      await notifyUser(outgoing.receiver_id, NotificationTypes.MESSAGE, {
-        messageId: saved.id,
-        senderId: Number(userId),
-      });
+      try {
+        await notifyUser(outgoing.receiver_id, NotificationTypes.MESSAGE, {
+          messageId: saved.id,
+          senderId: Number(userId),
+        });
+      } catch (err) {
+        console.error("[CHAT-SERVICE] Failed to create message notification:", err);
+      }
 
       const reply: ChatMessageIncoming = {
         id: saved.id,
@@ -131,8 +135,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const senderSockets = onlineUsers.get(userId);
       if (senderSockets) {
         for (const socket of senderSockets) {
-          // if (socket !== ws && socket.readyState === WebSocket.OPEN) socket.send(payload);
-          if (socket.readyState === WebSocket.OPEN) socket.send(payload);
+          if (socket !== ws && socket.readyState === WebSocket.OPEN)
+            socket.send(payload);
         }
       }
       break;

@@ -3,9 +3,11 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useLocation } from "react-router-dom";
 import {
   getNotifications,
   getUnreadCount,
@@ -14,6 +16,8 @@ import {
   type Notification,
 } from "../services/notificationService";
 import { useAuth } from "./AuthContext";
+import { ChatEvents } from "../../../shared/types/chat-types";
+import type { ChatServerMessage } from "../../../shared/types/chat-types";
 
 interface NotificationContextValue {
   notifications: Notification[];
@@ -31,6 +35,8 @@ const NotificationContext = createContext<NotificationContextValue | undefined>(
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
+  const { pathname } = useLocation();
+  const refreshId = useRef<symbol | null>(null);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -40,6 +46,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const refreshNotifications = useCallback(async () => {
     if (!token) return;
 
+    const requestId = Symbol();
+    refreshId.current = requestId;
     setLoading(true);
     setError(null);
 
@@ -49,15 +57,89 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         getUnreadCount(token),
       ]);
 
+      if (requestId !== refreshId.current) return;
       setNotifications(notificationData.notifications);
       setUnreadCount(count);
+
+      let nextCursor = notificationData.nextCursor;
+      while (nextCursor !== null) {
+        const page = await getNotifications(token, { cursor: nextCursor });
+        if (requestId !== refreshId.current) return;
+        setNotifications((current) => [...current, ...page.notifications]);
+        nextCursor = page.nextCursor;
+      }
     } catch (err) {
+      if (requestId !== refreshId.current) return;
       console.error("Failed to load notifications:", err);
       setError("Failed to load notifications");
     } finally {
-      setLoading(false);
+      if (requestId === refreshId.current) setLoading(false);
     }
   }, [token]);
+
+
+  useEffect(() => {
+    if (!token) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let reconnectDelay = 1000;
+    let disposed = false;
+
+    const connect = () => {
+      if (disposed) return;
+
+      const protocol =
+        window.location.protocol === "https:" ? "wss:" : "ws:";
+
+      const socket = new WebSocket(
+        `${protocol}//${window.location.host}/api/chat/ws?token=${encodeURIComponent(token)}`,
+      );
+      ws = socket;
+
+      socket.onopen = () => {
+        reconnectDelay = 1000;
+      };
+
+      socket.onmessage = (event) => {
+        let packet: ChatServerMessage;
+
+        try {
+          packet = JSON.parse(event.data) as ChatServerMessage;
+        } catch {
+          return;
+        }
+
+        if (packet.event === ChatEvents.NOTIFICATION) {
+          void refreshNotifications();
+        }
+      };
+
+      socket.onclose = () => {
+        if (disposed) return;
+
+        reconnectTimer = setTimeout(() => {
+          reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+          connect();
+        }, reconnectDelay);
+      };
+
+      socket.onerror = () => {
+        socket?.close();
+      };
+    };
+
+    connect();
+
+    return () => {
+      disposed = true;
+      if (reconnectTimer !== undefined) {
+        clearTimeout(reconnectTimer);
+      }
+      ws?.close();
+    };
+  }, [token, refreshNotifications]);
+
 
   useEffect(() => {
     if (token) {
@@ -65,8 +147,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } else {
       setNotifications([]);
       setUnreadCount(0);
+      setLoading(false);
+      setError(null);
     }
-  }, [token, refreshNotifications]);
+    return () => {
+      refreshId.current = null;
+    };
+  }, [token, refreshNotifications, pathname]);
 
   const markAsRead = async (id: string) => {
     if (!token) return;

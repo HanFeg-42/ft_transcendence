@@ -30,7 +30,7 @@ export default function Notifications() {
 
   const handleSelectTab = (tab: string) => {
     const routes: Record<string, string> = {
-      HOME: "/",
+      HOME: "/home",
       PROFILE: "/profile",
       CHAT: "/chat",
       NOTIFICATION: "/notifications",
