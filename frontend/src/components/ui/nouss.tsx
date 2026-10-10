@@ -1,5 +1,7 @@
 import logo from '../../assets/icons/PACOVA-logo.png';
 import { useState } from 'react';
+import {link} from 'react-router-dom';
+
 export const nono = "NONO is sleeping"
 
 // export default function nouss(): {}
@@ -26,18 +28,22 @@ interface NavProps{
 export default function NavBar({ color, font} : NavProps){
     const [isOpen, setOpen] = useState(false);
     return (
-        <div className={`flex items-center px-20 justify-between w-full h-3 p-8 shadow-md bg-${color} ${font}`}>
-            <div className="flex items-center space-x-0">
-                <img className="h-8 w-11" src={logo} alt="logo"></img>
-                <h1 className={`p-10 font-${font} font-bold font-xl tracking-wider text-white`}>PACOVA</h1>
+            <div className="relative z-50 flex items-center justify-between border-pacova-green border-b-2 w-full px-8 py-4 bg-pacova-surface/80 shadow-[0_2px_8px_rgba(142,214,3,0.5)] backdrop-blur-md shadow-md">
+            <div className="flex items-center">
+                {/* <Link to="/home"> */}
+                    <img className="h-8 w-8 [image-rendering:pixelated]" src={logo} alt="logo pacova" />
+                {/* </Link> */}
+                <h1 className={`ml-3 font-press-start font-${color} text-xl drop-shadow-glow-pink tracking-wider`}>
+                PACOVA
+                </h1>
             </div>
-            <div className={`hidden md:flex font-${font} items-center font-xl text-gray-500 md:space-x-20`}>
+            {/* ... la suite des liens ... */}
+            <div className={`hidden md:flex font-${font} font-xl text-gray-500 md:space-x-20`}>
                 <h1 className="cursor-pointer hover:text-white transition-colors">HOME</h1>
                 <h1 className="cursor-pointer hover:text-white transition-colors">PROFILE</h1>
                 <h1 className="cursor-pointer hover:text-white transition-colors">FREINDS</h1>
                 <h1 className="cursor-pointer hover:text-white transition-colors">SETTING</h1>
             </div>
-            <div className=''>
                 <button 
                     className="block md:hidden font-bold" 
                     onClick={()=>{setOpen(!isOpen)}}
@@ -52,7 +58,6 @@ export default function NavBar({ color, font} : NavProps){
                         <h1 className='cursor-pointer'>SETTING</h1>
                     </div>
                 )}
-            </div>
         </div>
     )
 }
