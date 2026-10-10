@@ -8,4 +8,10 @@ export const MOCK_FRIENDS: Friend[] = [
   { id: 3, username: 'user3', status: 'online' },
 ];
 
-
+export const routeMap: Record<string, string> = {
+  HOME: '/home',
+  PROFILE: '/profile',
+  CHAT: '/chat',
+  NOTIFICATION: '/notifications',
+  SETTINGS: '/settings',
+};

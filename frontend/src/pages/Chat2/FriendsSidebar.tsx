@@ -9,7 +9,7 @@ interface FriendsSidebarProps {
 
 export default function FriendsSidebar({friends, onSelectFriend, selectedFriend} : FriendsSidebarProps) {
   return (
-  <ul className="bg-pacova-purple text-pacova-pink font-vt323 p-4">
+  <ul className="w-80 shrink-0 bg-pacova-purple text-pacova-pink font-vt323 p-4">
     {friends.map((friend) => (
       <li key={friend.id} onClick={() => {onSelectFriend(friend)}}
       className={`flex items-center gap-2 border-1 px-3 py-3 rounded-md 
