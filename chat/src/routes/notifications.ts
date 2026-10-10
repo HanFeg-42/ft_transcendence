@@ -14,7 +14,17 @@ router.get('/notifications', async (req: Request, res: Response) => {
   }
 
   const limit = Math.min(Number(req.query.limit) || 20, 50);
-  const cursor = req.query.cursor as string | undefined;
+  let cursor: bigint | undefined;
+  if (req.query.cursor !== undefined) {
+    if (typeof req.query.cursor !== 'string' || !req.query.cursor.trim()) {
+      return res.status(400).json({ error: 'Invalid cursor' });
+    }
+    try {
+      cursor = BigInt(req.query.cursor);
+    } catch {
+      return res.status(400).json({ error: 'Invalid cursor' });
+    }
+  }
   const unread = req.query.unread as string | undefined;
 
   if (unread !== undefined && unread !== 'true' && unread !== 'false') {
@@ -31,9 +41,9 @@ router.get('/notifications', async (req: Request, res: Response) => {
       { id: 'desc' },
     ],
     take: limit,
-    ...(cursor && {
+    ...(cursor !== undefined && {
       skip: 1,
-      cursor: { id: BigInt(cursor) },
+      cursor: { id: cursor },
     }),
   });
 
