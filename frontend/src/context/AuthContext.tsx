@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types/auth";
 
@@ -10,6 +16,7 @@ interface AuthContextType {
   // void login(User user, char *token); in C
   logout: () => Promise<void>;
   verifyUser: () => Promise<boolean>;
+  refreshAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +70,68 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(user);
     setToken(token);
   };
+
+  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.status === 401) {
+        clearSession();
+        return null;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Token refresh failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setUser(data.user);
+      setToken(data.token);
+
+      return data.token;
+    } catch (error) {
+      console.error("Failed to refresh access token:", error);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    let isActive = true;
+    let refreshTimer: ReturnType<typeof setTimeout>;
+
+    const scheduleRefresh = (delay: number) => {
+      refreshTimer = setTimeout(async () => {
+        if (!isActive) {
+          return;
+        }
+
+        const newToken = await refreshAccessToken();
+
+        if (!isActive) {
+          return;
+        }
+
+        if (!newToken) {
+          scheduleRefresh(30_000);
+        }
+      }, delay);
+    };
+
+    scheduleRefresh(10 * 60 * 1000);
+
+    return () => {
+      isActive = false;
+      clearTimeout(refreshTimer);
+    };
+  }, [token, refreshAccessToken]);
 
   const clearSession = () => {
     setUser(null);
@@ -118,6 +187,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         login,
         logout,
         verifyUser,
+        refreshAccessToken,
       }}
     >
       {children}

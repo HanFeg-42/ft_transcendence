@@ -39,7 +39,7 @@ const ACHIEVEMENT_IMAGES: Record<string, string> = {
 export default function Profile() { // 2. Nom de composant en Majuscule
   const navigate = useNavigate();
   const { userId } = useParams();
-  const { token } = useAuth(); // 3. Extraire le token du contexte React
+  const { token, refreshAccessToken } = useAuth(); // 3. Extraire le token du contexte React
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

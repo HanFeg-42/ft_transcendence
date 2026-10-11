@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./authenticatedFetch";
+
 const API_URL = '/api/users';
 
 export interface Achievement {
@@ -29,14 +31,18 @@ export interface ProfileData {
   achievements?: Achievement[];
 }
 
-export async function getMyProfile(token: string): Promise<ProfileData> {
-  const response = await fetch(`${API_URL}/profile/me`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+export async function getMyProfile(token: string,refreshAccessToken: () => Promise<string | null>): Promise<ProfileData> {
+  const response = await authenticatedFetch(
+    `${API_URL}/profile/me`,
+    token,
+    refreshAccessToken,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     throw new Error('Impossible de charger le profil');
