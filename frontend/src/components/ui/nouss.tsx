@@ -1,6 +1,6 @@
 import logo from '../../assets/icons/PACOVA-logo.png';
 import { useState } from 'react';
-import {link} from 'react-router-dom';
+// import {link} from 'react-router-dom';
 
 export const nono = "NONO is sleeping"
 
@@ -28,7 +28,7 @@ interface NavProps{
 export default function NavBar({ color, font} : NavProps){
     const [isOpen, setOpen] = useState(false);
     return (
-            <div className="relative z-50 flex items-center justify-between border-pacova-green border-b-2 w-full px-8 py-4 bg-pacova-surface/80 shadow-[0_2px_8px_rgba(142,214,3,0.5)] backdrop-blur-md shadow-md">
+            <nav className="relative z-50 flex items-center justify-between border-pacova-green border-b-2 w-full px-8 py-4 bg-pacova-surface/80 shadow-[0_2px_8px_rgba(142,214,3,0.5)] backdrop-blur-md shadow-md">
             <div className="flex items-center">
                 {/* <Link to="/home"> */}
                     <img className="h-8 w-8 [image-rendering:pixelated]" src={logo} alt="logo pacova" />
@@ -58,6 +58,6 @@ export default function NavBar({ color, font} : NavProps){
                         <h1 className='cursor-pointer'>SETTING</h1>
                     </div>
                 )}
-        </div>
+        </nav>
     )
 }

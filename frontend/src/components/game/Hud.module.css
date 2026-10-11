@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════
+   HUD — Style Néon Arcade
+   ═══════════════════════════════════════════ */
+
+/* ⭐ Police arcade */
+.hud {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    color: #fff;
+    text-shadow: 0 0 8px currentColor;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* ═══ Ligne du haut ═══ */
+.topRow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 40px;
+}
+
+.scoreBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.label {
+    color: #ff00ff;   /* Magenta */
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+.value {
+    color: #ffff00;   /* Jaune */
+    font-size: 20px;
+    text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
+}
+
+.timerBlock {
+    display: flex;
+    justify-content: center;
+}
+
+.timer {
+    color: #ffff00;
+    font-size: 32px;
+    letter-spacing: 4px;
+    text-shadow:
+        0 0 10px #ffff00,
+        0 0 20px #ffff00,
+        0 0 30px #ffff00;
+    /* ⭐ Effet "blink" pour le timer */
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.85; }
+}
+
+/* ═══ Ligne du milieu ═══ */
+.middleRow {
+    display: grid;
+    grid-template-columns: 150px 1fr 150px;
+    align-items: center;
+    gap: 20px;
+}
+
+.livesBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.livesLabel {
+    color: #ff00ff;
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+.hearts {
+    display: flex;
+    gap: 8px;
+}
+
+.heart {
+    color: #ff3399;    /* Rose vif */
+    font-size: 24px;
+    text-shadow:
+        0 0 8px #ff3399,
+        0 0 16px #ff3399;
+    animation: heartBeat 1.2s ease-in-out infinite;
+}
+
+@keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+}
+
+/* ⭐ Le coeur avec index différent pour un effet décalé */
+.heart:nth-child(2) { animation-delay: 0.2s; }
+.heart:nth-child(3) { animation-delay: 0.4s; }

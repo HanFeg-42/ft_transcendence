@@ -3,38 +3,24 @@ import { useCallback } from 'react';
 import MazeUI from '../../components/game/MazeUI';
 import { useLocalGame } from '../../hooks/useLocalGame';
 import { useKeyboard } from '../../hooks/useKeyboard';
+import Huded from '../../components/game/Hud';
+import styles from './GameTestPage.module.css';
+import type { Direction } from '../../../../shared/types/game-types';
 
-function GameTestPage() {
+
+const GameTestPage: React.FC = () => {
     const { state, sendInput } = useLocalGame('player-1');
 
-    // ⭐ useCallback pour éviter de recréer la fonction à chaque render
-    const handleInput = useCallback(
-        (dir: Parameters<typeof sendInput>[0]) => sendInput(dir),
-        [sendInput]
-    );
-    useKeyboard(handleInput);
+    useKeyboard((dir: Direction) => sendInput(dir));
 
     return (
-        <div style={{ padding: 40, background: '#000', minHeight: '100vh' }}>
-            <h1 style={{ color: '#ff00ff', textAlign: 'center', fontFamily: 'monospace' }}>
-                🎮 TEST UI — Pac-Man Local
-            </h1>
-            <MazeUI state={state} 
-            mazeId="circuit"/>
-            <div style={{
-                color: '#fff',
-                textAlign: 'center',
-                marginTop: 20,
-                fontFamily: 'monospace',
-            }}>
-                <p>Score : {state.players[0]?.score ?? 0}</p>
-                <p>Vies : {state.players[0]?.lives ?? 0}</p>
-                <p>Temps : {state.timeRemaining}s</p>
-                <p>Status : {state.status}</p>
-                <p>Utilise les flèches ↑↓←→ ou WASD</p>
+        <div className={styles.page}>
+            <Huded state={state} />
+            <div className={styles.mazeWrapper}>
+                <MazeUI state={state} mazeId="circuit" />
             </div>
         </div>
     );
-}
+};
 
 export default GameTestPage;
