@@ -1,4 +1,10 @@
 // import { useState } from "react";
+// https://i.pinimg.com/236x/ff/12/2e/ff122eaf3ea44fcb8f0e5cf841b6b97a.jpg
+
+import securityIcon from "../assets/icons/sc.png";
+import appearanceIcon from "../assets/icons/palette-de-couleurs.png";
+import languageIcon from "../assets/icons/lang.png";
+import preferencesIcon from "../assets/icons/options (1).png";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
@@ -117,7 +123,7 @@ useEffect(() => {
       className="
         relative flex h-32 w-32 shrink-0
         items-center justify-center
-        rounded-lg border-2 border-pacova-green
+        rounded-lg border-2 border-pacova-pink
         shadow-[0_0_20px_rgba(142,214,3,0.20)]
         sm:h-36 sm:w-36
       "
@@ -187,8 +193,15 @@ useEffect(() => {
           <section id="security">
             <Card variant="gray" className="p-5 md:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center">
+                  <img
+                    src={securityIcon}
+                    alt="security"
+                    className="h-17 w-17 object-contain"
+                  />
                 <div>
-                  <h2 className={sectionTitle}>
+                  <h2 className="font-press-start text-sm text-yellow-400">
+                  {/* // {sectionTitle}> */}
                     {t("security")}
                   </h2>
 
@@ -196,11 +209,13 @@ useEffect(() => {
                     {t("securityDescription")}
                   </p>
                 </div>
+                </div>
+
 
                 
      
                 <PixelButton
-                  variant="gray"
+                  variant="warning-yellow"
                   onClick={() => setShowTwoFactor((current) => !current)}
                   // aria-expanded={showTwoFactor}
                   // className={actionButton}
@@ -210,12 +225,12 @@ useEffect(() => {
               </div>
 
               {showTwoFactor && (
-                <div className="mt-5 border-t border-pacova-gray/40 pt-5">
+                <div className="mt-5 mb-5 border-t border-yellow-400/40 pt-5">
                   <TwoFactorSetup />
                 </div>
               )}
 
-              <div className="mt-5 border-t border-pacova-gray/40 pt-5">
+              <div className="mt-5 mb-5 border-t border-yellow-400/40 pt-5">
                 <PixelButton
                   variant="gray"
                   // disabled={isLoggingOut}
@@ -240,20 +255,31 @@ useEffect(() => {
           {/* PREFERENCES */}
           <section id="preferences">
             <Card variant="gray" className="p-5 md:p-6">
-              <div className="mb-5">
-                <h2 className={sectionTitle}>
+              {/* <div className="mb-5"> */}
+                <div className="flex items-center gap-4 mb-5">
+                  <img
+                    src={preferencesIcon}
+                    alt="Appearance"
+                    className="h-10 w-10 object-contain"
+                  />
+
+          <div>
+          <h2 className="font-press-start text-sm text-[#59B5F7]">
+                {/* <h2 className={sectionTitle}> */}
                   {t("preferences")}
                 </h2>
 
-                <p className={`${description} mt-3`}>
+                <p className={`${description}`}>
                   {t("preferencesDescription")}
                 </p>
               </div>
+              </div>
+
 
               {/* Friend requests */}
-              <div className="flex items-center justify-between gap-4 border-t border-pacova-gray/40 py-5">
+              <div className="flex items-center justify-between gap-4 border-t border-[#59B5F7]/40 py-5">
                 <div>
-                  <h3 className="font-pixelify text-sm text-pacova-green">
+                  <h3 className="font-pixelify text-base text-white">
                     {t("friendRequests")}
                   </h3>
 
@@ -275,7 +301,7 @@ useEffect(() => {
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${
+                    className={`absolute top-0.5 h-4.5 w-4.5 rounded-full transition-all ${
                       friendRequests
                         ? "left-[22px] bg-pacova-green"
                         : "left-0.5 bg-pacova-gray"
@@ -285,9 +311,9 @@ useEffect(() => {
               </div>
 
               {/* Game invitations */}
-              <div className="flex items-center justify-between gap-4 border-t border-pacova-gray/40 py-5">
+              <div className="flex items-center justify-between gap-4 border-t border-[#59B5F7]/40 py-5">
                 <div>
-                  <h3 className="font-pixelify text-sm text-pacova-green">
+                  <h3 className="font-pixelify text-base text-white">
                     {t("gameInvitations")}
                   </h3>
 
@@ -309,7 +335,7 @@ useEffect(() => {
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${
+                    className={`absolute top-0.5 h-4.5 w-4.5 rounded-full transition-all ${
                       gameInvitations
                         ? "left-[22px] bg-pacova-green"
                         : "left-0.5 bg-pacova-gray"
@@ -321,68 +347,132 @@ useEffect(() => {
           </section>
 
           {/* APPEARANCE */}
-          <section id="appearance">
-            <Card variant="gray" className="p-5 md:p-6">
-              <div className="space-y-5">
-                <div>
-                  <h2 className={sectionTitle}>
-                    {t("appearance")}
-                  </h2>
+         
+<section id="appearance">
+  <Card variant="gray" className="p-4 md:p-5">
+    <div className="space-y-4">
 
-                  <p className={`mt-3 ${description}`}>
-                    {t("interfaceColors")}
-                  </p>
-                </div>
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <img
+          src={appearanceIcon}
+          alt="Appearance"
+          className="h-10 w-10 object-contain"
+        />
 
-                <div>
-                  <h3 className="font-vt323 text-xl text-white">
-                    {t("themeName")}
-                  </h3>
+        <div>
+          <h2 className="font-press-start text-sm text-[#B069DB]">
+            {/* {sectionTitle} */}
+            {t("appearance")}
+          </h2>
 
-                  <p className="font-vt323 text-base text-gray-400">
-                    {t("themeDescription")}
-                  </p>
-                </div>
+          <p className={`mt-1 ${description}`}>
+            {t("interfaceColors")}
+          </p>
+        </div>
+      </div>
 
-                {/* PACOVA color palette */}
-                <div className="flex gap-2">
-                  <div
-                    className="h-8 flex-1 rounded-sm bg-[#0D0914]"
-                    title="Background"
-                  />
+      {/* Theme and color palette */}
+      <div className="flex flex-col gap-4 border-t border-[#B069DB]/40 pt-3 sm:flex-row sm:items-center sm:justify-between">
 
-                  <div
-                    className="h-8 flex-1 rounded-sm bg-[#510950]"
-                    title="Purple"
-                  />
+        {/* Theme description */}
+        <div className="min-w-0">
+          <p className="font-vt323 text-base text-gray-400">
+            THEME
+          </p>
 
-                  <div
-                    className="h-8 flex-1 rounded-sm bg-[#F32077]"
-                    title="Pink"
-                  />
+          <h3 className="font-vt323 text-xl text-white">
+            {t("themeName")}
+          </h3>
 
-                  <div
-                    className="h-8 flex-1 rounded-sm bg-[#8ED603]"
-                    title="Green"
-                  />
-                </div>
-              </div>
-            </Card>
-          </section>
+          <p className="font-vt323 text-base text-gray-400">
+            {t("themeDescription")}
+          </p>
+        </div>
+
+        {/* PACOVA color palette */}
+        <div className="grid grid-cols-4 gap-3 sm:gap-4">
+
+          <div className="flex flex-col items-center gap-1">
+            <div
+              className="h-8 w-8 rounded-full border border-purple-400 bg-[#0D0914]"
+              title="Background"
+            />
+            <span className="font-vt323 text-sm text-gray-400">
+              BG
+            </span>
+            {/* <span className="font-vt323 text-[10px] text-gray-400">
+              #0D0914
+            </span> */}
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <div
+              className="h-8 w-8 rounded-full border border-purple-300 bg-[#510950]"
+              title="Purple"
+            />
+            <span className="font-vt323 text-sm text-gray-400">
+              PURPLE
+            </span>
+            {/* <span className="font-vt323 text-sm text-gray-400">
+              #510950
+            </span> */}
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <div
+              className="h-8 w-8 rounded-full border border-pink-300 bg-[#F32077]"
+              title="Pink"
+            />
+            <span className="font-vt323 text-sm text-gray-400">
+              PINK
+            </span>
+            {/* <span className="font-vt323 text-[10px] text-gray-400">
+              #F32077
+            </span> */}
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <div
+              className="h-8 w-8 rounded-full border border-lime-300 bg-[#8ED603]"
+              title="Green"
+            />
+            <span className="font-vt323 text-sm text-gray-400">
+              GREEN
+            </span>
+            {/* <span className="font-vt323 text-[10px] text-gray-400">
+              #8ED603
+            </span> */}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </Card>
+</section>
+
 
           {/* LANGUAGE */}
           <section id="language">
             <Card variant="gray" className="p-5 md:p-6">
               <div className="flex flex-col gap-5 
               sm:flex-row sm:items-center sm:justify-between">
+              <div className = "flex items-center gap-3">
+                <img
+          src={languageIcon}
+          alt="language"
+          className="h-12 w-12 object-contain"
+        />
                 <div>
-                  <h2 className={sectionTitle}>
+                  <h2 className="font-press-start text-sm text-[#59B5F7]">
+                  {/* <h2 className={sectionTitle}> */}
                     {t("language")}
                   </h2>
 
                   <p className={`${description} mt-3`}>
                     {t("chooseLanguage")}
                   </p>
+                </div>
                 </div>
 
                 <select
@@ -395,7 +485,7 @@ useEffect(() => {
                   // w-full appearance-none rounded-sm bg-[#0D0914]
 // px-2 pr-8 py-2 font-vt323 text-lg text-white
 // outline-none focus:ring-1 focus:ring-pacova-green sm:w-48
-                  className="rounded-sm bg-[#0D0914] 
+                  className="border border-[#59B5F7] rounded-lg bg-[#0D0914] 
                   px-2 py-2 pr-8 font-vt323 text-lg text-white 
                   outline-none focus:ring-1 focus:ring-pacova-green sm:w-48"
                 >

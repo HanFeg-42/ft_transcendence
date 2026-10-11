@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Background from '../components/ui/Background';
@@ -40,6 +41,7 @@ export default function Profile() { // 2. Nom de composant en Majuscule
   const navigate = useNavigate();
   const { userId } = useParams();
   const { token } = useAuth(); // 3. Extraire le token du contexte React
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -80,20 +82,23 @@ export default function Profile() { // 2. Nom de composant en Majuscule
           {loading ? (
             <Card variant="gray" className="w-full h-full flex items-center justify-center p-8">
               <span className="font-pixelify text-pacova-green text-lg animate-pulse">
-                LOADING DATA...
+                {t("loadingData")}
+                {/* LOADING DATA... - add translation*/}
               </span>
             </Card>
           ) : error ? (
             <Card variant="gray" className="w-full h-full flex items-center justify-center p-8 text-center">
               <span className="font-pixelify text-red-500 text-sm">
-                FAILED TO LOAD PROFILE
+                {t("profileLoadError")}
+                {/* FAILED TO LOAD PROFILE - add translation */}
               </span>
             </Card>
           ) : (
             <ProfileCard
               username={profile?.username}
               avatarUrl={profile?.avatarUrl}
-              statusText={profile?.statusText || 'Ready to play'}
+              statusText={profile?.statusText || t("readyToPlay")}
+              // statusText={profile?.statusText || 'Ready to play'} - add translation
               level={profile?.level ?? 1}
               currentXp={profile?.currentXp ?? 0}
               maxXp={profile?.maxXp ?? 1000}
@@ -108,13 +113,15 @@ export default function Profile() { // 2. Nom de composant en Majuscule
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch flex-1">
             <div className="md:col-span-2 flex flex-col h-full">
-              <GameUI />
+              <GameUI /> 
+              {/* -----------------------------> translation */}
             </div>
 
             <div className="md:col-span-1 flex h-full">
               <Card variant="gray" className="w-full h-full flex flex-col justify-between items-center text-center p-5 bg-pacova-surface/60 backdrop-blur-sm">
                 <span className="font-pixelify text-xl text-pacova-green uppercase tracking-widest self-start">
-                  ▼ CURRENT RANK
+                  {t("currentRank")}
+                  {/* ▼ CURRENT RANK  ------------------------> */}
                 </span>
                 
                 <div className="my-auto flex flex-col items-center gap-2 py-4">
@@ -128,7 +135,8 @@ export default function Profile() { // 2. Nom de composant en Majuscule
                   </h3>
                   <div className="text-yellow-400 text-sm tracking-widest">★★★★☆</div>
                   <span className="font-vt323 text-sm text-gray-400 tracking-wider">
-                    TOP 12% OF PLAYERS
+                    t("topPlayers")
+                    {/* TOP 12% OF PLAYERS ---------------------->*/}
                   </span>
                 </div>
                 
@@ -145,7 +153,8 @@ export default function Profile() { // 2. Nom de composant en Majuscule
           {/* Achievements */}
           <div className="w-full flex flex-col gap-4 mt-4">
             <span className="font-pixelify text-xl text-pacova-pink uppercase tracking-widest block pl-1">
-              ▼ ACHIEVEMENTS
+              {t("achievements")}
+              {/* ▼ ACHIEVEMENTS ----------------------> */}
             </span>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
