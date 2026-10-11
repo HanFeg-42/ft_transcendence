@@ -11,7 +11,8 @@ import MessageList from './MessageList';
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
 import { useNavigate } from 'react-router-dom';
-
+import useChatSocket from './useChatSocket';
+import MessageInput from './MessageInput';
 
 
 
@@ -24,7 +25,9 @@ export default function Chatt() {
   const navigate = useNavigate();
   const [selectedFriend, setSelectedFriend] = useState(visibleFriends[0]);
   const { historyMessages, historyLoading, historyError } = useChatHistory(selectedFriend.id, token);
-
+  const url = token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '';
+  const {  sendMessage } = useChatSocket(url);
+  const [draft, setDraft] = useState('');
 
   if(!user || !token)
       return <p>Loading...</p>;
@@ -39,6 +42,12 @@ export default function Chatt() {
       navigate(routeMap[tab]);
   }
 
+  function handleSend() {
+    if (!draft.trim()) return;
+    sendMessage(selectedFriend.id, draft.trim());
+    setDraft('');
+  }
+
   return ( 
     <Background>
       <Navbar activeTab="CHAT" onSelectTab={handleSelectTab}></Navbar>
@@ -47,6 +56,7 @@ export default function Chatt() {
         <section className='flex-1 min-w-0 flex flex-col'>
           <MessageList conversation={historyMessages} selectedFriend={selectedFriend}
           currentUserId={currentUserId} loading={historyLoading} error={historyError}/>
+          <MessageInput draft={draft} onDraftChange={setDraft} onSend={handleSend} disabled={false}/>
         </section>
       </main>
       

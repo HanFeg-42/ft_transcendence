@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect  } from 'react';
 import type { 
-  ChatMessageOutgoing, 
+//   ChatMessageOutgoing, 
   ChatMessageIncoming, 
   ChatClientMessage, 
   ChatServerMessage,
@@ -8,7 +8,7 @@ import type {
 import { ChatEvents } from '../../../../shared/types/chat-types';
 
 
-export function useChatSocket(url: string)
+export default function useChatSocket(url: string)
 {
     const socketRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -41,16 +41,34 @@ export function useChatSocket(url: string)
                     setMessages(prevMessages => [...prevMessages, packet.data]);
                     break;
                 }
-
+                case ChatEvents.PRESENCE:
+                {
+                    setPresence(prevPresence => ({
+                        ...prevPresence, [packet.data.user_id]: packet.data.status
+                    }));
+                    break;
+                }
             }
         }
 
         
 
 
-        return () => {
-    ws.close();
-};
+        return () => {ws.close();};
     }, [url]);
 
+    function sendMessage(receiver_id: number, content: string)
+    {
+        if(!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN)
+            return;
+
+        const outgoing: ChatClientMessage = {
+            event: ChatEvents.MESSAGE,
+            data: { receiver_id, content}
+        }
+
+        socketRef.current.send(JSON.stringify(outgoing));
+    }
+
+    return { isConnected, messages, presence, sendMessage };
 }
