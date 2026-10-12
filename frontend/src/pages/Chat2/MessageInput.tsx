@@ -14,8 +14,8 @@ interface MessageInputProps
 export default function MessageInput({draft, onDraftChange, onSend, disabled}: MessageInputProps)
 {
   return (
-    <div className='flex-1 bg-pacova-pink'>
-        <input value={draft} type="text" disabled={disabled}
+    <div className='flex gap-2 p-3'>
+        <input className='flex-1' value={draft} type="text" disabled={disabled}
         onChange={(e) => onDraftChange(e.target.value)}
         placeholder="Type a message..."
         onKeyDown={(e) => {

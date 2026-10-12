@@ -1,5 +1,6 @@
 import type { Friend, Message } from './types';
 import { formatMessageTimestamp } from './formatTimestamp'
+import type { RefObject } from 'react';
 
 
 interface MessageListProps{
@@ -8,12 +9,19 @@ interface MessageListProps{
     currentUserId: number;
 		loading: boolean;
 		error: string | null;
+    messagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
 
 export default function MessageList(
-	{conversation, selectedFriend, currentUserId, loading, error} : MessageListProps)
-{
+	{conversation, 
+  selectedFriend,
+  currentUserId,
+  loading,
+  error,
+  messagesEndRef
+} : MessageListProps){
+  
   if(error)
 		return <p>{error}</p>
 	if(loading)
@@ -36,6 +44,7 @@ export default function MessageList(
 						</div>
 					</div>
       )})}
+      <div ref={messagesEndRef} />
     </div>
   )
 }
