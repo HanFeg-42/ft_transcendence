@@ -1,19 +1,44 @@
 .page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    grid-template-areas:
+        "top    top    top"
+        "left   maze   right";
+    grid-template-columns: 200px auto 200px;
+    grid-template-rows: auto auto;
+    gap: 30px;
+    padding: 40px;
     min-height: 100vh;
     background-color: #000;
-    /* ⭐ Fond avec grille subtile (comme sur la maquette) */
     background-image:
         linear-gradient(rgba(255, 0, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 0, 255, 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
-    padding: 20px 0;
-    gap: 30px;
+    justify-content: center;
+    align-content: center;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+/* ⭐ Timer centré en haut */
+.topBar {
+    grid-area: top;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+/* ⭐ Colonnes gauche/droite avec score + vies */
+.leftBar,
+.rightBar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
 }
 
 .mazeWrapper {
+    grid-area: maze;
     display: flex;
     justify-content: center;
     align-items: center;

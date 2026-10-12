@@ -11,6 +11,8 @@ export function useLocalGame(playerId: string = 'player-1') {
     const [, setFrame] = useState(0);
 
     useEffect(() => {
+        // addPlayer('player-2', stateRef.current);
+        //     setFrame(f => f + 1);
         const interval = setInterval(() => {
             tick(stateRef.current);   // Fait avancer la logique
             setFrame((f) => f + 1);   // Force le re-render React

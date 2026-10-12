@@ -1,28 +1,36 @@
 /* ═══════════════════════════════════════════
-   HUD — Style Néon Arcade
+   HUD — Timer + Score/Vies
    ═══════════════════════════════════════════ */
 
-/* ⭐ Police arcade */
-.hud {
-    font-family: 'Press Start 2P', 'Courier New', monospace;
-    color: #fff;
-    text-shadow: 0 0 8px currentColor;
-    user-select: none;
+/* ═══ TIMER (en haut, centré) ═══ */
+.timerBlock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.timer {
+    color: #ffff00;
+    font-size: 36px;
+    letter-spacing: 6px;
+    text-shadow:
+        0 0 10px #ffff00,
+        0 0 20px #ffff00,
+        0 0 30px #ffff00;
+    font-family: 'Press Start 2P', monospace;
+}
+
+/* ═══ BLOC JOUEUR (score + vies) ═══ */
+.playerBlock {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 20px;
-}
-
-/* ═══ Ligne du haut ═══ */
-.topRow {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    gap: 40px;
+    gap: 10px;
+    font-family: 'Press Start 2P', monospace;
 }
 
-.scoreBlock {
+/* ⭐ Ligne SCORE : label + valeur côte à côte */
+.scoreLine {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -30,79 +38,56 @@
 }
 
 .label {
-    color: #ff00ff;   /* Magenta */
-    font-size: 14px;
+    color: #ff00ff;
+    font-size: 12px;
     letter-spacing: 2px;
+    text-shadow: 0 0 6px #ff00ff;
 }
 
 .value {
-    color: #ffff00;   /* Jaune */
-    font-size: 20px;
-    text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
-}
-
-.timerBlock {
-    display: flex;
-    justify-content: center;
-}
-
-.timer {
     color: #ffff00;
-    font-size: 32px;
-    letter-spacing: 4px;
+    font-size: 18px;
     text-shadow:
         0 0 10px #ffff00,
-        0 0 20px #ffff00,
-        0 0 30px #ffff00;
-    /* ⭐ Effet "blink" pour le timer */
-    animation: pulse 2s ease-in-out infinite;
+        0 0 20px #ffff00;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.85; }
-}
-
-/* ═══ Ligne du milieu ═══ */
-.middleRow {
-    display: grid;
-    grid-template-columns: 150px 1fr 150px;
-    align-items: center;
-    gap: 20px;
-}
-
-.livesBlock {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
+/* ═══ VIES ═══ */
 .livesLabel {
     color: #ff00ff;
-    font-size: 14px;
+    font-size: 12px;
     letter-spacing: 2px;
+    text-shadow: 0 0 6px #ff00ff;
+    margin-top: 6px;
 }
 
 .hearts {
     display: flex;
-    gap: 8px;
+    gap: 6px;
 }
 
 .heart {
-    color: #ff3399;    /* Rose vif */
-    font-size: 24px;
+    color: #ff3399;
+    font-size: 22px;
     text-shadow:
         0 0 8px #ff3399,
         0 0 16px #ff3399;
     animation: heartBeat 1.2s ease-in-out infinite;
 }
 
+.heart:nth-child(2) { animation-delay: 0.2s; }
+.heart:nth-child(3) { animation-delay: 0.4s; }
+
 @keyframes heartBeat {
     0%, 100% { transform: scale(1); }
     50%      { transform: scale(1.1); }
 }
 
-/* ⭐ Le coeur avec index différent pour un effet décalé */
-.heart:nth-child(2) { animation-delay: 0.2s; }
-.heart:nth-child(3) { animation-delay: 0.4s; }
+/* ═══ Placeholder si pas de joueur 2 ═══ */
+.waiting {
+    color: #666;
+    font-size: 12px;
+    font-family: 'Press Start 2P', monospace;
+    text-align: center;
+    padding: 20px;
+}
