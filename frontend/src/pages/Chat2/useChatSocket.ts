@@ -17,7 +17,7 @@ export default function useChatSocket(url: string)
     const [presence, setPresence] = useState<Record<number, 'online' | 'offline'>>({});
     const [typing, setTyping] = useState<Record<number, boolean>>({});
     const typingTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-
+    const [readAt, setReadAt] = useState<Record<number, string>>({});
 
 
     useEffect(() => {
@@ -86,6 +86,14 @@ export default function useChatSocket(url: string)
 
                     break;
                 }
+
+                case ChatEvents.READ: {
+                    const readerId = packet.data.reader_id;
+                    const readTimestamp = packet.data.read_at;
+
+                    setReadAt((prev) => ({ ...prev, [readerId]: readTimestamp }));
+                    break;
+                }
             }
         }
 
@@ -125,5 +133,19 @@ export default function useChatSocket(url: string)
         socketRef.current.send(JSON.stringify(outgoing));
     }
 
-    return { isConnected, messages, presence, sendMessage, typing, sendTyping };
+    function sendRead(senderId: number)
+    {
+        if(!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN)
+            return;
+        
+        const outgoing: ChatClientMessage = {
+            event: ChatEvents.READ,
+            data: { sender_id: senderId }
+        }
+
+        socketRef.current.send(JSON.stringify(outgoing));
+    }
+
+    return { isConnected, messages, presence,
+         sendMessage, typing, sendTyping, sendRead,readAt };
 }

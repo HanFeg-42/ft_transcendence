@@ -14,4 +14,5 @@ export interface Message {
   receiver_id: number;
   content: string;
   created_at: string;
+  read_at: string | null;
 }

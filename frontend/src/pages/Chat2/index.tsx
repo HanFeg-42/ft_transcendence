@@ -33,7 +33,8 @@ export default function Chatt() {
   const [selectedFriend, setSelectedFriend] = useState(visibleFriends[0]);
   const { historyMessages, historyLoading, historyError } = useChatHistory(selectedFriend.id, token);
   const url = token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '';
-  const { messages, presence, sendMessage, typing, sendTyping } = useChatSocket(url);
+  const { messages, presence, sendMessage,
+     typing, sendTyping, sendRead, readAt } = useChatSocket(url);
   const [draft, setDraft] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);// empty flag pin
   const { iBlockedThem, theyBlockedMe, toggleBlock } = useBlockStatus(selectedFriend?.id, token);
@@ -53,6 +54,28 @@ export default function Chatt() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation.length, selectedFriend.id, historyLoading, typing[selectedFriend.id]])
+
+
+  // READ Effect 1: Fires when conversation length changes or active friend changes
+  useEffect(() => {
+    if (document.visibilityState === 'visible' && selectedFriend?.id) {
+      sendRead(selectedFriend.id);
+    }
+  }, [conversation.length, selectedFriend?.id]);
+  // Effect 2: Fires when the user tabs back into the window/browser
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible' && selectedFriend?.id) {
+        sendRead(selectedFriend.id);
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [selectedFriend?.id]);
+
 
 
 
@@ -141,6 +164,7 @@ export default function Chatt() {
           error={historyError} 
           messagesEndRef={messagesEndRef}
           isTyping={typing[selectedFriend.id] ?? false}
+          friendReadAt={readAt[selectedFriend.id] ?? null}
           />
 
           <MessageInput 

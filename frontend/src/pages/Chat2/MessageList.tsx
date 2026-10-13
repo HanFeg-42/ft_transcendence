@@ -15,6 +15,7 @@ interface MessageListProps{
 		error: string | null;
     messagesEndRef: RefObject<HTMLDivElement | null>;
     isTyping: boolean;
+    friendReadAt: string | null;
 }
 
 
@@ -25,7 +26,8 @@ export default function MessageList(
   loading,
   error,
   messagesEndRef,
-  isTyping
+  isTyping,
+  friendReadAt
 } : MessageListProps){
   
   if(error)
@@ -35,11 +37,14 @@ export default function MessageList(
   if(conversation.length === 0)
     return <p className="font-vt323 text-gray-600 text-lg text-center mt-8">No messages yet</p>
 
+
+  
   return (
     <div className={`flex-1 min-h-0 flex flex-col gap-4 p-5 overflow-y-auto overflow-x-hidden overscroll-contain ${NEON_SCROLLBAR}`}>
       {conversation.map((message) => {
           const isOwn = message.sender_id === currentUserId;
-                      
+          const isRead = message.read_at != null || (friendReadAt != null && message.created_at <= friendReadAt);           
+
           return (
 					<div className={`flex flex-col max-w-[80%] min-w-0 ${
           isOwn ? 'self-end items-end' : 'self-start items-start'}`} 
@@ -58,6 +63,11 @@ export default function MessageList(
                 : 'bg-pacova-green-dark/40 text-white'}`}>
                 {message.content}</div>
 				  		<span className="font-vt323 text-gray-500 text-sm mt-1 flex items-center gap-1.5">
+                {isOwn && (
+                  <span className="tracking-[-2px]">
+                    {isRead ? '✓✓' : '✓'}
+                  </span>
+                )}
                 {formatMessageTimestamp(message.created_at)}</span>
 					  </div>
       )})}
