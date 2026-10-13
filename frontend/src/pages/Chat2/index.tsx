@@ -14,6 +14,13 @@ import { useNavigate } from 'react-router-dom';
 import useChatSocket from './useChatSocket';
 import MessageInput from './MessageInput';
 import ConversationHeader from './ConversationHeader';
+import useBlockStatus from './useBlockStatus';
+import NewChatModal from './NewChatModal';
+
+
+
+
+
 
 
 
@@ -29,6 +36,9 @@ export default function Chatt() {
   const { messages, presence, sendMessage } = useChatSocket(url);
   const [draft, setDraft] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);// empty flag pin
+  const { iBlockedThem, theyBlockedMe, toggleBlock } = useBlockStatus(selectedFriend?.id, token);
+  const isBlocked = iBlockedThem || theyBlockedMe;
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
 
   //merge old and live messages
   const liveForFriend = messages.filter((msg) => {
@@ -43,8 +53,16 @@ export default function Chatt() {
 
 
 
-  if(!user || !token)
-      return <p>Loading...</p>;
+  if(!user || !token){
+      return (
+        <Background>
+          <Navbar activeTab="CHAT" onSelectTab={handleSelectTab} />
+          <main className="flex-1 flex items-center justify-center">
+            <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">Loading...</h1>
+          </main>
+        </Background>
+      );
+    }
 
   function handleSelectFriend(friend: Friend)
   {
@@ -75,16 +93,48 @@ export default function Chatt() {
   return ( 
     <Background>
       <Navbar activeTab="CHAT" onSelectTab={handleSelectTab}></Navbar>
-      <main className='flex gap-5 px-4 py-5 h-[calc(100vh-80px)]'>
-        <FriendsSidebar friends={visibleFriendsLive} onSelectFriend={handleSelectFriend} selectedFriend={selectedFriend}/>
-        <section className='flex-1 min-w-0 flex flex-col'>
-          <ConversationHeader friend={selectedFriendLive} />
-          <MessageList conversation={conversation} selectedFriend={selectedFriend}
-          currentUserId={currentUserId} loading={historyLoading} error={historyError} messagesEndRef={messagesEndRef}/>
-          <MessageInput draft={draft} onDraftChange={setDraft} onSend={handleSend} disabled={false}/>
+
+      <main className="flex-1 min-h-0 h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] max-w-[1320px] mx-auto w-full px-4 py-5 flex gap-5 overflow-hidden">
+        <FriendsSidebar 
+        friends={visibleFriendsLive} 
+        onSelectFriend={handleSelectFriend} 
+        selectedFriend={selectedFriend}
+        onNewChat={() => setIsNewChatOpen(true)}
+        />
+
+
+        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
+          <ConversationHeader 
+          friend={selectedFriendLive}
+          iBlockedThem={iBlockedThem} 
+          toggleBlock={toggleBlock}
+          />
+
+          <MessageList 
+          conversation={conversation} 
+          selectedFriend={selectedFriend}
+          currentUserId={currentUserId} 
+          loading={historyLoading} 
+          error={historyError} 
+          messagesEndRef={messagesEndRef}/>
+
+          <MessageInput 
+          draft={draft} 
+          onDraftChange={setDraft}
+          onSend={handleSend} 
+          disabled={isBlocked}/>
         </section>
       </main>
       
+      <NewChatModal 
+        isOpen={isNewChatOpen} 
+        onClose={() => setIsNewChatOpen(false)} 
+        friends={visibleFriendsLive} 
+        onSelectFriend={(friend) => {
+          setSelectedFriend(friend);
+        }} 
+        />
+
     </Background>
   )
 }
