@@ -14,6 +14,7 @@ interface MessageListProps{
 		loading: boolean;
 		error: string | null;
     messagesEndRef: RefObject<HTMLDivElement | null>;
+    isTyping: boolean;
 }
 
 
@@ -23,7 +24,8 @@ export default function MessageList(
   currentUserId,
   loading,
   error,
-  messagesEndRef
+  messagesEndRef,
+  isTyping
 } : MessageListProps){
   
   if(error)
@@ -59,6 +61,31 @@ export default function MessageList(
                 {formatMessageTimestamp(message.created_at)}</span>
 					  </div>
       )})}
+
+
+      {isTyping && (
+        <div className="flex flex-col max-w-[80%] min-w-0 self-start items-start">
+          <span className="font-vt323 text-sm uppercase tracking-wide mb-1 text-pacova-green">
+            {selectedFriend.username}
+          </span>
+            
+          <div className="px-4 py-3 pixel-corners-3step bg-pacova-green-dark/40 flex items-center gap-1.5">
+            <span
+              className="w-2 h-2 bg-pacova-green pixel-corners-3step animate-pulse"
+              style={{ animationDelay: '0ms' }}
+            />
+            <span
+              className="w-2 h-2 bg-pacova-green pixel-corners-3step animate-pulse"
+              style={{ animationDelay: '150ms' }}
+            />
+            <span
+              className="w-2 h-2 bg-pacova-green pixel-corners-3step animate-pulse"
+              style={{ animationDelay: '300ms' }}
+            />
+          </div>
+        </div>
+      )}
+
       <div ref={messagesEndRef} />
     </div>
   )

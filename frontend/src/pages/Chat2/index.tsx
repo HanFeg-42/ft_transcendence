@@ -33,12 +33,15 @@ export default function Chatt() {
   const [selectedFriend, setSelectedFriend] = useState(visibleFriends[0]);
   const { historyMessages, historyLoading, historyError } = useChatHistory(selectedFriend.id, token);
   const url = token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '';
-  const { messages, presence, sendMessage } = useChatSocket(url);
+  const { messages, presence, sendMessage, typing, sendTyping } = useChatSocket(url);
   const [draft, setDraft] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);// empty flag pin
   const { iBlockedThem, theyBlockedMe, toggleBlock } = useBlockStatus(selectedFriend?.id, token);
   const isBlocked = iBlockedThem || theyBlockedMe;
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+  const lastTypingSentRef = useRef<Record<number, number>>({});
+
+
 
   //merge old and live messages
   const liveForFriend = messages.filter((msg) => {
@@ -49,7 +52,7 @@ export default function Chatt() {
   ); 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation.length, selectedFriend.id, historyLoading])
+  }, [conversation.length, selectedFriend.id, historyLoading, typing[selectedFriend.id]])
 
 
 
@@ -79,6 +82,23 @@ export default function Chatt() {
     sendMessage(selectedFriend.id, draft.trim());
     setDraft('');
   }
+
+  function handleDraftChange(value: string) {
+      setDraft(value);
+
+      if (value.trim() !== "") {
+        const now = Date.now();
+        const lastSent = lastTypingSentRef.current[selectedFriend.id] || 0;
+      
+        // Throttle: check if more than 2000ms (2 seconds) have passed
+        if (now - lastSent > 2000) {
+          sendTyping(selectedFriend.id);
+          lastTypingSentRef.current[selectedFriend.id] = now;
+        }
+      }
+}
+
+
   //array containing all of friends for the sidebar list
   const visibleFriendsLive = visibleFriends.map((friend) => ({
     ...friend, // Copy all existing friend properties (name, avatar, etc.)
@@ -89,6 +109,9 @@ export default function Chatt() {
     ...selectedFriend, 
     status: presence[selectedFriend.id] ?? selectedFriend.status 
   };
+
+
+
 
   return ( 
     <Background>
@@ -116,11 +139,13 @@ export default function Chatt() {
           currentUserId={currentUserId} 
           loading={historyLoading} 
           error={historyError} 
-          messagesEndRef={messagesEndRef}/>
+          messagesEndRef={messagesEndRef}
+          isTyping={typing[selectedFriend.id] ?? false}
+          />
 
           <MessageInput 
           draft={draft} 
-          onDraftChange={setDraft}
+          onDraftChange={handleDraftChange}
           onSend={handleSend} 
           disabled={isBlocked}/>
         </section>

@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect  } from 'react';
+// import React from 'react';
 import type { 
 //   ChatMessageOutgoing, 
   ChatMessageIncoming, 
@@ -14,6 +15,10 @@ export default function useChatSocket(url: string)
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [messages, setMessages] = useState<ChatMessageIncoming[]>([]);
     const [presence, setPresence] = useState<Record<number, 'online' | 'offline'>>({});
+    const [typing, setTyping] = useState<Record<number, boolean>>({});
+    const typingTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+
+
 
     useEffect(() => {
         if (!url) return;
@@ -38,14 +43,47 @@ export default function useChatSocket(url: string)
             {
                 case ChatEvents.MESSAGE:
                 {
+                    // Clear their typing timer and status immediately
+                    const senderId = packet.data.sender_id;
+                    if (typingTimers.current[senderId]) {
+                        clearTimeout(typingTimers.current[senderId]);
+                    }
+                    setTyping((prev) => ({ ...prev, [senderId]: false }));
+
+
                     setMessages(prevMessages => [...prevMessages, packet.data]);
                     break;
                 }
+
+
                 case ChatEvents.PRESENCE:
                 {
                     setPresence(prevPresence => ({
                         ...prevPresence, [packet.data.user_id]: packet.data.status
                     }));
+                    break;
+                }
+
+                case ChatEvents.TYPING:
+                {
+                    const senderId = packet.data.sender_id;
+
+                    // 1. Clear previous timer if it exists
+                    if (typingTimers.current[senderId]) {
+                        clearTimeout(typingTimers.current[senderId]);
+                    }
+
+                    // 2. Set typing status to true
+                    setTyping(pervTyping => ({
+                        ...pervTyping, [senderId]: true
+                    }));
+
+
+                    // 3. Set a 2-second timeout to turn it back to false
+                    typingTimers.current[senderId] = setTimeout(() => {
+                        setTyping((prev) => ({ ...prev, [senderId]: false }));
+                    }, 2000);
+
                     break;
                 }
             }
@@ -54,7 +92,11 @@ export default function useChatSocket(url: string)
         
 
 
-        return () => {ws.close();};
+        return () => {
+            // Clear all active typing timeout timers
+            Object.values(typingTimers.current).forEach(clearTimeout);
+            ws.close();
+        };
     }, [url]);
 
     function sendMessage(receiver_id: number, content: string)
@@ -70,5 +112,18 @@ export default function useChatSocket(url: string)
         socketRef.current.send(JSON.stringify(outgoing));
     }
 
-    return { isConnected, messages, presence, sendMessage };
+
+    function sendTyping(receiverId: number) {
+        if(!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN)
+            return;
+        
+        const outgoing: ChatClientMessage = {
+            event: ChatEvents.TYPING,
+            data: { receiver_id: receiverId }
+        }
+
+        socketRef.current.send(JSON.stringify(outgoing));
+    }
+
+    return { isConnected, messages, presence, sendMessage, typing, sendTyping };
 }
