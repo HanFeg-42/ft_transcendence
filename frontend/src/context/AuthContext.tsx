@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types/auth";
+import { authenticatedFetch } from "../services/authenticatedFetch";
 
 interface AuthContextType {
   user: User | null;
@@ -178,20 +179,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     clearSession();
   };
 
-  const verifyUser = async () => {
+  
+  /**
+   * Verifies the current user, refreshing an expired access token and retrying
+   * the request once when necessary.
+   *
+   * Only clears the session if authentication still fails with a 401.
+   * Other server or network errors should not automatically log the user out.
+   *
+   * @returns True if the user is verified, otherwise false.
+   */
+  const verifyUser = async (): Promise<boolean> => {
     if (!token) {
       return false;
     }
 
     try {
-      const response = await fetch("/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(
+        "/api/auth/me",
+        token,
+        refreshAccessToken,
+      );
+
+      if (response.status === 401) {
+        clearSession();
+        return false;
+      }
 
       if (!response.ok) {
-        clearSession();
         return false;
       }
 
@@ -204,6 +219,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false;
     }
   };
+
 
   return (
     <AuthContext.Provider
