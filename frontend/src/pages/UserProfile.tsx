@@ -16,7 +16,7 @@ import { routeMap } from './Chat/constants';
 export default function UserProfile() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
-  const { token } = useAuth();
+  const { token, refreshAccessToken } = useAuth();
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export default function UserProfile() {
     }
     setLoading(true);
     setError(null);
-    getProfile(Number(userId), token)
+    getProfile(Number(userId), token, refreshAccessToken)
       .then((data) => {
         setProfile(data);
         setLoading(false);
@@ -39,7 +39,7 @@ export default function UserProfile() {
         setError(err.message);
         setLoading(false);
       });
-  }, [token, userId]);
+  }, [token, userId, refreshAccessToken]);
 
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];

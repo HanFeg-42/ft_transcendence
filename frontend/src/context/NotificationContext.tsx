@@ -34,7 +34,7 @@ const NotificationContext = createContext<NotificationContextValue | undefined>(
 );
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuth();
+  const { token, refreshAccessToken } = useAuth();
   const { pathname } = useLocation();
   const refreshId = useRef<symbol | null>(null);
 
@@ -53,8 +53,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     try {
       const [notificationData, count] = await Promise.all([
-        getNotifications(token),
-        getUnreadCount(token),
+        getNotifications(token, refreshAccessToken),
+        getUnreadCount(token, refreshAccessToken),
       ]);
 
       if (requestId !== refreshId.current) return;
@@ -63,7 +63,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
       let nextCursor = notificationData.nextCursor;
       while (nextCursor !== null) {
-        const page = await getNotifications(token, { cursor: nextCursor });
+        const page = await getNotifications(token, refreshAccessToken, { cursor: nextCursor });
         if (requestId !== refreshId.current) return;
         setNotifications((current) => [...current, ...page.notifications]);
         nextCursor = page.nextCursor;
@@ -75,7 +75,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } finally {
       if (requestId === refreshId.current) setLoading(false);
     }
-  }, [token]);
+  }, [token, refreshAccessToken]);
 
 
   useEffect(() => {
@@ -155,10 +155,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
   }, [token, refreshNotifications, pathname]);
 
-  const markAsRead = async (id: string) => {
+  /**
+   * Marks one notification as read and updates the local UI.
+   *
+   * The service handles access-token refresh and retries the request
+   * once if the original token has expired.
+   *
+   * @param id - The ID of the notification to mark as read.
+   */
+  const markAsRead = useCallback(async (id: string) => {
     if (!token) return;
 
-    await markNotificationRead(token, id);
+    await markNotificationRead(token, id, refreshAccessToken);
 
     setNotifications((current) =>
       current.map((notification) =>
@@ -169,12 +177,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     );
 
     setUnreadCount((count) => Math.max(0, count - 1));
-  };
+  }, [token, refreshAccessToken]);
 
-  const markAllAsRead = async () => {
+  /**
+   * Marks all notifications as read and updates the local UI.
+   *
+   * The service handles access-token refresh and retries the request
+   * once if the original token has expired.
+   */
+  const markAllAsRead = useCallback(async () => {
     if (!token) return;
 
-    await markAllNotificationsRead(token);
+    await markAllNotificationsRead(token, refreshAccessToken);
 
     setNotifications((current) =>
       current.map((notification) => ({
@@ -184,7 +198,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     );
 
     setUnreadCount(0);
-  };
+  }, [token, refreshAccessToken]);
 
   return (
     <NotificationContext.Provider

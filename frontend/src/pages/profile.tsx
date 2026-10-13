@@ -50,22 +50,23 @@ export default function Profile() { // 2. Nom de composant en Majuscule
     if (!token) return;
 
     const fetchProfile = userId
-      ? getProfileById(token, parseInt(userId, 10))   // profil public
-      : getMyProfile(token);                          // profil perso
+      ? getProfileById(token, parseInt(userId, 10), refreshAccessToken)  // profil public
+      : getMyProfile(token, refreshAccessToken);                          // profil perso
 
     fetchProfile
       .then(setProfile)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [token, userId]);
+  }, [token, userId, refreshAccessToken]);
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
     if (path) navigate(path);
   };
 
+  // Updates the profile and allows the request to recover from an expired access token.
   const handleSave = async (data: { username?: string; bio?: string; avatar?: string }) => {
     if (!token) throw new Error('No token');
-    const updated = await updateMyProfile(token, data);
+    const updated = await updateMyProfile(token, data, refreshAccessToken);
     setProfile(updated);   // ← met à jour l'UI
   };
 

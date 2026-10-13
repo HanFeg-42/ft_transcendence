@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import type { ReactNode } from "react";
@@ -29,7 +30,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  // Shares an in-progress refresh request across all callers in this provider.
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
+  
   useEffect(() => {
     let isActive = true;
 
@@ -71,31 +74,55 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setToken(token);
   };
 
+  /**
+   * Refreshes the access token using the session's HTTP-only refresh cookie.
+   *
+   * Concurrent callers reuse the same in-progress request, preventing
+   * duplicate refresh calls from API requests and the proactive timer.
+   *
+   * @returns The new access token, or null if refresh fails.
+   */
   const refreshAccessToken = useCallback(async (): Promise<string | null> => {
-    try {
-      const response = await fetch("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include",
-      });
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
+    }
 
-      if (response.status === 401) {
-        clearSession();
+    const refreshPromise = (async (): Promise<string | null> => {
+      try {
+        const response = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (response.status === 401) {
+          clearSession();
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Token refresh failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        setUser(data.user);
+        setToken(data.token);
+
+        return data.token;
+      } catch (error) {
+        console.error("Failed to refresh access token:", error);
         return null;
       }
+    })();
 
-      if (!response.ok) {
-        throw new Error(`Token refresh failed: ${response.status}`);
+    refreshPromiseRef.current = refreshPromise;
+
+    try {
+      return await refreshPromise;
+    } finally {
+      if (refreshPromiseRef.current === refreshPromise) {
+        refreshPromiseRef.current = null;
       }
-
-      const data = await response.json();
-
-      setUser(data.user);
-      setToken(data.token);
-
-      return data.token;
-    } catch (error) {
-      console.error("Failed to refresh access token:", error);
-      return null;
     }
   }, []);
 
