@@ -5,17 +5,21 @@
    ═══════════════════════════════════════════ */
 .mazeContainer {
     position: relative;
-    background-color: #000;
+    /* ⭐ Fond semi-transparent */
+    background-color: rgba(0, 0, 0, 0.4);
+    
     border: 4px solid #ff00ff;
     box-shadow:
         0 0 20px #ff00ff,
         inset 0 0 20px rgba(255, 0, 255, 0.2);
     border-radius: 12px;
     margin: 0 auto;
-    /* ⭐ UN SEUL box-sizing : content-box pour que le border s'ajoute */
     box-sizing: content-box;
-    /* ⭐ UN SEUL image-rendering */
     image-rendering: pixelated;
+    
+    /* ⭐ Optionnel : verre dépoli */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 /* ═══════════════════════════════════════════
@@ -69,9 +73,6 @@
     z-index: 10;
     background-color: #ffff00;
     border-radius: 50%;
-    box-shadow:
-        0 0 10px #ffff00,
-        0 0 20px #ffff00;
     transform-origin: center center;
     transition: transform 0.1s linear;
     /* ⭐ Nécessaire pour positionner la bouche */
@@ -91,7 +92,7 @@
     /* ⭐ Animation de la bouche */
     transform-origin: left center;
     animation: chomp 0.4s infinite alternate;
-    background-color: #000;
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 @keyframes chomp {

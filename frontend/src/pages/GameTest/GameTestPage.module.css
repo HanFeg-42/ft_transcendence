@@ -1,4 +1,5 @@
 .page {
+    position: relative; /* ⭐ Nécessaire pour positionner le fond absolu */
     display: grid;
     grid-template-areas:
         "top    top    top"
@@ -8,14 +9,30 @@
     gap: 30px;
     padding: 40px;
     min-height: 100vh;
-    background-color: #000;
-    background-image:
-        linear-gradient(rgba(255, 0, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 0, 255, 0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+    overflow: hidden; /* ⭐ Masque les bords qui dépassent à cause du scale */
+
     justify-content: center;
     align-content: center;
     font-family: 'Press Start 2P', 'Courier New', monospace;
+    z-index: 1; /* ⭐ Force le contenu à rester au-dessus */
+}
+.page::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+        url('../../assets/images/bg.jpg');    
+    background-size: cover;
+    background-position: center;
+    
+    filter: blur(8px); /* ⭐ Applique le flou uniquement ici */
+    transform: scale(1.1); /* ⭐ Évite les bordures blanches dues au flou */
+    z-index: -1; /* ⭐ Place le fond derrière le texte */
 }
 
 /* ⭐ Timer centré en haut */
