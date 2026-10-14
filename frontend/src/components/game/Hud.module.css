@@ -68,7 +68,7 @@
 /* ⭐ Conteneur : alignement vertical */
 .hearts {
     display: flex;
-    gap: 30px;                 /* Espace entre les cœurs */
+    gap: 4vw;                 /* Espace entre les cœurs */
     align-items: center;
     margin-top: 8px;
 }
@@ -119,4 +119,47 @@
     font-family: 'Press Start 2P', monospace;
     text-align: center;
     padding: 20px;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile paysage (< 900px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 900px) and (orientation: landscape) {
+    .playerBlock {
+        padding: 6px;
+        min-width: 60px;
+        gap: 4px;
+        border-width: 1px;
+    }
+
+    .label {
+        font-size: 7px;
+        letter-spacing: 1px;
+    }
+
+    .value {
+        font-size: 10px;
+    }
+
+    .livesLabel {
+        font-size: 7px;
+        margin-top: 2px;
+    }
+
+    .hearts {
+        gap: 2px;
+    }
+
+    .heart {
+        transform: scale(0.5);
+    }
+
+    .timer {
+        font-size: 16px;
+        letter-spacing: 2px;
+    }
+
+    .timerBlock {
+        padding: 4px 12px;
+    }
 }

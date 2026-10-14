@@ -26,11 +26,11 @@
     
     background-image: 
         linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-        url('../../assets/images/bg.jpg');    
+        url('../../assets/images/bg7.jpg');    
     background-size: cover;
     background-position: center;
     
-    filter: blur(8px); /* ⭐ Applique le flou uniquement ici */
+    filter: blur(5px); /* ⭐ Applique le flou uniquement ici */
     transform: scale(1.1); /* ⭐ Évite les bordures blanches dues au flou */
     z-index: -1; /* ⭐ Place le fond derrière le texte */
 }
@@ -59,4 +59,26 @@
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Tablette (< 1200px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 1200px) {
+    .page {
+        grid-template-columns: 150px auto 150px;
+        gap: 20px;
+        padding: 20px;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile paysage (< 900px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 900px) and (orientation: landscape) {
+    .page {
+        grid-template-columns: 80px auto 80px;
+        gap: 10px;
+        padding: 10px;
+    }
 }

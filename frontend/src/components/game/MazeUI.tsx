@@ -2,8 +2,8 @@ import React from 'react';
 import type { GameState } from '../../../../shared/types/game-types';
 import { MAZES, DEFAULT_MAZE_ID } from '../../engine/maze';
 import { TICKS_PER_TILE } from '../../engine/movement';
-import { CELL_SIZE } from '../../constants';
 import styles from './MazeUI.module.css';
+import { useCellSize } from '../../hooks/useCellSize';
 
 interface MazeUIProps {
     state: GameState;
@@ -16,15 +16,16 @@ const GHOST_COLORS = ['#ff0000', '#ffb8ff', '#00ffff', '#ffb851'];
 const getPixelPosition = (
     tile: { x: number; y: number },
     dir: string | null,
-    step: number
+    step: number,
+    CellSize: number
 ): { x: number; y: number } => {
-    const baseX = tile.x * CELL_SIZE;
-    const baseY = tile.y * CELL_SIZE;
+    const baseX = tile.x * CellSize;
+    const baseY = tile.y * CellSize;
 
     if (!dir || step === 0) return { x: baseX, y: baseY };
 
     const progress = step / TICKS_PER_TILE;
-    const offset = progress * CELL_SIZE;
+    const offset = progress * CellSize;
 
     switch (dir) {
         case 'UP':    return { x: baseX, y: baseY - offset };
@@ -58,7 +59,8 @@ const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
 
     const height = maze.length;
     const width = maze[0].length;
-
+    const CELL_SIZE = useCellSize(width);
+    
     return (
         <div
             className={styles.mazeContainer}
@@ -107,7 +109,7 @@ const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
 
             {/* 3. JOUEURS — SIMPLIFIÉ : juste l'appel aux fonctions */}
             {players.map((player) => {
-                const pos = getPixelPosition(player.tile, player.dir, player.step);
+                const pos = getPixelPosition(player.tile, player.dir, player.step, CELL_SIZE);
                 return (
                     <div
                         key={`player-${player.id}`}
@@ -125,7 +127,7 @@ const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
 
             {/* 4. CHASERS */}
             {chasers.map((chaser) => {
-                const pos = getPixelPosition(chaser.tile, chaser.dir, chaser.step);
+                const pos = getPixelPosition(chaser.tile, chaser.dir, chaser.step, CELL_SIZE);
                 const color = GHOST_COLORS[chaser.id % GHOST_COLORS.length];
                 return (
                     <svg

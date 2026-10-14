@@ -42,7 +42,7 @@ export const Card: React.FC<CardProps> = ({
       ${glowStyle}
       ${textStyle}
       ${opacity}
-      p-4 sm:p-5 md:p-6
+      p-3 sm:p-5 md:p-6
       rounded-xl
       overflow-hidden
       transition-all

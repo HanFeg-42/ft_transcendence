@@ -1,20 +1,23 @@
-// frontend/src/pages/GameTest/GameTestPage.tsx
-// import { useCallback } from 'react';
 import React from 'react';
 import MazeUI from '../../components/game/MazeUI';
 import { useLocalGame } from '../../hooks/useLocalGame';
 import { useKeyboard } from '../../hooks/useKeyboard';
-// import Hud from '../../components/game/Hud';
 import HudTop from '../../components/game/HudTop';
+
+import type { Direction } from '../../../../shared/types/game-types';
 import HudPlayer from '../../components/game/HudPlayer';
 import styles from './GameTestPage.module.css';
-import type { Direction } from '../../../../shared/types/game-types';
+import { RotDev } from '../../components/game/RotateDevice';
+import MobileControls from "../../components/game/MobileControls"
 
 const GameTestPage: React.FC = () => {
     const { state, sendInput } = useLocalGame('player-1');
     useKeyboard((dir: Direction) => sendInput(dir));
 
     return (
+        <>
+        <RotDev/>
+        <MobileControls onInput={sendInput}/>
         <div className={styles.page}>
             {/* Timer centré en haut */}
             <div className={styles.topBar}>
@@ -36,6 +39,7 @@ const GameTestPage: React.FC = () => {
                 <HudPlayer player={state.players[1]} />
             </div>
         </div>
+        </>
     );
 };
 
