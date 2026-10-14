@@ -2,7 +2,7 @@
 // "export default" lets other files import it with any name.
 import { MOCK_FRIENDS, routeMap } from './constants';
 import FriendsSidebar from './FriendsSidebar';
-import type { Friend } from './types';
+import type { Friend, Message } from './types';
 import { useState, useRef, useEffect } from 'react';
 // import { formatMessageTimestamp } from './formatTimestamp'
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +16,7 @@ import MessageInput from './MessageInput';
 import ConversationHeader from './ConversationHeader';
 import useBlockStatus from './useBlockStatus';
 import NewChatModal from './NewChatModal';
+import GameInviteModal from './GameInviteModal'
 
 
 
@@ -33,28 +34,73 @@ export default function Chatt() {
   const [selectedFriend, setSelectedFriend] = useState(visibleFriends[0]);
   const { historyMessages, historyLoading, historyError } = useChatHistory(selectedFriend.id, token);
   const url = token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '';
-  const { messages, presence, sendMessage,
-     typing, sendTyping, sendRead, readAt } = useChatSocket(url);
+  const { messages, presence, sendMessage, typing, 
+    sendTyping, sendRead, readAt, sendInvite, sendInviteReply } = useChatSocket(url);
   const [draft, setDraft] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);// empty flag pin
   const { iBlockedThem, theyBlockedMe, toggleBlock } = useBlockStatus(selectedFriend?.id, token);
   const isBlocked = iBlockedThem || theyBlockedMe;
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const lastTypingSentRef = useRef<Record<number, number>>({});
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+
+
 
 
 
   //merge old and live messages
-  const liveForFriend = messages.filter((msg) => {
-    return (msg.sender_id === selectedFriend.id || msg.receiver_id === selectedFriend.id)
-  });
-  const conversation = [...historyMessages, ...liveForFriend].filter(
-    (message, index, all) => all.findIndex((m) => m.id === message.id) === index
-  ); 
+  // const liveForFriend = messages.filter((msg) => {
+  //   return (msg.sender_id === selectedFriend.id || msg.receiver_id === selectedFriend.id)
+  // });
+  // const conversation = [...historyMessages, ...liveForFriend].filter(
+  //   (message, index, all) => all.findIndex((m) => m.id === message.id) === index
+  // ); 
+
+    const liveForFriend = messages.filter((msg) => {
+      return (msg.sender_id === selectedFriend.id || msg.receiver_id === selectedFriend.id);
+    });
+
+    // Use a Map keyed by id so later live updates override older history items
+    const conversationMap = new Map<number, Message>();
+    [...historyMessages, ...liveForFriend].forEach((msg) => {
+      conversationMap.set(msg.id, msg);
+    });
+    const conversation = Array.from(conversationMap.values());
+
+  //array containing all of friends for the sidebar list
+  const visibleFriendsLive = visibleFriends.map((friend) => ({
+    ...friend, // Copy all existing friend properties (name, avatar, etc.)
+    status: presence[friend.id] ?? friend.status // Override status if live data exists
+  }));
+  //single object representing just the one person currently chatting with.
+  const selectedFriendLive = { 
+    ...selectedFriend, 
+    status: presence[selectedFriend.id] ?? selectedFriend.status 
+  };
+  const incomingInvite = [...messages]
+  .reverse()
+  .find(
+    (msg) => 
+      msg.kind === 'game_invite' && 
+      msg.meta?.status === 'pending' && 
+      msg.receiver_id === currentUserId
+  );
+  // 1. Check if there is any pending invite in the current conversation
+  const hasPendingInvite = conversation.some(
+    (msg) => msg.kind === 'game_invite' && msg.meta?.status === 'pending'
+  );
+
+  // 2. Find the friend object corresponding to the incoming invite sender
+  const inviteSender = visibleFriends.find(
+    (f) => incomingInvite && f.id === incomingInvite.sender_id
+  );
+
+
+
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation.length, selectedFriend.id, historyLoading, typing[selectedFriend.id]])
-
 
   // READ Effect 1: Fires when conversation length changes or active friend changes
   useEffect(() => {
@@ -79,6 +125,8 @@ export default function Chatt() {
 
 
 
+
+
   if(!user || !token){
       return (
         <Background>
@@ -93,6 +141,7 @@ export default function Chatt() {
   function handleSelectFriend(friend: Friend)
   {
     setSelectedFriend(friend);
+    setIsInviteOpen(false);
   }
   function handleSelectTab(tab: string)
   {
@@ -119,19 +168,17 @@ export default function Chatt() {
           lastTypingSentRef.current[selectedFriend.id] = now;
         }
       }
-}
+  }
 
+  function handleSendInvite() {
+    sendInvite(selectedFriend.id);
+    setIsInviteOpen(false);
+  }
 
-  //array containing all of friends for the sidebar list
-  const visibleFriendsLive = visibleFriends.map((friend) => ({
-    ...friend, // Copy all existing friend properties (name, avatar, etc.)
-    status: presence[friend.id] ?? friend.status // Override status if live data exists
-  }));
-  //single object representing just the one person currently chatting with.
-  const selectedFriendLive = { 
-    ...selectedFriend, 
-    status: presence[selectedFriend.id] ?? selectedFriend.status 
-  };
+  function handleStartGame(gameId: string) {
+    navigate(`${routeMap['GAME'] || '/game'}/${gameId}`); // Or use your specific GAME_ROUTE constant
+  }
+
 
 
 
@@ -154,6 +201,8 @@ export default function Chatt() {
           friend={selectedFriendLive}
           iBlockedThem={iBlockedThem} 
           toggleBlock={toggleBlock}
+          onInviteClick={() => setIsInviteOpen(true)}
+          inviteDisabled={isBlocked || hasPendingInvite}
           />
 
           <MessageList 
@@ -165,6 +214,23 @@ export default function Chatt() {
           messagesEndRef={messagesEndRef}
           isTyping={typing[selectedFriend.id] ?? false}
           friendReadAt={readAt[selectedFriend.id] ?? null}
+          onStartGame={handleStartGame}
+          />
+
+          <GameInviteModal 
+          isOpen={isInviteOpen && !incomingInvite}
+          isReceiver={false}
+          friendName={selectedFriend.username}
+          onConfirm={handleSendInvite}
+          onCancel={() => setIsInviteOpen(false)}
+          />
+
+          <GameInviteModal 
+          isOpen={Boolean(incomingInvite)}
+          isReceiver={true}
+          friendName={inviteSender?.username ?? 'A friend'}
+          onConfirm={() => incomingInvite && sendInviteReply(incomingInvite.id, true)}
+          onCancel={() => incomingInvite && sendInviteReply(incomingInvite.id, false)}
           />
 
           <MessageInput 

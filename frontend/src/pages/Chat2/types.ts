@@ -15,4 +15,6 @@ export interface Message {
   content: string;
   created_at: string;
   read_at: string | null;
+  kind: 'text' | 'game_invite' | 'system';
+  meta: { gameId?: string; status?: 'pending' | 'accepted' | 'declined' } | null;
 }

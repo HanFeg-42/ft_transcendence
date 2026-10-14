@@ -1,6 +1,6 @@
 // Props = the data a parent gives to a child component.
 import type { Friend } from './types';
-
+export const GAME_ROUTE = '/game-ws'   //tmp
 
 export const MOCK_FRIENDS: Friend[] = [
   { id: 1, username: 'user1', status: 'online' },

@@ -2,8 +2,9 @@ import type { Friend, Message } from './types';
 import { formatMessageTimestamp } from './formatTimestamp'
 import type { RefObject } from 'react';
 import { NEON_SCROLLBAR } from '../Chat/constants';
-// import PacManIcon from '../Chat/PacManIcon';
-// import { ICONS } from '../../utils/icons';
+import PacManIcon from './PacManIcon';
+import { ICONS } from '../../utils/icons';
+import PixelButton from '../../components/ui/PixelButton';
 
 
 
@@ -16,6 +17,7 @@ interface MessageListProps{
     messagesEndRef: RefObject<HTMLDivElement | null>;
     isTyping: boolean;
     friendReadAt: string | null;
+    onStartGame: (gameId: string) => void;
 }
 
 
@@ -27,7 +29,8 @@ export default function MessageList(
   error,
   messagesEndRef,
   isTyping,
-  friendReadAt
+  friendReadAt,
+  onStartGame
 } : MessageListProps){
   
   if(error)
@@ -38,12 +41,67 @@ export default function MessageList(
     return <p className="font-vt323 text-gray-600 text-lg text-center mt-8">No messages yet</p>
 
 
+  // Compute the id of the last game invite message (copy array before reversing)
+    const lastInviteId = [...conversation]
+        .reverse()
+        .find((msg) => msg.kind === 'game_invite')?.id;
+
   
   return (
     <div className={`flex-1 min-h-0 flex flex-col gap-4 p-5 overflow-y-auto overflow-x-hidden overscroll-contain ${NEON_SCROLLBAR}`}>
       {conversation.map((message) => {
           const isOwn = message.sender_id === currentUserId;
           const isRead = message.read_at != null || (friendReadAt != null && message.created_at <= friendReadAt);           
+
+          if (message.kind === 'system') return null;
+
+
+
+
+          // 2. Render game invites as custom rows
+          if (message.kind === 'game_invite') {
+              const status = message.meta?.status;
+              const gameId = message.meta?.gameId;
+
+              return (
+                  <div key={message.id} className="flex justify-center my-2 w-full">
+                      <div className="flex flex-col items-center gap-2 px-4 py-3 bg-pacova-surface border-2 border-pacova-green/40 pixel-corners-3step max-w-sm w-full text-center">
+                          <div className="flex items-center gap-2">
+                              {status === 'declined' ? (
+                                  <img src={ICONS['gost-red']} alt="" className="w-6 h-6 image-rendering-pixelated" />
+                              ) : (
+                                  <PacManIcon className="w-6 h-6" />
+                              )}
+                              <span className="font-vt323 uppercase text-sm tracking-wide">
+                                  {status === 'pending' && (
+                                      isOwn ? "Invitation sent" : `${selectedFriend.username} invited you`
+                                  )}
+                                  {status === 'accepted' && (
+                                      <span className="text-pacova-green">Invite accepted</span>
+                                  )}
+                                  {status === 'declined' && (
+                                      <span className="text-red-400">Invite declined</span>
+                                  )}
+                              </span>
+                          </div>
+
+                          {status === 'accepted' && message.id === lastInviteId && gameId && (
+                              <PixelButton 
+                                  variant="filled-green" 
+                                  size="sm" 
+                                  onClick={() => onStartGame(gameId)}
+                              >
+                                  Start Game
+                              </PixelButton>
+                          )}
+                      </div>
+                  </div>
+              );
+          }
+
+
+
+
 
           return (
 					<div className={`flex flex-col max-w-[80%] min-w-0 ${

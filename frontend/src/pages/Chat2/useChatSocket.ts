@@ -3,7 +3,7 @@ import { useRef, useState, useEffect  } from 'react';
 import type { 
 //   ChatMessageOutgoing, 
   ChatMessageIncoming, 
-  ChatClientMessage, 
+//   ChatClientMessage, 
   ChatServerMessage,
 } from '../../../../shared/types/chat-types';
 import { ChatEvents } from '../../../../shared/types/chat-types';
@@ -94,11 +94,27 @@ export default function useChatSocket(url: string)
                     setReadAt((prev) => ({ ...prev, [readerId]: readTimestamp }));
                     break;
                 }
+
+                case ChatEvents.GAME_INVITE: {
+                    setMessages(prevMessages => [...prevMessages, packet.data]);
+                    break;
+                }
+                case ChatEvents.GAME_INVITE_REPLY: {
+                    setMessages((prev) => {
+                        const index = prev.findIndex((msg) => msg.id === packet.data.id);
+                        if (index !== -1) {
+                            // Replace existing message by id
+                            const updated = [...prev];
+                            updated[index] = packet.data;
+                            return updated;
+                        }
+                        // Otherwise add it
+                        return [...prev, packet.data];
+                    });
+                    break;
+                }
             }
         }
-
-        
-
 
         return () => {
             // Clear all active typing timeout timers
@@ -107,45 +123,56 @@ export default function useChatSocket(url: string)
         };
     }, [url]);
 
-    function sendMessage(receiver_id: number, content: string)
-    {
-        if(!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN)
-            return;
 
-        const outgoing: ChatClientMessage = {
+
+
+
+
+
+    function sendPacket(packet: any) {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify(packet));
+        }
+    }
+
+
+    function sendMessage(receiver_id: number, content: string){
+        sendPacket({
             event: ChatEvents.MESSAGE,
             data: { receiver_id, content}
-        }
-
-        socketRef.current.send(JSON.stringify(outgoing));
+        });
     }
 
 
     function sendTyping(receiverId: number) {
-        if(!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN)
-            return;
-        
-        const outgoing: ChatClientMessage = {
+        sendPacket({
             event: ChatEvents.TYPING,
             data: { receiver_id: receiverId }
-        }
-
-        socketRef.current.send(JSON.stringify(outgoing));
+        });
     }
 
-    function sendRead(senderId: number)
-    {
-        if(!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN)
-            return;
-        
-        const outgoing: ChatClientMessage = {
+    function sendRead(senderId: number){
+        sendPacket({
             event: ChatEvents.READ,
             data: { sender_id: senderId }
-        }
-
-        socketRef.current.send(JSON.stringify(outgoing));
+        });
     }
 
+    function sendInvite(receiverId: number) {
+        sendPacket({
+            event: ChatEvents.GAME_INVITE,
+            data: { receiver_id: receiverId }
+        });
+    }
+
+    function sendInviteReply(messageId: number, accept: boolean) {
+        sendPacket({
+            event: ChatEvents.GAME_INVITE_REPLY,
+            data: { message_id: messageId, accept: accept }
+        });
+    }
+
+
     return { isConnected, messages, presence,
-         sendMessage, typing, sendTyping, sendRead,readAt };
+         sendMessage, typing, sendTyping, sendRead,readAt, sendInvite, sendInviteReply };
 }

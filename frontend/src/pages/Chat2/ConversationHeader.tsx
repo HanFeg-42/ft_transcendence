@@ -11,13 +11,17 @@ interface ConversationHeaderProps{
   friend: Friend;
   iBlockedThem: boolean;
   toggleBlock: () => void;
+  onInviteClick: () => void;
+  inviteDisabled: boolean;
 }
 
 
 export default function ConversationHeader({
   friend, 
   iBlockedThem, 
-  toggleBlock}: ConversationHeaderProps)
+  toggleBlock,
+  onInviteClick,
+  inviteDisabled}: ConversationHeaderProps)
 {
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const [confirmMode, setConfirmMode] = useState<'block' | null>(null);
@@ -80,8 +84,8 @@ export default function ConversationHeader({
 
             <button
               type="button"
-              // onClick={onInviteClick}
-              // disabled={inviteDisabled}
+              onClick={onInviteClick}
+              disabled={inviteDisabled}
               className={`justify-self-center flex items-center gap-2 px-4 py-1.5 rounded-full border-2 border-amber-400/70 bg-black/60 font-pixelify text-amber-300 text-sm uppercase tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.5)] hover:brightness-125 disabled:opacity-30 disabled:cursor-not-allowed transition-all ${NO_GLOW ? '' : ''}`}
             >
               <PacManIcon className="w-5 h-5" />
