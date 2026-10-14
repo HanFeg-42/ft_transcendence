@@ -91,7 +91,13 @@ export default function useChatSocket(url: string)
                     const readerId = packet.data.reader_id;
                     const readTimestamp = packet.data.read_at;
 
-                    setReadAt((prev) => ({ ...prev, [readerId]: readTimestamp }));
+                    setReadAt((prev) => {
+                        const existingTimestamp = prev[readerId];
+                        if (!existingTimestamp || readTimestamp > existingTimestamp) {
+                            return { ...prev, [readerId]: readTimestamp };
+                        }
+                        return prev;
+                    });
                     break;
                 }
 

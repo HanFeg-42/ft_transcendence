@@ -1,8 +1,8 @@
 // A React component is just a function that returns JSX (HTML-like code).
 // "export default" lets other files import it with any name.
-import { MOCK_FRIENDS, routeMap } from './constants';
+import { MOCK_FRIENDS, routeMap, GAME_ROUTE } from './constants';
 import FriendsSidebar from './FriendsSidebar';
-import type { Friend, Message } from './types';
+import type { Friend } from './types';
 import { useState, useRef, useEffect } from 'react';
 // import { formatMessageTimestamp } from './formatTimestamp'
 import { useAuth } from '../../context/AuthContext';
@@ -38,8 +38,8 @@ export default function Chatt() {
     sendTyping, sendRead, readAt, sendInvite, sendInviteReply } = useChatSocket(url);
   const [draft, setDraft] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);// empty flag pin
-  const { iBlockedThem, theyBlockedMe, toggleBlock } = useBlockStatus(selectedFriend?.id, token);
-  const isBlocked = iBlockedThem || theyBlockedMe;
+  const { iBlockedThem, toggleBlock } = useBlockStatus(selectedFriend?.id, token);
+  const isBlocked = iBlockedThem;
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const lastTypingSentRef = useRef<Record<number, number>>({});
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -48,24 +48,24 @@ export default function Chatt() {
 
 
 
-  //merge old and live messages
-  // const liveForFriend = messages.filter((msg) => {
-  //   return (msg.sender_id === selectedFriend.id || msg.receiver_id === selectedFriend.id)
-  // });
-  // const conversation = [...historyMessages, ...liveForFriend].filter(
-  //   (message, index, all) => all.findIndex((m) => m.id === message.id) === index
-  // ); 
+  // merge old and live messages
+  const liveForFriend = messages.filter((msg) => {
+    return (msg.sender_id === selectedFriend.id || msg.receiver_id === selectedFriend.id)
+  });
+  const conversation = [...historyMessages, ...liveForFriend].filter(
+    (message, index, all) => all.findIndex((m) => m.id === message.id) === index
+  ); 
 
-    const liveForFriend = messages.filter((msg) => {
-      return (msg.sender_id === selectedFriend.id || msg.receiver_id === selectedFriend.id);
-    });
+    // const liveForFriend = messages.filter((msg) => {
+    //   return (msg.sender_id === selectedFriend.id || msg.receiver_id === selectedFriend.id);
+    // });
 
-    // Use a Map keyed by id so later live updates override older history items
-    const conversationMap = new Map<number, Message>();
-    [...historyMessages, ...liveForFriend].forEach((msg) => {
-      conversationMap.set(msg.id, msg);
-    });
-    const conversation = Array.from(conversationMap.values());
+    // // Use a Map keyed by id so later live updates override older history items
+    // const conversationMap = new Map<number, Message>();
+    // [...historyMessages, ...liveForFriend].forEach((msg) => {
+    //   conversationMap.set(msg.id, msg);
+    // });
+    // const conversation = Array.from(conversationMap.values());
 
   //array containing all of friends for the sidebar list
   const visibleFriendsLive = visibleFriends.map((friend) => ({
@@ -77,7 +77,7 @@ export default function Chatt() {
     ...selectedFriend, 
     status: presence[selectedFriend.id] ?? selectedFriend.status 
   };
-  const incomingInvite = [...messages]
+  const incomingInvite = [...conversation]
   .reverse()
   .find(
     (msg) => 
@@ -176,7 +176,8 @@ export default function Chatt() {
   }
 
   function handleStartGame(gameId: string) {
-    navigate(`${routeMap['GAME'] || '/game'}/${gameId}`); // Or use your specific GAME_ROUTE constant
+    console.log("tmp ", gameId);
+    navigate(GAME_ROUTE); // Or use your specific GAME_ROUTE constant
   }
 
 

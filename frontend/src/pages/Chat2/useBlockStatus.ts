@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function useBlockStatus(friendId: number, token: string | null){
   const [iBlockedThem, setIBlockedThem] = useState<boolean>(false);
-  const [theyBlockedMe, setTheyBlockedMe] = useState<boolean>(false);
+  // const [theyBlockedMe, setTheyBlockedMe] = useState<boolean>(false);
 
 
     useEffect(() => {
@@ -20,7 +20,7 @@ export default function useBlockStatus(friendId: number, token: string | null){
                   const data = await response.json();
                   if (!isCancelled) {
                     setIBlockedThem(data.iBlockedThem); 
-                    setTheyBlockedMe(data.theyBlockedMe);
+                    // setTheyBlockedMe(data.theyBlockedMe);
                   }
                 }
               } catch (err) {
@@ -47,5 +47,5 @@ export default function useBlockStatus(friendId: number, token: string | null){
           }
     }
 
-    return { iBlockedThem, theyBlockedMe, toggleBlock };
+    return { iBlockedThem, toggleBlock };
 }
