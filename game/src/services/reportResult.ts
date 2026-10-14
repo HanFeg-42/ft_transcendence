@@ -1,4 +1,4 @@
-import { GameState } from "../../shared/types/game-types";
+import { GameState } from "../../../shared/types/game-types";
 
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://user:3004";
 

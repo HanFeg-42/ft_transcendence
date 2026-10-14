@@ -37,6 +37,7 @@ export const addPlayer = (playerId: string, state: GameState) => {
     lives: 3,
     score: 0,
     connected: true,
+    joinedAt: Date.now(),
   });
 };
 
@@ -66,6 +67,7 @@ export const createGame = (
       lives: 3,
       score: 0,
       connected: true,
+      joinedAt: Date.now(),
     },
   ];
 
@@ -86,6 +88,7 @@ export const createGame = (
     chasers,
     pellets: parsePellets(maze),
     timeRemaining: timeLimit,
+    timeLimit,
     vulnerableTimer: 0,
     mazeId,
   };

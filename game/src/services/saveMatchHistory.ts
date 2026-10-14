@@ -1,13 +1,13 @@
-import { GameState } from "../../shared/types/game-types";
-import { prisma } from "./prisma";
+import { GameState } from "../../../shared/types/game-types";
+import { prisma } from "../prisma";
 
-export const saveMatch = async (state: GameState, startedAt: Date) => {
+const saveMatch = async (state: GameState, startedAt: Date) => {
   try {
     await prisma.match.create({
       data: {
         status: "finished",
         mazeSeed: state.mazeId,
-        // TODO: timeLimitSeconds - save the real time limit instead of the default (360)
+        timeLimitSeconds : state.timeLimit,
         startedAt,
         endedAt: new Date(),
         winnerUserId: state.winnerId ? Number(state.winnerId) : null,
@@ -16,13 +16,13 @@ export const saveMatch = async (state: GameState, startedAt: Date) => {
             userId: Number(p.id),
             slot: index + 1,
             result: !state.winnerId
-              ? "draw"
+              ? "DRAW"
               : state.winnerId === p.id
-                ? "win"
-                : "loss",
+                ? "WIN"
+                : "LOSS",
             score: p.score,
             livesRemaining: p.lives,
-            // TODO: joinedAt - save the real join time instead of the default
+            joinedAt: new Date(p.joinedAt!),
           })),
         },
       },
@@ -31,3 +31,5 @@ export const saveMatch = async (state: GameState, startedAt: Date) => {
     console.error("[GAME-SERVICE] Failed to save match history:", e);
   }
 };
+
+export default saveMatch;

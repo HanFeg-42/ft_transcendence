@@ -9,14 +9,14 @@ import {
 } from "../../shared/types/game-types";
 import { endSession, getSession, joinSession } from "./gameSessions";
 import { applyInput, tick, removePlayer, finishMatch } from "./engine/engine";
-import { saveMatch } from "./matchHistory";
-import { reportResult } from "./reportResult";
+import saveMatch from "./services/saveMatchHistory";
+import { reportResult } from "./services/reportResult";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so
 // it persists across all connections, not reset per-client.
 const gameRooms = new Map<string, Set<WebSocket>>();
-const playerSocket = new Map<string, Websocket>();
+const playerSocket = new Map<string, WebSocket>();
 const activeLoops = new Map<string, NodeJS.Timeout>();
 const pendingStarts = new Map<string, NodeJS.Timeout>();
 const START_DELAY_MS = 3000;
@@ -66,7 +66,11 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 
   // Listen for client disconnects (tab closed, lost connection)
   ws.on("close", (code) => {
-    handleClose(ws, code, userId);
+    try {
+      handleClose(ws, code, userId);
+    } catch (e) {
+      console.error("[GAME-SERVICE] Close handler failed:", e);
+    }
   });
 
   // Listen for low-level socket errors
@@ -146,11 +150,19 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         const startedAt = new Date();
 
         const loopId = setInterval(() => {
-          if (state.players.every((p) => p.connected)) tick(state);
-          broadcast(gameId, GameEvents.GAME_STATE, state);
-          if (state.status !== "playing") {
-            saveMatch(state, startedAt);
-            reportResult(state);
+          try {
+            if (state.players.every((p) => p.connected)) tick(state);
+            broadcast(gameId, GameEvents.GAME_STATE, state);
+            if (state.status !== "playing") {
+              saveMatch(state, startedAt);
+              reportResult(state);
+              activeLoops.delete(gameId);
+              gameRooms.delete(gameId);
+              endSession(gameId);
+              clearInterval(loopId);
+            }
+          } catch (e) {
+            console.error("[GAME-SERVICE] Game loop failed, ending match", e);
             activeLoops.delete(gameId);
             gameRooms.delete(gameId);
             endSession(gameId);
@@ -178,7 +190,6 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       !["UP", "DOWN", "LEFT", "RIGHT"].includes(input.direction)
     )
       return;
-    console.log("[GAME-SERVICE] Player input:", input);
     const state = getSession(input.gameId);
     if (!state) return;
     applyInput(state, userId, input.direction);
@@ -259,7 +270,7 @@ function handleError(ws: WebSocket, err: Error) {
 // Setup WebSocket server
 export function setupWebSocket(server: http.Server) {
   // Attach WebSocket server directly to the existing HTTP server instance
-  const wss = new WebSocketServer({ server });
+  const wss = new WebSocketServer({ server, maxPayload: 4 * 1024 });
 
   // Triggered every time a new client establishes a socket connection
   wss.on("connection", (ws, req) => {
