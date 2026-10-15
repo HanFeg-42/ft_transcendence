@@ -4,12 +4,14 @@ interface CardProps {
   children: React.ReactNode;
   variant?: 'pink' | 'green' | 'gray';
   className?: string;
+  gameCard?: string;
 }
 
 export const Card: React.FC<CardProps> = ({
-  children,
-  variant = 'pink',
+  children, /*for any <> element given inside the call of the component*/
+  variant = 'gray',
   className = '',
+  gameCard = false,
 }) => {
   const borderStyle = 
     variant === 'pink' ? 'border-pacova-pink/50' : 
@@ -22,6 +24,9 @@ export const Card: React.FC<CardProps> = ({
 
   // Applique le texte noir pour 'gray', sinon reste blanc
   const textStyle = variant === 'gray' ? 'text-black' : 'text-white';
+
+  const opacity = 
+  gameCard === 'true' ? 'opacity-70': '';
 
   return (
     <div className={`
@@ -36,15 +41,15 @@ export const Card: React.FC<CardProps> = ({
       ${borderStyle}
       ${glowStyle}
       ${textStyle}
-      p-4 sm:p-5 md:p-6
+      ${opacity}
+      p-3 sm:p-5 md:p-6
       rounded-xl
       overflow-hidden
       transition-all
       ${className}
     `}>
       {/* Effet d'écran rétro */}
-      <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
-      
+      <div className={`absolute inset-0 pixel-scanlines pointer-events-none ${opacity}`}></div>
       {/* Contenu à l'intérieur de la carte */}
       <div className="relative z-10">
         {children}
