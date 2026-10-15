@@ -1,0 +1,49 @@
+/* ⭐ Caché par défaut */
+.controls {
+    display: none;
+}
+
+/* ⭐ Affiché sur mobile paysage */
+@media (max-width: 900px){
+    .controls {
+        display: grid;
+        grid-template-areas:
+            ".    up    ."
+            "left .  right"
+            ".    down  .";
+        grid-template-columns: 50px 50px 50px;
+        grid-template-rows: 50px 50px 50px;
+        gap: 4px;
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        z-index: 100;
+    }
+}
+
+.btn {
+    background-color: #4b3e4b4d;
+    border: 2px solid #464446;
+    border-radius: 50%;
+    color: #ffff00;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* ⭐ Désactive le zoom sur double-tap */
+    touch-action: manipulation;
+    /* ⭐ Désactive la sélection de texte */
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.btn:active {
+    background-color: rgba(80, 77, 80, 0.6);
+    transform: scale(0.95);
+}
+
+.up    { grid-area: up; }
+.down  { grid-area: down; }
+.left  { grid-area: left; }
+.right { grid-area: right; }
