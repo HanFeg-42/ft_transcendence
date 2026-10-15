@@ -33,7 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           credentials: "include",
         });
 
-        if (!response.ok || response.status === 204) {
+        if (!response.ok) {
           return;
         }
 
