@@ -42,7 +42,7 @@ export const Input: React.FC<InputProps> = ({
           {...props}
         />
         {/* Overlay pour l'effet de balayage écran rétro (CRT) */}
-        <span className="absolute inset-0 pixel-scanlines pointer-events-none" />
+        <span className="absolute inset-0 pixel-scanlines pointer-events-none -z-1" />
       </div>
 
       {/* 3. Affichage du message d'erreur s'il existe */}

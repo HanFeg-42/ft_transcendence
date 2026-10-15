@@ -68,7 +68,7 @@
 /* ⭐ Conteneur : alignement vertical */
 .hearts {
     display: flex;
-    gap: 4vw;                 /* Espace entre les cœurs */
+    gap: 22px;                 /* Espace entre les cœurs */
     align-items: center;
     margin-top: 8px;
 }
@@ -129,7 +129,6 @@
         padding: 6px;
         min-width: 60px;
         gap: 4px;
-        border-width: 1px;
     }
 
     .label {
@@ -147,11 +146,28 @@
     }
 
     .hearts {
-        gap: 2px;
+        gap: 15px;
     }
 
     .heart {
         transform: scale(0.5);
+        width: 2px;
+        height: 2px;
+        box-shadow:
+            /* Ligne 1 : ..... */
+            /* Ligne 2 : .XX.XX. */
+            -2px -2px 0 #F32077, 0 -2px 0 #F32077, 4px -2px 0 #F32077, 6px -2px 0 #F32077,
+            /* Ligne 3 : XXXXXXX */
+            -2px 0 0 #F32077, 0 0 0 #F32077, 2px 0 0 #F32077, 4px 0 0 #F32077, 6px 0 0 #F32077,
+            /* Ligne 4 : .XXXXX. */
+            -2px 2px 0 #F32077, 0 2px 0 #F32077, 2px 2px 0 #F32077, 4px 2px 0 #F32077, 6px 2px 0 #F32077,
+            /* Ligne 5 : ..XXX.. */
+            0 4px 0 #F32077, 2px 4px 0 #F32077, 4px 4px 0 #F32077,
+            /* Ligne 6 : ...X... */
+            2px 6px 0 #F32077;
+        /* ⭐ Glow néon */
+        filter: drop-shadow(0 0 2px #F32077) drop-shadow(0 0 4px #F32077);
+
     }
 
     .timer {

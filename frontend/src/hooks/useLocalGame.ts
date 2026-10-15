@@ -14,7 +14,11 @@ export function useLocalGame(playerId: string = 'player-1') {
         // addPlayer('player-2', stateRef.current);
         //     setFrame(f => f + 1);
         const interval = setInterval(() => {
-            tick(stateRef.current);   // Fait avancer la logique
+        tick(stateRef.current);   // Fait avancer la logique
+        const state = stateRef.current;
+        if (state.status === 'playing') {
+            tick(state);
+        }
             setFrame((f) => f + 1);   // Force le re-render React
         }, TICK_INTERVAL_MS);
 

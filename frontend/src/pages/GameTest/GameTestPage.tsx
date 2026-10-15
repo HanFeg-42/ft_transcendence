@@ -38,6 +38,20 @@ const GameTestPage: React.FC = () => {
             <div className={styles.rightBar}>
                 <HudPlayer player={state.players[1]} />
             </div>
+            
+            {state.status === 'lost' && (
+                <div className={styles.gameOver}>
+                    <h1>GAME OVER</h1>
+                    <p>Score : {state.players[0]?.score}</p>
+                </div>
+            )}
+
+            {state.status === 'won' && (
+                <div className={styles.gameOver}>
+                    <h1>YOU WIN!</h1>
+                    <p>Score : {state.players[0]?.score}</p>
+                </div>
+            )}
         </div>
         </>
     );
