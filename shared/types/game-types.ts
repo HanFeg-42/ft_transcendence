@@ -71,6 +71,7 @@ export interface Player {
   lives: number;
   score: number;
   connected: boolean;
+  joinedAt?: number;
 }
 export interface Chaser {
   id: number;
@@ -87,6 +88,7 @@ export interface GameState {
   chasers: Chaser[];
   pellets: boolean[][];
   timeRemaining: number;
+  timeLimit?: number;
   winnerId?: string;
   vulnerableTimer: number;
   mazeId: string;

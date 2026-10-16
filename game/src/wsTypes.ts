@@ -9,11 +9,14 @@ import {
 } from "../../shared/types/game-types";
 import { endSession, getSession, joinSession } from "./gameSessions";
 import { applyInput, tick, removePlayer, finishMatch } from "./engine/engine";
+import saveMatch from "./services/saveMatchHistory";
+import { reportResult } from "./services/reportResult";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so
 // it persists across all connections, not reset per-client.
 const gameRooms = new Map<string, Set<WebSocket>>();
+const playerSocket = new Map<string, WebSocket>();
 const activeLoops = new Map<string, NodeJS.Timeout>();
 const pendingStarts = new Map<string, NodeJS.Timeout>();
 const START_DELAY_MS = 3000;
@@ -50,16 +53,24 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
     return;
   }
 
-  console.log("[GAME-SERVICE] Client connected:", userId, "from:", req.url);
+  console.log("[GAME-SERVICE] Client connected:", userId);
 
   // Listen for incoming data packets from the client
   ws.on("message", (rawData: RawData) => {
-    handleMessage(ws, rawData, userId);
+    try {
+      handleMessage(ws, rawData, userId);
+    } catch (e) {
+      console.error("[GAME-SERVICE] Message handler failed:", e);
+    }
   });
 
   // Listen for client disconnects (tab closed, lost connection)
   ws.on("close", (code) => {
-    handleClose(ws, code, userId);
+    try {
+      handleClose(ws, code, userId);
+    } catch (e) {
+      console.error("[GAME-SERVICE] Close handler failed:", e);
+    }
   });
 
   // Listen for low-level socket errors
@@ -83,9 +94,13 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     return; // drop the bad message, keep the connection and service alive
   }
 
+  if (!packet || typeof packet !== "object") return;
+  if (!packet.data || typeof packet.data !== "object") return;
+
   // --- Join a room ---
   if (packet.event === GameEvents.JOIN_GAME) {
     const { gameId, mazeId }: JoinGamePayload = packet.data;
+    if (!gameId || typeof gameId !== "string") return;
     const existing = getSession(gameId);
     if (
       existing &&
@@ -103,6 +118,9 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         clearTimeout(forfeitId);
         forfeitTimers.delete(gameId);
       }
+      if (existing?.players.some((p) => !p.connected)) {
+        startForfeitTimer(gameId, existing);
+      }
     }
     const abandonId = abandonTimers.get(gameId);
     if (abandonId) {
@@ -113,6 +131,12 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       gameRooms.set(gameId, new Set());
     }
     gameRooms.get(gameId)!.add(ws);
+    const old = playerSocket.get(userId);
+    if (old && old !== ws) {
+      gameRooms.get(gameId)?.delete(old);
+      old.close(4000, "Replaced by a new connection");
+    }
+    playerSocket.set(userId, ws);
 
     const state: GameState = joinSession(gameId, userId, mazeId);
     broadcast(gameId, GameEvents.GAME_STATE, state);
@@ -123,11 +147,22 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const startId = setTimeout(() => {
         pendingStarts.delete(gameId);
         state.status = "playing";
+        const startedAt = new Date();
 
         const loopId = setInterval(() => {
-          if (state.players.every((p) => p.connected)) tick(state);
-          broadcast(gameId, GameEvents.GAME_STATE, state);
-          if (state.status !== "playing") {
+          try {
+            if (state.players.every((p) => p.connected)) tick(state);
+            broadcast(gameId, GameEvents.GAME_STATE, state);
+            if (state.status !== "playing") {
+              saveMatch(state, startedAt);
+              reportResult(state);
+              activeLoops.delete(gameId);
+              gameRooms.delete(gameId);
+              endSession(gameId);
+              clearInterval(loopId);
+            }
+          } catch (e) {
+            console.error("[GAME-SERVICE] Game loop failed, ending match", e);
             activeLoops.delete(gameId);
             gameRooms.delete(gameId);
             endSession(gameId);
@@ -149,7 +184,12 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   if (packet.event === GameEvents.PLAYER_INPUT) {
     // Type-cast the payload to enforce shared interface rules
     const input: PlayerInputPayload = packet.data;
-    console.log("[GAME-SERVICE] Player input:", input);
+    if (
+      !input.gameId ||
+      typeof input.gameId !== "string" ||
+      !["UP", "DOWN", "LEFT", "RIGHT"].includes(input.direction)
+    )
+      return;
     const state = getSession(input.gameId);
     if (!state) return;
     applyInput(state, userId, input.direction);
@@ -166,12 +206,19 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   }
 }
 
+const startForfeitTimer = (gameId: string, state: GameState) => {
+  if (forfeitTimers.has(gameId)) return;
+  const forfeitId = setTimeout(() => {
+    forfeitTimers.delete(gameId);
+    finishMatch(state, state.players.find((p) => p.connected)?.id);
+  }, FORFEIT_DELAY_MS);
+  forfeitTimers.set(gameId, forfeitId);
+};
 // Handle disconnection
 function handleClose(ws: WebSocket, code: number, userId: string) {
   console.log(`[GAME-SERVICE] Player left the game: ${userId} (Code: ${code})`);
-
+  if (playerSocket.get(userId) === ws) playerSocket.delete(userId);
   // Cleanup active game session...
-
   for (const [gameId, sockets] of gameRooms) {
     if (!sockets.delete(ws)) continue;
     const state = getSession(gameId);
@@ -188,12 +235,8 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
     if (state?.status === "playing") {
       const player = state.players.find((p) => p.id === userId);
       if (player) player.connected = false;
-      if (sockets.size > 0 && !forfeitTimers.has(gameId)) {
-        const forfeitId = setTimeout(() => {
-          forfeitTimers.delete(gameId);
-          finishMatch(state, state.players.find((p) => p.connected)?.id);
-        }, FORFEIT_DELAY_MS);
-        forfeitTimers.set(gameId, forfeitId);
+      if (sockets.size > 0) {
+        startForfeitTimer(gameId, state);
       }
     }
     if (sockets.size === 0) {
@@ -227,7 +270,7 @@ function handleError(ws: WebSocket, err: Error) {
 // Setup WebSocket server
 export function setupWebSocket(server: http.Server) {
   // Attach WebSocket server directly to the existing HTTP server instance
-  const wss = new WebSocketServer({ server });
+  const wss = new WebSocketServer({ server, maxPayload: 4 * 1024 });
 
   // Triggered every time a new client establishes a socket connection
   wss.on("connection", (ws, req) => {

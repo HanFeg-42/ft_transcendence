@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import Background from "../components/ui/Background";
 import Navbar from "../components/ui/Navbar";
-import TwoFactorSetup from "../components/TwoFactorSetup";
+// import TwoFactorSetup from "../components/TwoFactorSetup";
 import PixelButton from "../components/ui/PixelButton";
 
 const routeMap: Record<string, string> = {
@@ -55,7 +55,7 @@ export default function Home() {
           Welcome, {user?.username}!
         </p>
 
-        <TwoFactorSetup />
+        {/* <TwoFactorSetup /> */}
 
         <PixelButton
           variant="filled-pink"
