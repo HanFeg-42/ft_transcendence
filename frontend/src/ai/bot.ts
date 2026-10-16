@@ -2,6 +2,7 @@ import type {GameState, Direction} from '../../../shared/types/game-types'
 import {MAZES, isWall} from '../engine/maze'
 import {ahead} from '../engine/movement'
 import { directions, directionToNearestPellet } from './pathfinding';
+import { threatsNear, escapeDirection } from './danger';
 
 
 
@@ -12,6 +13,11 @@ export function chooseDirection(state: GameState, botId: string): Direction | nu
     const bot = state.players.find(player => player.id === botId);
     if(!bot)
         return null;
+
+    const threats = threatsNear(state, botId);
+    if(threats.length > 0)
+        return escapeDirection(state, botId, threats);   
+
     const pelletD = directionToNearestPellet(state, botId);
     if(pelletD)
         return pelletD;
