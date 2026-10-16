@@ -9,7 +9,7 @@ import Settings from "./pages/Settings";
 import Game from "./pages/GameTest/GameTestPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import DesignSystem from './pages/DesignSystem'
-// import Nav from './pages/NavbarTest'
+import Nav from './pages/NavbarTest'
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
@@ -32,8 +32,8 @@ function App() {
         <Route path="/game" element={<Game />} />
         <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
       </Route>
-      {/* <Route path="/DesignSystem" element={<DesignSystem />} />
-      <Route path="/NavbarTest" element={<Nav />} /> */}
+      {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
+      <Route path="/NavbarTest" element={<Nav />} />
     </Routes>
   );
 }
