@@ -13,6 +13,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
+import BotTest from "./pages/BotTest";
+
 
 /** Renders the application's route configuration. */
 function App() {
@@ -33,6 +35,7 @@ function App() {
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
       {/* <Route path="/Design" element={<Design />} /> */}
+      <Route path="/bot-test" element={<BotTest />} />
     </Routes>
   );
 }

@@ -14,7 +14,14 @@ function key(tile: Tile): string
 // returns the direction that continues pellet,
 export function directionToNearestPellet(state: GameState, botId: string): Direction | null
 {
+    return directionToNearest(state, botId, (tile) => state.pellets[tile.y][tile.x]);
+}
 
+
+
+
+export function directionToNearest(state: GameState, botId: string, isTarget: (tile: Tile) => boolean)
+{
     const bot = state.players.find(player => player.id === botId);
     if(!bot)
         return null;
@@ -42,7 +49,7 @@ export function directionToNearestPellet(state: GameState, botId: string): Direc
         const item = queue.shift()!;
 
         // Check if pellet exists (y goes first)
-        if(state.pellets[item.tile.y][item.tile.x])
+        if(isTarget(item.tile))
             return item.firstDir;
 
         // Check 4 directions from the current item's tile
@@ -59,6 +66,3 @@ export function directionToNearestPellet(state: GameState, botId: string): Direc
     }
     return null;
 }
-
-
-

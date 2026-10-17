@@ -1,11 +1,12 @@
 import type {GameState, Direction, Chaser, Tile} from '../../../shared/types/game-types'
 import {MAZES, isWall} from '../engine/maze'
 import {ahead} from '../engine/movement'
-import { directions } from './pathfinding';
+import { directions, directionToNearest } from './pathfinding';
 
 
 
-const DANGER_RADIUS: number  = 4;
+
+const DANGER_RADIUS: number  = 3;
 
 
 function manhattan(a: Tile, b: Tile): number
@@ -76,4 +77,21 @@ export function escapeDirection(state: GameState, botId: string, threats: Chaser
 
     // 5. Return the safest direction found
     return bestDirection;   
+}
+
+
+
+export function directionToEatableChaser(state: GameState, botId: string): Direction | null
+{
+    if(state.vulnerableTimer <= 0) return null;
+    
+
+    return directionToNearest(state, botId, (tile) => {
+        return state.chasers.some((chaser) => {
+          const isOnTile = chaser.tile.x === tile.x && chaser.tile.y === tile.y;
+          const isNotEaten = !chaser.isEaten;
+        
+          return isOnTile && isNotEaten;
+        });
+      });
 }
