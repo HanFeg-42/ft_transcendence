@@ -1,5 +1,6 @@
 import http from "http";
 import { WebSocketServer, WebSocket, RawData } from "ws";
+import { randomUUID } from "crypto";
 // Import shared WebSocket contract rules (event names and payload shapes)
 import {
   GameEvents,
@@ -24,6 +25,7 @@ const abandonTimers = new Map<string, NodeJS.Timeout>();
 const ABANDON_DELAY_MS = 30000;
 const forfeitTimers = new Map<string, NodeJS.Timeout>();
 const FORFEIT_DELAY_MS = 15000;
+let queuedPlayer: { userId: string; ws: WebSocket } | null = null;
 // Send a message to every socket currently in a given room
 // Send a message to every socket currently in a given room
 function broadcast(gameId: string, eventName: string, data: unknown) {
@@ -193,16 +195,30 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     const state = getSession(input.gameId);
     if (!state) return;
     applyInput(state, userId, input.direction);
-
-    // Calculate new position...
-    // ...
-
     if (!gameRooms.has(input.gameId)) {
       console.warn(
         `[GAME-SERVICE] PLAYER_INPUT for unknown room ${input.gameId}, ignoring`,
       );
       return;
     }
+  }
+
+  if (packet.event === GameEvents.QUEUE) {
+    if (!queuedPlayer) {
+      queuedPlayer = { userId, ws };
+      return;
+    } else if (queuedPlayer.userId === userId) return;
+    const message = JSON.stringify({
+      event: GameEvents.MATCH_FOUND,
+      data: { gameId: randomUUID() },
+    });
+    ws.send(message);
+    queuedPlayer.ws.send(message);
+    queuedPlayer = null;
+  }
+
+  if (packet.event === GameEvents.LEAVE_QUEUE) {
+    if (queuedPlayer?.ws === ws) queuedPlayer = null;
   }
 }
 
@@ -218,6 +234,7 @@ const startForfeitTimer = (gameId: string, state: GameState) => {
 function handleClose(ws: WebSocket, code: number, userId: string) {
   console.log(`[GAME-SERVICE] Player left the game: ${userId} (Code: ${code})`);
   if (playerSocket.get(userId) === ws) playerSocket.delete(userId);
+  if (queuedPlayer?.ws === ws) queuedPlayer = null;
   // Cleanup active game session...
   for (const [gameId, sockets] of gameRooms) {
     if (!sockets.delete(ws)) continue;

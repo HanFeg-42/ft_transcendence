@@ -17,6 +17,9 @@ export const GameEvents = {
   PLAYER_INPUT: "playerInput", // client -> server: movement/direction
   GAME_STATE: "gameState", // server -> client: authoritative state tick
   GAME_OVER: "gameOver", // server -> client: match ended
+  QUEUE: "queue", // client -> server: find me an opponent
+  LEAVE_QUEUE: "leaveQueue", // client -> server: cancel the search
+  MATCH_FOUND: "matchFound", // server -> client: opponent found, join this game
 } as const;
 
 export type GameEvent = (typeof GameEvents)[keyof typeof GameEvents];
@@ -45,6 +48,10 @@ export interface PlayerInputPayload {
 //   pellets: boolean[][];
 //   timeRemaining: number;
 // }
+
+export interface MatchFoundPayload {
+  gameId: string;
+}
 
 //4.Data sent when the match finishes
 export interface GameOverPayload {
