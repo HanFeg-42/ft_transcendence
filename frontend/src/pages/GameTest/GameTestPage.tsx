@@ -1,6 +1,6 @@
 import React from 'react';
 import MazeUI from '../../components/game/MazeUI';
-import { useLocalGame } from '../../hooks/useLocalGame';
+import useLocalGame from '../../hooks/useLocalGame';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import HudTop from '../../components/game/HudTop';
 
@@ -17,7 +17,7 @@ const GameTestPage: React.FC = () => {
     return (
         <>
         <RotDev/>
-        <MobileControls onInput={sendInput}/>
+        {state.status === 'playing' && <MobileControls onInput={sendInput}/>}
         <div className={styles.page}>
             {/* Timer centré en haut */}
             <div className={styles.topBar}>
@@ -38,18 +38,22 @@ const GameTestPage: React.FC = () => {
             <div className={styles.rightBar}>
                 <HudPlayer player={state.players[1]} />
             </div>
-            
-            {state.status === 'lost' && (
-                <div className={styles.gameOver}>
-                    <h1>GAME OVER</h1>
-                    <p>Score : {state.players[0]?.score}</p>
-                </div>
-            )}
+            {state.status !== 'playing' && (
+                <div className={styles.gameOverlay}>
+                    <h1 className={styles.gameOverTitle}>
+                        {state.status === 'won' ? 'YOU WIN! 🏆' : 'GAME OVER 💀'}
+                    </h1>
+                    
+                    <p className={styles.gameOverScore}>
+                        Score final : {state.players[0]?.score ?? 0}
+                    </p>
 
-            {state.status === 'won' && (
-                <div className={styles.gameOver}>
-                    <h1>YOU WIN!</h1>
-                    <p>Score : {state.players[0]?.score}</p>
+                    <button 
+                        className={styles.restartBtn} 
+                        onClick={() => window.location.reload()}
+                    >
+                        REJOUER
+                    </button>
                 </div>
             )}
         </div>

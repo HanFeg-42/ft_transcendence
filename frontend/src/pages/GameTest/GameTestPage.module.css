@@ -61,19 +61,48 @@
     align-items: center;
 }
 
-.gameOver {
+.gameOverlay {
     position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 9999;
+    inset: 0; /* Couvre tout l'écran */
+    background-color: rgba(0, 0, 0, 0.85); /* Fond noir semi-transparent */
+    z-index: 10000; /* Au-dessus de tout */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 20px;
     font-family: 'Press Start 2P', monospace;
+}
+
+.gameOverTitle {
+    font-size: 40px;
     color: #ff00ff;
-    font-size: 32px;
     text-shadow: 0 0 20px #ff00ff;
+}
+
+.gameOverScore {
+    font-size: 16px;
+    color: #ffff00;
+    text-shadow: 0 0 10px #ffff00;
+}
+
+.restartBtn {
+    font-family: 'Press Start 2P', monospace;
+    padding: 15px 30px;
+    font-size: 16px;
+    background-color: transparent;
+    color: #00ffff;
+    border: 2px solid #00ffff;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 10px #00ffff;
+    transition: all 0.2s;
+}
+
+.restartBtn:hover {
+    background-color: #00ffff;
+    color: #000;
+    box-shadow: 0 0 20px #00ffff;
 }
 
 /* ═══════════════════════════════════════════
