@@ -1,20 +1,23 @@
-// Shows just the time for anything sent today (matches the old behavior),
-// but falls back to a date so a message from last week doesn't read as if
-// it happened minutes ago.
-export function formatMessageTimestamp(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date();
+export const CURRENT_USER_ID = 99;
 
-  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+export function formatMessageTimestamp(iso: string)
+{
+    const then = new Date(iso);
+    const now = new Date();
+    let res;
 
-  const isToday = date.toDateString() === now.toDateString();
-  if (isToday) return time;
+    // Extract the time string (e.g., "03:15 PM")
+    const timePart = then.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const sameYear = date.getFullYear() === now.getFullYear();
-  const datePart = date.toLocaleDateString(
-    [],
-    sameYear ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' }
-  );
+    if(then.toDateString() === now.toDateString())
+        res = timePart;
+    else
+    {
+        // Extract the date string (e.g., "Oct 9")
+        const datePart = then.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        // Combine date and time (e.g., "Oct 9, 03:15 PM")
+        res = `${datePart}, ${timePart}`;
+    }
 
-  return `${datePart} ${time}`;
+    return res;
 }

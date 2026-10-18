@@ -1,29 +1,25 @@
 import PixelButton from '../../components/ui/PixelButton';
 import PacManIcon from './PacManIcon';
 import { ICONS } from '../../utils/icons';
-import type { HistoryMessage } from './types';
 
 const GHOSTS: Array<keyof typeof ICONS> = ['gost-red', 'gost-pink', 'gost-blue', 'gost-orange'];
 
 interface GameInviteModalProps {
   isOpen: boolean;
-  onClose: () => void;
-  friendUsername: string;
-  currentUserId: number;
-  pendingInvite: HistoryMessage | null;
-  onSend: () => void;
-  onAccept: () => void;
-  onDecline: () => void;
+  isReceiver: boolean;
+  friendName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 export default function GameInviteModal({
-  isOpen, onClose, friendUsername, currentUserId,
-  pendingInvite, onSend, onAccept, onDecline,
+  isOpen, 
+  isReceiver, 
+  friendName, 
+  onConfirm, 
+  onCancel
 }: GameInviteModalProps) {
-  if (!isOpen) return null;
-
-  const isReceiver = Boolean(pendingInvite && pendingInvite.receiver_id === currentUserId);
-  const isWaiting = Boolean(pendingInvite && !isReceiver); // sender, already sent, no reply yet
+    if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
@@ -41,17 +37,15 @@ export default function GameInviteModal({
 
           {isReceiver ? (
             <p className="font-vt323 text-lg text-gray-200">
-              <span className="text-white">{friendUsername}</span> invited you to play
+              <span className="text-white">{friendName}</span> invited you to play
               <br />
-              <span className="font-pixelify text-2xl text-pacova-green">Pac-Man</span>
+              <span className="font-pixelify text-2xl text-pacova-green">Pacova</span>
             </p>
           ) : (
             <p className="font-vt323 text-lg text-gray-200">
-              {isWaiting ? 'Waiting for' : 'Invite'}{' '}
-              <span className="text-white">{friendUsername}</span>{' '}
-              {isWaiting ? '…' : 'to play'}
+              <span className="text-white"></span> Invite {friendName} to play
               <br />
-              <span className="font-pixelify text-2xl text-pacova-green">Pac-Man</span>
+              <span className="font-pixelify text-2xl text-pacova-green">Pacova</span>
             </p>
           )}
 
@@ -66,18 +60,15 @@ export default function GameInviteModal({
           <div className="flex gap-3 mt-1">
             {isReceiver && (
               <>
-                <PixelButton variant="filled-green" size="md" onClick={onAccept}>Accept</PixelButton>
-                <PixelButton variant="outline-magenta" size="md" onClick={onDecline}>Decline</PixelButton>
+                <PixelButton variant="filled-green" size="md" onClick={onConfirm}>Accept</PixelButton>
+                <PixelButton variant="outline-magenta" size="md" onClick={onCancel}>Decline</PixelButton>
               </>
             )}
-            {!isReceiver && !isWaiting && (
+            {!isReceiver && (
               <>
-                <PixelButton variant="filled-green" size="md" onClick={onSend}>Send Invite</PixelButton>
-                <PixelButton variant="outline-magenta" size="md" onClick={onClose}>Cancel</PixelButton>
+                <PixelButton variant="filled-green" size="md" onClick={onConfirm}>Send</PixelButton>
+                <PixelButton variant="outline-magenta" size="md" onClick={onCancel}>Cancel</PixelButton>
               </>
-            )}
-            {isWaiting && (
-              <PixelButton variant="outline-magenta" size="md" onClick={onClose}>Cancel</PixelButton>
             )}
           </div>
         </div>

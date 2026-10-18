@@ -1,45 +1,44 @@
-import { useEffect, useState } from 'react';
-import type { HistoryMessage } from './types';
+import { useState, useEffect } from "react";
+import type { Message } from "./types";
 
-// Fetches chat history for the selected friend whenever it changes, and
-// tracks loading/error state for it.
-export function useChatHistory(friendId: number, token: string | null, userReady: boolean) {
-  const [historyMessages, setHistoryMessages] = useState<HistoryMessage[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!userReady || !token) return;
 
-    let cancelled = false;
-    setHistoryLoading(true);
-    setHistoryError(null);
-``
-    fetch(`/api/chat/messages/${friendId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json() as Promise<HistoryMessage[]>;
-      })
-      .then((data) => {
-        if (cancelled) return;
-        // API returns newest-first (for pagination); display wants oldest-first
-        setHistoryMessages([...data].reverse());
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        console.error('[CHAT] Failed to load history:', err);
-        setHistoryError('Could not load message history.');
-      })
-      .finally(() => {
-        if (!cancelled) setHistoryLoading(false);
-      });
+export default function useChatHistory(friendId: number, token: string | null) 
+{
+    const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
+    const [historyLoading, setHistoryLoading] = useState<boolean>(false);
+    const [historyError, setHistoryError] = useState<string | null>(null);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [friendId, token, userReady]);
+    useEffect(() => {
+        if (!token) return;
+        let cancelled = false;
+        setHistoryLoading(true);
+        setHistoryError(null);//clear out any old errors from previous
 
-  return { historyMessages, historyLoading, historyError };
+        fetch(`/api/chat/messages/${friendId}`, {
+        headers: {'Authorization': `Bearer ${token}`}})
+        .then(response => {
+            if(!response.ok)
+                throw new Error('Could not load message history.');
+            return response.json();
+        })
+        .then(data => {
+            if (cancelled) return;
+            setHistoryMessages([...data].reverse());
+        })
+        .catch(error => {
+            if (cancelled) return;
+            setHistoryError(error.message);
+        })
+        .finally(() => {
+            if (cancelled) return;
+            setHistoryLoading(false);
+        });
+        
+
+        return () => { cancelled = true; };
+
+    }, [friendId, token])
+
+    return { historyMessages, historyLoading, historyError };
 }

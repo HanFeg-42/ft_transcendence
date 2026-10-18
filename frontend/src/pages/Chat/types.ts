@@ -1,26 +1,20 @@
-import type { IconName } from '../../utils/icons';
+// "interface" describes the fields an object must have.
+// "export" lets other files import it.
+export interface Friend {
+  id: number;
+  username: string;
+  status: 'online' | 'offline'; // only these two exact strings are allowed
+}
 
-// Shape of a message coming back from the chat history REST endpoint
-// (and used for live WS messages too, since both render the same way).
-export interface HistoryMessage {
+
+
+export interface Message {
   id: number;
   sender_id: number;
   receiver_id: number;
   content: string;
   created_at: string;
-  kind: 'text' | 'game_invite' | 'system';
   read_at: string | null;
+  kind: 'text' | 'game_invite' | 'system';
   meta: { gameId?: string; status?: 'pending' | 'accepted' | 'declined' } | null;
-}
-
-export interface Friend {
-  id: number;
-  username: string;
-  icon: IconName;
-  status: 'online' | 'offline' | 'busy';
-}
-
-export interface BlockStatus {
-  iBlockedThem: boolean;
-  theyBlockedMe: boolean;
 }

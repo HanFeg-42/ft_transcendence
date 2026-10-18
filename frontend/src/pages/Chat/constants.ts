@@ -1,9 +1,11 @@
+// Props = the data a parent gives to a child component.
 import type { Friend } from './types';
+export const GAME_ROUTE = '/game-ws'   //tmp
 
 export const MOCK_FRIENDS: Friend[] = [
-  { id: 1, username: 'user1', icon: 'gost-pink', status: 'online' },
-  { id: 2, username: 'user2', icon: 'gost-red', status: 'online' },
-  { id: 3, username: 'yassine', icon: 'gost-blue', status: 'offline' },
+  { id: 1, username: 'user1', status: 'online' },
+  { id: 2, username: 'user2', status: 'offline' },
+  { id: 3, username: 'user3', status: 'online' },
 ];
 
 export const routeMap: Record<string, string> = {
@@ -13,6 +15,7 @@ export const routeMap: Record<string, string> = {
   NOTIFICATION: '/notifications',
   SETTINGS: '/settings',
 };
+
 
 // Kills every glow/shine source (box-shadow, drop-shadow, filter) on buttons
 // and inputs, no matter what the shared components bake in.
