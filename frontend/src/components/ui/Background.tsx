@@ -1,4 +1,5 @@
 import React from 'react';
+import Footer from './Footer';
 
 interface BackgroundProps {
   children: React.ReactNode;
@@ -53,6 +54,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
       {/* Page Content */}
       <div className="relative z-10 w-full min-h-screen flex flex-col justify-between">
         {children}
+        <Footer />
       </div>
     </div>
   );

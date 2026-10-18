@@ -37,7 +37,6 @@ router.get('/:id', async (req: Request, res: Response) => {
       select: {
         id: true,
         username: true,
-        email: true,
         avatar: true,
       },
     });
