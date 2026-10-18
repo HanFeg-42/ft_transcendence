@@ -3,7 +3,7 @@ import MazeUI from '../../components/game/MazeUI';
 import useLocalGame from '../../hooks/useLocalGame';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import HudTop from '../../components/game/HudTop';
-
+import PixelButton from '../../components/ui/PixelButton';
 import type { Direction } from '../../../../shared/types/game-types';
 import HudPlayer from '../../components/game/HudPlayer';
 import styles from './GameTestPage.module.css';
@@ -39,21 +39,18 @@ const GameTestPage: React.FC = () => {
                 <HudPlayer player={state.players[1]} />
             </div>
             {state.status !== 'playing' && (
-                <div className={styles.gameOverlay}>
-                    <h1 className={styles.gameOverTitle}>
-                        {state.status === 'won' ? 'YOU WIN! 🏆' : 'GAME OVER 💀'}
+                <div className={styles.gameOverLayout}>
+                    <h1 className={styles.gameoverstate}>
+                        {state.status === 'WIN'? 'win':'GAME OVER'}
                     </h1>
                     
-                    <p className={styles.gameOverScore}>
-                        Score final : {state.players[0]?.score ?? 0}
-                    </p>
+                    <h1 className={styles.gameOverScore}>
+                        Final Score : {state.players[1].score}
+                    </h1>
 
-                    <button 
-                        className={styles.restartBtn} 
-                        onClick={() => window.location.reload()}
-                    >
-                        REJOUER
-                    </button>
+                    <PixelButton variant="filledgreen" size="sm">
+                        RESTART
+                    </PixelButton>
                 </div>
             )}
         </div>
@@ -62,3 +59,5 @@ const GameTestPage: React.FC = () => {
 };
 
 export default GameTestPage;
+
+        // <PixelButton variant="olive-yellow" size="sm" className="w-full py-3 text-base tracking-widest" onClick={onEditClick}>
