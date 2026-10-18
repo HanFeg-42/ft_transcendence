@@ -77,6 +77,8 @@ export interface Player {
   step: number;
   lives: number;
   score: number;
+  pelletsEaten: number;
+  ghostsEaten: number;
   connected: boolean;
   joinedAt?: number;
 }

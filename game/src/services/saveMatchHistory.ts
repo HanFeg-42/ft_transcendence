@@ -7,7 +7,7 @@ const saveMatch = async (state: GameState, startedAt: Date) => {
       data: {
         status: "finished",
         mazeSeed: state.mazeId,
-        timeLimitSeconds : state.timeLimit,
+        timeLimitSeconds: state.timeLimit,
         startedAt,
         endedAt: new Date(),
         winnerUserId: state.winnerId ? Number(state.winnerId) : null,
@@ -21,6 +21,8 @@ const saveMatch = async (state: GameState, startedAt: Date) => {
                 ? "WIN"
                 : "LOSS",
             score: p.score,
+            pelletsEaten: p.pelletsEaten,
+            ghostsEaten: p.ghostsEaten,
             livesRemaining: p.lives,
             joinedAt: new Date(p.joinedAt!),
           })),
