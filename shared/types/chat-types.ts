@@ -1,8 +1,6 @@
-// shared/types/chat-types.ts
 // Contract between: frontend (chat UI) <-> chat-service
 import type { NotificationSocketData } from "./notification-types";
 
-// --- Event names -----------------------------------------------------
 export const ChatEvents = {
   MESSAGE: "message",
   TYPING: "typing",
@@ -13,49 +11,16 @@ export const ChatEvents = {
   NOTIFICATION: "notification",
 } as const;
 
-export type ChatEvent = (typeof ChatEvents)[keyof typeof ChatEvents];
-
-// --- Payload shapes ----------------------------------------------------
-// What the client SENDS when posting a new message.
-export interface ChatMessageOutgoing {
-  receiver_id: number;
-  content: string;
-}
-
-// What the service SENDS BACK (stored + enriched with id/timestamp).
+// A stored message (text, game invite, or system line). Used by the websocket AND the REST history.
 export interface ChatMessageIncoming {
   id: number;
   sender_id: number;
   receiver_id: number;
   content: string;
   created_at: string; // ISO string
-  kind: "text" | "game_invite" | "system";
   read_at: string | null;
-  meta: {
-    gameId?: string;
-    status?: "pending" | "accepted" | "declined";
-  } | null;
-}
-
-// Sent from client -> server when typing
-export interface ChatTypingOutgoing {
-  receiver_id: number;
-}
-
-// Broadcast from server -> client when someone is typing
-export interface ChatTypingEvent {
-  sender_id: number;
-}
-
-// Sent from client -> server when marking messages as read
-export interface ChatReadOutgoing {
-  sender_id: number;
-}
-
-// Broadcast from server -> client when a friend marks your messages as read
-export interface ChatReadEvent {
-  reader_id: number;
-  read_at: string;
+  kind: "text" | "game_invite" | "system";
+  meta: { gameId?: string; status?: "pending" | "accepted" | "declined" } | null;
 }
 
 export interface ChatPresenceEvent {
@@ -63,30 +28,20 @@ export interface ChatPresenceEvent {
   status: "online" | "offline";
 }
 
-// Sent from client -> server to initiate a game invite
-export interface ChatInviteOutgoing {
-  receiver_id: number;
-}
-
-// Sent from client -> server when responding to a game invite card
-export interface ChatInviteReply {
-  message_id: number;
-  accept: boolean;
-}
-
-// --- Envelopes ----------------------------------------------------------
+// Client -> server
 export type ChatClientMessage =
-  | { event: typeof ChatEvents.MESSAGE; data: ChatMessageOutgoing }
-  | { event: typeof ChatEvents.TYPING; data: ChatTypingOutgoing }
-  | { event: typeof ChatEvents.READ; data: ChatReadOutgoing }
-  | { event: typeof ChatEvents.GAME_INVITE; data: ChatInviteOutgoing }
-  | { event: typeof ChatEvents.GAME_INVITE_REPLY; data: ChatInviteReply };
+  | { event: typeof ChatEvents.MESSAGE; data: { receiver_id: number; content: string } }
+  | { event: typeof ChatEvents.TYPING; data: { receiver_id: number } }
+  | { event: typeof ChatEvents.READ; data: { sender_id: number } } // "I read messages from sender_id"
+  | { event: typeof ChatEvents.GAME_INVITE; data: { receiver_id: number } }
+  | { event: typeof ChatEvents.GAME_INVITE_REPLY; data: { message_id: number; accept: boolean } };
 
+// Server -> client (invites and replies arrive as full messages)
 export type ChatServerMessage =
   | { event: typeof ChatEvents.MESSAGE; data: ChatMessageIncoming }
-  | { event: typeof ChatEvents.PRESENCE; data: ChatPresenceEvent }
-  | { event: typeof ChatEvents.TYPING; data: ChatTypingEvent } // <-- Uses sender_id
-  | { event: typeof ChatEvents.READ; data: ChatReadEvent } // <-- Uses reader_id + read_at
-  | { event: typeof ChatEvents.GAME_INVITE; data: ChatMessageIncoming } // Invites/replies arrive as formatted messages
+  | { event: typeof ChatEvents.GAME_INVITE; data: ChatMessageIncoming }
   | { event: typeof ChatEvents.GAME_INVITE_REPLY; data: ChatMessageIncoming }
-  | { event: typeof ChatEvents.NOTIFICATION; data: NotificationSocketData; };
+  | { event: typeof ChatEvents.PRESENCE; data: ChatPresenceEvent }
+  | { event: typeof ChatEvents.TYPING; data: { sender_id: number } }
+  | { event: typeof ChatEvents.READ; data: { reader_id: number; read_at: string } }
+  | { event: typeof ChatEvents.NOTIFICATION; data: NotificationSocketData };
