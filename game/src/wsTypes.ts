@@ -103,6 +103,9 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   if (packet.event === GameEvents.JOIN_GAME) {
     const { gameId, mazeId }: JoinGamePayload = packet.data;
     if (!gameId || typeof gameId !== "string") return;
+    for (const sockets of gameRooms.values()) {
+      if (sockets.has(ws)) return;
+    }
     const existing = getSession(gameId);
     if (
       existing &&
