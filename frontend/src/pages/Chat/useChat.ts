@@ -9,16 +9,10 @@ import type {
 const api = (token: string, path: string, method = 'GET') =>
   fetch(`/api/chat/${path}`, { method, headers: { Authorization: `Bearer ${token}` } });
 
-// Add or replace messages by id, keep them ordered (ids grow with time).
-const upsert = (list: Message[], incoming: Message[]) => {
-  const byId = new Map(list.map((m) => [m.id, m]));
-  incoming.forEach((m) => byId.set(m.id, m));
-  return [...byId.values()].sort((a, b) => a.id - b.id);
-};
-
 /** Everything the chat page needs from the backend, for the selected friend. */
 export default function useChat(token: string | null, friendId: number) {
-  const [messages, setMessages] = useState<Message[]>([]); // history + live, all friends
+  const [history, setHistory] = useState<Message[]>([]); // loaded from the REST API
+  const [live, setLive] = useState<Message[]>([]); // received through the websocket
   const [status, setStatus] = useState<'loading' | 'error' | 'ok'>('loading');
   const [iBlockedThem, setIBlockedThem] = useState(false);
   const [presence, setPresence] = useState<Record<number, 'online' | 'offline'>>({});
@@ -36,7 +30,7 @@ export default function useChat(token: string | null, friendId: number) {
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data: Message[]) => {
         if (stale) return;
-        setMessages((prev) => upsert(prev, data));
+        setHistory([...data].reverse()); // API returns newest first
         setStatus('ok');
       })
       .catch(() => {
@@ -78,13 +72,14 @@ export default function useChat(token: string | null, friendId: number) {
       }
 
       switch (packet.event) {
-        // Messages, invites and invite replies are all the same shape: add or replace by id.
+        // Messages, invites and invite replies share one shape. An invite reply has the same id as
+        // the invite, so it is appended too and replaces it when the conversation is built below.
         case ChatEvents.MESSAGE:
         case ChatEvents.GAME_INVITE:
         case ChatEvents.GAME_INVITE_REPLY: {
           const msg = packet.data;
           if (packet.event === ChatEvents.MESSAGE) showTyping(msg.sender_id, false);
-          setMessages((prev) => upsert(prev, [msg]));
+          setLive((prev) => [...prev, msg]);
           break;
         }
         case ChatEvents.PRESENCE: {
@@ -123,8 +118,11 @@ export default function useChat(token: string | null, friendId: number) {
     }
   }
 
+  const withFriend = (m: Message) => m.sender_id === friendId || m.receiver_id === friendId;
+  const conversation = [...new Map([...history, ...live].filter(withFriend).map((m) => [m.id, m])).values()];
+
   return {
-    conversation: messages.filter((m) => m.sender_id === friendId || m.receiver_id === friendId),
+    conversation,
     status,
     presence,
     typing,

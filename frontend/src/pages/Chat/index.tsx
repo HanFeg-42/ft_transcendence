@@ -19,7 +19,7 @@ export default function Chat() {
   const [draft, setDraft] = useState('');
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const lastTypingSent = useRef(0);
+  const lastTypingSent = useRef<Record<number, number>>({}); // per friend
 
   // Friends (without me); fall back to the first one if the selected one is me.
   const others = MOCK_FRIENDS.filter((f) => f.id !== myId);
@@ -34,7 +34,8 @@ export default function Chat() {
 
   const blocked = chat.iBlockedThem;
   const pendingInvites = conversation.filter((m) => m.kind === 'game_invite' && m.meta?.status === 'pending');
-  const incomingInvite = pendingInvites.find((m) => m.receiver_id === myId);
+  const invitesForMe = pendingInvites.filter((m) => m.receiver_id === myId);
+  const incomingInvite = invitesForMe[invitesForMe.length - 1]; // latest one
 
   // Tell the server we read this chat: on new messages, friend change, and when the tab regains focus.
   useEffect(() => {
@@ -65,9 +66,9 @@ export default function Chat() {
   // Update the draft and tell the friend we're typing (at most once every 2s).
   function handleDraftChange(value: string) {
     setDraft(value);
-    if (value.trim() && Date.now() - lastTypingSent.current > 2000) {
+    if (value.trim() && Date.now() - (lastTypingSent.current[friendId] ?? 0) > 2000) {
       chat.sendTyping(friendId);
-      lastTypingSent.current = Date.now();
+      lastTypingSent.current[friendId] = Date.now();
     }
   }
 
