@@ -34,6 +34,8 @@ function App() {
         <Route path="/game" element={<Game />} />
         <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
       </Route>
+      {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
+      {/* <Route path="/NavbarTest" element={<Nav />} /> */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       {/* <Route path="/DesignSystem" element={<DesignSystem />} />
