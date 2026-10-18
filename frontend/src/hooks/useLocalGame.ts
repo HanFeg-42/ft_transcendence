@@ -1,14 +1,36 @@
 import {useRef, useEffect, useState} from "react";
-import type { GameState, Direction } from "../../../shared/types/game-types";
+import type { GameState, Direction, Player } from "../../../shared/types/game-types";
 import { createGame, tick, applyInput } from "../engine/engine";
 
 
 const TICK_INTERVAL_MS = 1000 / 30;
-export default function uselocalgame(playerId: string='player-id'){
+export function useLocalGame(playerId: string = 'player-1', playersCount: number = 1) {
     const stateRef = useRef<GameState>(createGame(playerId));
-    const [,setFrame] = useState(0);
+    const [, setFrame] = useState(0);
 
+    // ⭐ Ajoute un 2ème joueur si demandé (une seule fois)
     useEffect(() => {
+        const state = stateRef.current;
+        
+        if (playersCount === 2 && state.players.length === 1) {
+            const spawn = state.players[0].spawn;
+            const player2: Player = {
+                id: 'player-2',
+                spawn: { x: spawn.x + 4, y: spawn.y },  // Décalé de 4 cases
+                tile:  { x: spawn.x + 4, y: spawn.y },
+                dir: null,
+                nextDir: null,
+                step: 0,
+                lives: 3,
+                score: 0,
+                connected: true,
+            };
+            state.players.push(player2);
+            setFrame(f => f + 1);
+        }
+    }, [playersCount]);
+
+    useEffect(() => {     // Boucle de jeu
         const interval = setInterval(() => { //funct deja existante en js execute une fonction en boucle
             //lire state
             const state = stateRef.current;
@@ -21,12 +43,10 @@ export default function uselocalgame(playerId: string='player-id'){
         return () => clearInterval(interval);
     }, []);
 
-    const sendInput = (dir: Direction) => {
+    const sendInput = (id: string, dir: Direction) => {
         const state = stateRef.current;
-        
-        if(state.status !== 'playing') return;
-
-        applyInput(state, playerId, dir); //change la prochaine direction
+        if (state.status !== 'playing') return;
+        applyInput(state, id, dir);
     };
     return {
         state: stateRef.current,
