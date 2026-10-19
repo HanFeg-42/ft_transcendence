@@ -6,13 +6,17 @@ import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
-import Game from "./pages/Game";
+import Game from "./pages/GameTest/GameTestPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import DesignSystem from './pages/DesignSystem'
-// import Design from './pages/Design'
+// import Nav from './pages/NavbarTest'
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
+import Privacy from "./pages/legal/PrivacyPolicy";
+import Terms from "./pages/legal/TermsOfService";
+import FriendsTest from "./pages/FriendsTest";
+
 
 /** Renders the application's route configuration. */
 function App() {
@@ -26,13 +30,19 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/friends-test" element={<FriendsTest />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
+        {/* <Route path="/game" element={<Game />} /> */}
         <Route path="/game" element={<Game />} />
         <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
-      {/* <Route path="/Design" element={<Design />} /> */}
+      {/* <Route path="/NavbarTest" element={<Nav />} /> */}
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      {/* <Route path="/DesignSystem" element={<DesignSystem />} />
+      <Route path="/NavbarTest" element={<Nav />} /> */}
     </Routes>
   );
 }
