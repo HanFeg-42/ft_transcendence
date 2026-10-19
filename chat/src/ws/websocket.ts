@@ -104,7 +104,7 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         content: saved.content,
         created_at: saved.createdAt.toISOString(),
         read_at: saved.readAt ? saved.readAt.toISOString() : null,
-        kind: saved.kind as "text" | "game_invite" | "system",
+        kind: saved.kind as "text" | "game_invite",
         meta: saved.meta as ChatMessageIncoming["meta"],
       };
 
@@ -291,14 +291,14 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         data: { meta: { ...meta, status: nextStatus } },
       });
 
-      const system = await prisma.message.create({
-        data: {
-          senderId: currentUserId,
-          receiverId: invite.senderId,
-          content: accept ? "Invite accepted" : "Invite declined",
-          kind: "system",
-        },
-      });
+      // const system = await prisma.message.create({
+      //   data: {
+      //     senderId: currentUserId,
+      //     receiverId: invite.senderId,
+      //     content: accept ? "Invite accepted" : "Invite declined",
+      //     kind: "system",
+      //   },
+      // });
 
       const packets = [
         {
@@ -314,19 +314,19 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
             meta: updated.meta,
           } as ChatMessageIncoming,
         },
-        {
-          event: ChatEvents.MESSAGE,
-          data: {
-            id: system.id,
-            sender_id: system.senderId,
-            receiver_id: system.receiverId,
-            content: system.content,
-            created_at: system.createdAt.toISOString(),
-            read_at: null,
-            kind: "system",
-            meta: null,
-          } as ChatMessageIncoming,
-        },
+        // {
+        //   event: ChatEvents.MESSAGE,
+        //   data: {
+        //     id: system.id,
+        //     sender_id: system.senderId,
+        //     receiver_id: system.receiverId,
+        //     content: system.content,
+        //     created_at: system.createdAt.toISOString(),
+        //     read_at: null,
+        //     kind: "system",
+        //     meta: null,
+        //   } as ChatMessageIncoming,
+        // },
       ];
 
       for (const uid of [String(invite.senderId), String(currentUserId)]) {

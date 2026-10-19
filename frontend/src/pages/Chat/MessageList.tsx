@@ -37,30 +37,26 @@ export default function MessageList({ conversation, friend, myId, status, isTypi
       {conversation.map((message) => {
         const isOwn = message.sender_id === myId;
 
-        if (message.kind === 'system') return null;
 
         if (message.kind === 'game_invite') {
           const inviteStatus = message.meta?.status;
-          const canStart = inviteStatus === 'accepted' && message.id === lastInviteId && message.meta?.gameId;
+          const gameId = message.meta?.gameId;
+          // "Start Game" only on the latest accepted invite, and only until it is pressed once
+          // (remembered in this browser, so it stays hidden when coming back from the game).
+          const canStart =
+            inviteStatus === 'accepted' && message.id === lastInviteId && gameId && !localStorage.getItem(`started:${gameId}`);
 
           return (
             <div key={message.id} className="flex flex-col items-center gap-2 my-4 w-full">
-              <div className="flex flex-col items-center gap-1.5 px-4 py-2 bg-black/40 border border-pacova-purple/30 rounded shadow-[0_0_10px_rgba(168,85,247,0.15)] text-center">
-                <span className="font-vt323 uppercase text-pacova-purple text-base tracking-wide">
-                  {isOwn ? 'Invitation sent' : `${friend.username} invited you`}
-                </span>
-                {inviteStatus === 'accepted' && (
-                  <span className="font-vt323 uppercase text-base tracking-wide text-pacova-purple">Invite accepted</span>
-                )}
-                {inviteStatus === 'declined' && (
-                  <span className="font-vt323 uppercase text-base tracking-wide text-red-400">Invite declined</span>
-                )}
-              </div>
+              <p className="font-vt323 text-gray-400 text-base uppercase tracking-wide text-center">
+                {isOwn ? 'Invitation sent' : `${friend.username} invited you`}
+                {inviteStatus && inviteStatus !== 'pending' && <><br />Invite {inviteStatus}</>}
+              </p>
 
               {canStart && (
                 <button
                   type="button"
-                  onClick={() => navigate(GAME_ROUTE)}
+                  onClick={() => { localStorage.setItem(`started:${gameId}`, '1'); navigate(GAME_ROUTE); }}
                   className="flex items-center gap-2 mt-1 px-4 py-2 bg-black/80 border-2 border-amber-400 text-amber-300 font-pixelify text-sm uppercase tracking-wide shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:brightness-125 transition-all rounded"
                 >
                   <PacManIcon className="w-5 h-5" />

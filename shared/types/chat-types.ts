@@ -11,7 +11,7 @@ export const ChatEvents = {
   NOTIFICATION: "notification",
 } as const;
 
-// A stored message (text, game invite, or system line). Used by the websocket AND the REST history.
+// A stored message (text, game invit). Used by the websocket AND the REST history.
 export interface ChatMessageIncoming {
   id: number;
   sender_id: number;
@@ -19,7 +19,7 @@ export interface ChatMessageIncoming {
   content: string;
   created_at: string; // ISO string
   read_at: string | null;
-  kind: "text" | "game_invite" | "system";
+  kind: "text" | "game_invite";
   meta: { gameId?: string; status?: "pending" | "accepted" | "declined" } | null;
 }
 
