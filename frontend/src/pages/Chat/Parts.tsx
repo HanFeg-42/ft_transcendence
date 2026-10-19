@@ -44,7 +44,7 @@ export function Sidebar({ friends, selectedId, onSelect, onNewChat }: {
               friend.id === selectedId
                 ? friend.status === 'offline' ? 'border-gray-500' : 'border-pacova-green'
                 : 'border-transparent hover:border-pacova-gray'
-            }`}
+            }`} 
           >
             <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
               <Avatar iconName={'gost-orange'} size="sm" />
