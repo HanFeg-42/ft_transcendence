@@ -148,6 +148,7 @@ export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisable
                   <button
                     type="button"
                     role="menuitem"
+                    disabled={blocked}
                     onClick={() => navigate(`/profile/${friend.id}`)}
                     className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-pacova-green hover:bg-pacova-green/10"
                   >

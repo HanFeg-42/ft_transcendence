@@ -22,7 +22,7 @@ export default function useChat(token: string | null, friendId: number) {
 
   // History + block status, reloaded when the selected friend changes.
   useEffect(() => {
-    if (!token) return;
+    if (!token || !friendId) return;
     let stale = false;
     setStatus('loading');
 

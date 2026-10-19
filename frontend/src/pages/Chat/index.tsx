@@ -8,34 +8,49 @@ import PixelButton from '../../components/ui/PixelButton';
 import useChat from './useChat';
 import MessageList from './MessageList';
 import { Sidebar, Header, NewChatModal, GameInviteModal } from './Parts';
-import { MOCK_FRIENDS, NO_GLOW, routeMap } from './helpers';
+import { type Friend, NO_GLOW, routeMap } from './helpers';
 
 export default function Chat() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const myId = user ? Number(user.id) : 0;
 
-  const [selectedId, setSelectedId] = useState(1);
+  const [selectedId, setSelectedId] = useState(0);
+  const [friendList, setFriendList] = useState<Friend[]>([]);
   const [draft, setDraft] = useState('');
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const lastTypingSent = useRef<Record<number, number>>({}); // per friend
 
-  // Friends (without me); fall back to the first one if the selected one is me.
-  const others = MOCK_FRIENDS.filter((f) => f.id !== myId);
-  const friendId = others.some((f) => f.id === selectedId) ? selectedId : others[0].id;
+
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('/api/chat/friends', { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setFriendList(data.map((f: any) => ({ id: f.id, username: f.username, status: f.online ? 'online' : 'offline' }))))
+      .catch(console.error);
+  }, [token]);
+
+  const friendId = friendList.some((f) => f.id === selectedId) ? selectedId : friendList[0]?.id ?? 0;
 
   const chat = useChat(token, friendId);
   const { conversation, sendRead } = chat;
 
   // Friends with their live online/offline status.
-  const friends = others.map((f) => ({ ...f, status: chat.presence[f.id] ?? f.status }));
+  const friends = friendList.map((f) => ({
+    ...f,
+    status: f.id === friendId && chat.iBlockedThem ? 'offline' : chat.presence[f.id] ?? f.status,
+  }));
   const friend = friends.find((f) => f.id === friendId) ?? friends[0];
 
   const blocked = chat.iBlockedThem;
   const pendingInvites = conversation.filter((m) => m.kind === 'game_invite' && m.meta?.status === 'pending');
   const invitesForMe = pendingInvites.filter((m) => m.receiver_id === myId);
   const incomingInvite = invitesForMe[invitesForMe.length - 1]; // latest one
+
+
+  
 
   // Tell the server we read this chat: on new messages, friend change, and when the tab regains focus.
   useEffect(() => {
@@ -78,6 +93,20 @@ export default function Chat() {
         <Navbar activeTab="CHAT" onSelectTab={goToTab} />
         <main className="flex-1 flex items-center justify-center">
           <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">Loading...</h1>
+        </main>
+      </Background>
+    );
+  }
+
+
+  if (!friend) {
+    return (
+      <Background>
+        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
+        <main className="flex-1 flex items-center justify-center">
+          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase text-center px-4">
+            {'No friends yet'}
+          </h1>
         </main>
       </Background>
     );
@@ -140,7 +169,7 @@ export default function Chat() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSend();
               }}
-            />
+            />z
             <PixelButton type="button" variant="outline-green" size="lg" className={NO_GLOW} onClick={handleSend} disabled={blocked}>
               <span className="inline-flex items-center gap-2">
                 <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor" aria-hidden="true">

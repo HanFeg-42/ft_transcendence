@@ -5,11 +5,11 @@ export interface Friend {
 }
 
 // Temporary friends list until the friends service is connected.
-export const MOCK_FRIENDS: Friend[] = [
-  { id: 1, username: 'user1', status: 'online' },
-  { id: 2, username: 'user2', status: 'offline' },
-  { id: 3, username: 'user3', status: 'online' },
-];
+// export const MOCK_FRIENDS: Friend[] = [
+//   { id: 1, username: 'user1', status: 'online' },
+//   { id: 2, username: 'user2', status: 'offline' },
+//   { id: 3, username: 'user3', status: 'online' },
+// ];
 
 export const GAME_ROUTE = '/game-ws'; // tmp
 
