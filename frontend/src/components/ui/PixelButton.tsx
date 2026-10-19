@@ -90,15 +90,15 @@ const variantStyles: Record<
   "warning-yellow": {
     bg: "bg-amber-950",
     glow: "shadow-[inset_0_0_12px_rgba(245,158,11,0.6)]",
-    borderColor: "border-amber-400",
+    borderColor: "border-amber-400/40",
     dropShadow: "drop-shadow-glow-yellow",
   },
 };
 
 const sizeStyles: Record<PixelButtonSize, string> = {
-  sm: "px-3 py-1 text-sm font-press-start min-h-[32px]",
-  md: "px-4 py-1.5 sm:px-5 sm:py-2 text-sm sm:text-base font-press-start min-h-[38px]", // 💡 Réduit le padding et min-h de 42px à 38px
-  lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-lg sm:text-xl font-press-start min-h-[44px]",
+  sm: "px-4 py-1.5 text-base font-press-start min-h-[36px]",
+  md: "px-5 py-2 sm:px-6 sm:py-2.5 text-base sm:text-xl font-press-start min-h-[42px]",
+  lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-xl sm:text-2xl font-press-start min-h-[44px]",
 };
 
 export const PixelButton: React.FC<PixelButtonProps> = ({

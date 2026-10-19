@@ -11,9 +11,7 @@ import styles from './GameTestPage.module.css';
 import { RotDev } from '../../components/game/RotateDevice';
 import MobileControls from "../../components/game/MobileControls";
 
-// ⭐ Sub-component to handle the actual game session safely
 const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
-    // Now the hooks are safe and always called
     const { state, sendInput } = useLocalGame('player-1', gameMode);
     
     useKeyboard((dir: Direction) => sendInput('player-1', dir), 'arrows');
@@ -41,7 +39,7 @@ const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
                     <MazeUI state={state} mazeId="circuit" />
                 </div>
                 
-                {/* ⭐ Only ONE right bar, protected with optional chaining (?) */}
+            
                 {hasPlayer2 && (
                     <div className={styles.rightBar}>
                         <HudPlayer player={state.players?.[1]} />
@@ -49,18 +47,18 @@ const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
                 )}
             </div>
 
-            {/* Game Over Overlay */}
+
             {state.status !== 'playing' && (
                 <div className={styles.gameOverLayout}>
-                    <h1 className={styles.gameOverState}>
-                        {state.status === 'won' ? 'WIN 🏆' : 'GAME OVER 💀'}
+                    <h1 className={styles.gameoverstate}>
+                        {state.status === 'won' ? 'WIN 🏆' : 'GAME OVER'}
                     </h1>
                     <h1 className={styles.gameOverScore}>
                         Final Score : {state.players[0]?.score ?? 0}
                     </h1>
                     <PixelButton 
-                        variant="filled-green" 
-                        size="sm" 
+                        variant="outline-green" 
+                        size="lg" 
                         onClick={() => window.location.reload()}
                     >
                         RESTART
@@ -71,11 +69,10 @@ const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
     );
 };
 
-// ⭐ Main component handles the Menu
 const GameTestPage: React.FC = () => {
     const [gameMode, setGameMode] = useState<null | 1 | 2>(null);
 
-    // If no mode is selected, show the menu
+
     if (gameMode === null) {
         return (
             <>
@@ -85,9 +82,6 @@ const GameTestPage: React.FC = () => {
         );
     }
 
-    // If a mode is selected, launch the game session
-    // The "key={gameMode}" is CRITICAL! It forces React to completely reset the game 
-    // when switching from 1 player to 2 players.
     return <GameSession key={gameMode} gameMode={gameMode} />;
 };
 
