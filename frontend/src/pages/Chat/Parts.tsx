@@ -21,14 +21,16 @@ export function PacManIcon({ className = '', flip = false }: { className?: strin
 
 /* ------------------------------ Sidebar ------------------------------ */
 
-export function Sidebar({ friends, selectedId, onSelect, onNewChat }: {
+export function Sidebar({ friends, selectedId, onSelect, onNewChat, open }: {
   friends: Friend[];
   selectedId: number;
   onSelect: (id: number) => void;
   onNewChat: () => void;
+  open: boolean;
 }) {
   return (
-    <div className="w-[22rem] shrink-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
+    <div className={`${open ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0 min-h-0 flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden`}>
+    {/* <div className="w-[22rem] shrink-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden"> */}
       <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider text-center px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
         <PacManIcon className="w-7 h-7 shrink-0" />
         Friends
@@ -75,12 +77,13 @@ export function Sidebar({ friends, selectedId, onSelect, onNewChat }: {
 /* ------------------------------ Header ------------------------------- */
 
 // Render with key={friend.id} so the menu resets when the friend changes.
-export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisabled }: {
+export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisabled, onToggleFriends }: {
   friend: Friend;
   blocked: boolean;
   onToggleBlock: () => void;
   onInvite: () => void;
   inviteDisabled: boolean;
+  onToggleFriends: () => void;
 }) {
   const navigate = useNavigate();
   const [menu, setMenu] = useState<'closed' | 'open' | 'confirm'>('closed');
@@ -104,8 +107,25 @@ export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisable
   }, [menu]);
 
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative">
+    <div className="grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 md:px-5 h-20 border-b-2 border-pacova-green-dark relative">
+    {/* <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 h-20 border-b-2 border-pacova-green-dark relative"> */}
       <div className="flex items-center gap-3 min-w-0">
+
+
+            {/* 2. new: the 3 lines button (mobile only) */}
+          <button
+            type="button"
+            onClick={onToggleFriends}
+            aria-label="Friends"
+            className={`md:hidden p-1 text-pacova-green shrink-0 ${NO_GLOW}`}
+          >
+            <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="2.5" />
+              <rect x="3" y="10.75" width="18" height="2.5" />
+              <rect x="3" y="16.5" width="18" height="2.5" />
+            </svg>
+          </button>
+
         <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
           <Avatar iconName={'gost-pink-3d'} size="sm" />
         </span>
@@ -121,11 +141,14 @@ export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisable
         type="button"
         onClick={onInvite}
         disabled={inviteDisabled}
-        className="justify-self-center flex items-center gap-2 px-4 py-1.5 rounded-full border-2 border-amber-400/70 bg-black/60 font-pixelify text-amber-300 text-sm uppercase tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.5)] hover:brightness-125 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        aria-label="Invite to play"
+        className="justify-self-center flex items-center gap-2 px-2 md:px-4 py-1.5 rounded-full border-2 border-amber-400/70 bg-black/60 font-pixelify text-amber-300 text-sm uppercase tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.5)] hover:brightness-125 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
       >
         <PacManIcon className="w-5 h-5" />
-        Invite to Play
+        <span className="hidden md:inline">Invite to Play</span>
       </button>
+
+
 
       <div ref={menuRef} className="relative justify-self-end">
         <button
@@ -141,7 +164,8 @@ export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisable
         </button>
 
         {menu !== 'closed' && (
-          <div role="menu" className="absolute right-0 top-full mt-2 w-64 bg-pacova-surface border-2 border-pacova-green-dark rounded-lg z-20 overflow-hidden">
+          <div role="menu" className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-3rem)] bg-pacova-surface border-2 border-pacova-green-dark rounded-lg z-20 overflow-hidden">
+
             {menu === 'open' ? (
               <ul className="relative py-1">
                 <li>
@@ -150,7 +174,7 @@ export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisable
                     role="menuitem"
                     disabled={blocked}
                     onClick={() => navigate(`/profile/${friend.id}`)}
-                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-pacova-green hover:bg-pacova-green/10"
+                    className="w-full text-left px-4 py-2 font-vt323 text-lg md:text-xl uppercase truncate text-pacova-green hover:bg-pacova-green/10 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                   >
                     View Profile
                   </button>
@@ -160,7 +184,7 @@ export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisable
                     type="button"
                     role="menuitem"
                     onClick={() => setMenu('confirm')}
-                    className="w-full text-left px-4 py-2 font-vt323 text-xl uppercase text-red-500 hover:bg-red-500/10"
+                    className="w-full text-left px-4 py-2 font-vt323 text-lg md:text-xl uppercase truncate text-red-500 hover:bg-red-500/10"
                   >
                     {blocked ? 'Unblock' : 'Block'} {friend.username}
                   </button>
@@ -276,16 +300,16 @@ export function GameInviteModal({ name, receiver = false, onYes, onNo }: {
           <p className="font-vt323 text-lg text-gray-200">
             {receiver ? (
               <>
-                <span className="text-white">{name}</span> invited you to play
+                <span className="text-white break-all">{name}</span> invited you to play
               </>
             ) : (
-              <>Invite {name} to play</>
+              <>Invite <span className="break-all">{name}</span> to play</>
             )}
             <br />
             <span className="font-pixelify text-2xl text-pacova-green">Pacova</span>
           </p>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap justify-center gap-2">
             {GHOSTS.map((g) => (
               <img key={g} src={ICONS[g]} alt="" className="w-8 h-8 image-rendering-pixelated" />
             ))}
