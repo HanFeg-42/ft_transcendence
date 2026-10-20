@@ -49,7 +49,7 @@ export function Sidebar({ friends, selectedId, onSelect, onNewChat, open }: {
             }`} 
           >
             <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-              <Avatar iconName={'gost-orange'} size="sm" />
+              <Avatar iconName={'packmann'} size="sm" />
             </span>
             <span className="font-vt323 text-white text-lg uppercase truncate flex-1">{friend.username}</span>
             <span
