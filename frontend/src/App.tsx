@@ -15,6 +15,7 @@ import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
 import Privacy from "./pages/legal/PrivacyPolicy";
 import Terms from "./pages/legal/TermsOfService";
+import Leaderboard from "./pages/Leaderboard";
 
 /** Renders the application's route configuration. */
 function App() {
@@ -30,14 +31,12 @@ function App() {
         <Route path="/chat" element={<Chat />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
-        {/* <Route path="/game" element={<Game />} /> */}
         <Route path="/game" element={<Game />} />
-        <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
+        <Route path="/game-ws" element={<GameWs />} /> 
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Route>
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
-      {/* <Route path="/DesignSystem" element={<DesignSystem />} />
-      <Route path="/NavbarTest" element={<Nav />} /> */}
     </Routes>
   );
 }
