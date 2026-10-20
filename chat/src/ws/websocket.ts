@@ -77,6 +77,39 @@ async function isBlocked(a: number, b: number): Promise<boolean> {
 }
 
 
+const INVITE_TTL_MS = 60_000; // an invite expires after 60s
+
+// Close a pending invite (accepted / declined / expired) and tell both users.
+// `byUser` is set when someone answers, so only the invited user can do it.
+async function settleInvite(id: number, status: "accepted" | "declined" | "expired", byUser?: number) {
+  const invite = await prisma.message.findUnique({ where: { id } });
+  const meta = invite?.meta as { gameId?: string; status?: string } | null;
+  if (!invite || invite.kind !== "game_invite" || meta?.status !== "pending") return; // already settled
+  if (byUser !== undefined && invite.receiverId !== byUser) return;
+
+  // a late answer counts as expired
+  const final = status !== "expired" && Date.now() - invite.createdAt.getTime() > INVITE_TTL_MS ? "expired" : status;
+
+  const updated = await prisma.message.update({ where: { id }, data: { meta: { ...meta, status: final } } });
+  const payload = JSON.stringify({
+    event: ChatEvents.GAME_INVITE_REPLY,
+    data: {
+      id: updated.id,
+      sender_id: updated.senderId,
+      receiver_id: updated.receiverId,
+      content: updated.content,
+      created_at: updated.createdAt.toISOString(),
+      read_at: null,
+      kind: "game_invite",
+      meta: updated.meta,
+    } as ChatMessageIncoming,
+  });
+  for (const uid of [invite.senderId, invite.receiverId])
+    for (const socket of onlineUsers.get(String(uid)) ?? [])
+      if (socket.readyState === WebSocket.OPEN) socket.send(payload);
+}
+
+
 
 // 1. Handling New Connections (handleConnection)
 async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
@@ -278,7 +311,9 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const senderId = Number(userId);
 
       
-      if (await isBlocked(receiver_id, senderId)) break;                  // GAME_INVITE
+     
+      if ((await isBlocked(receiver_id, senderId)) || !onlineUsers.has(String(receiver_id)))
+        return sendError(ws, "User is not available to play");
 
       const saved = await prisma.message.create({
         data: {
@@ -289,6 +324,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
           meta: { gameId: crypto.randomUUID(), status: "pending" },
         },
       });
+
+      setTimeout(() => settleInvite(saved.id, "expired").catch(console.error), INVITE_TTL_MS);
 
       const reply: ChatMessageIncoming = {
         id: saved.id,
@@ -317,75 +354,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       break;
     }
 
-    case ChatEvents.GAME_INVITE_REPLY: {
-      const { message_id, accept } = packet.data;
-      const currentUserId = Number(userId);
-
-      const invite = await prisma.message.findUnique({
-        where: { id: message_id },
-      });
-      if (
-        !invite ||
-        invite.receiverId !== currentUserId ||
-        invite.kind !== "game_invite"
-      )
-        break;
-      const meta = invite.meta as { gameId?: string; status?: string } | null;
-      if (!meta || meta.status !== "pending") break; // already answered — ignore
-
-      const nextStatus = accept ? "accepted" : "declined";
-      const updated = await prisma.message.update({
-        where: { id: message_id },
-        data: { meta: { ...meta, status: nextStatus } },
-      });
-
-      // const system = await prisma.message.create({
-      //   data: {
-      //     senderId: currentUserId,
-      //     receiverId: invite.senderId,
-      //     content: accept ? "Invite accepted" : "Invite declined",
-      //     kind: "system",
-      //   },
-      // });
-
-      const packets = [
-        {
-          event: ChatEvents.GAME_INVITE_REPLY,
-          data: {
-            id: updated.id,
-            sender_id: updated.senderId,
-            receiver_id: updated.receiverId,
-            content: updated.content,
-            created_at: updated.createdAt.toISOString(),
-            read_at: null,
-            kind: "game_invite",
-            meta: updated.meta,
-          } as ChatMessageIncoming,
-        },
-        // {
-        //   event: ChatEvents.MESSAGE,
-        //   data: {
-        //     id: system.id,
-        //     sender_id: system.senderId,
-        //     receiver_id: system.receiverId,
-        //     content: system.content,
-        //     created_at: system.createdAt.toISOString(),
-        //     read_at: null,
-        //     kind: "system",
-        //     meta: null,
-        //   } as ChatMessageIncoming,
-        // },
-      ];
-
-      for (const uid of [String(invite.senderId), String(currentUserId)]) {
-        const sockets = onlineUsers.get(uid);
-        if (!sockets) continue;
-        for (const p of packets) {
-          const payload = JSON.stringify(p);
-          for (const socket of sockets)
-            if (socket.readyState === WebSocket.OPEN) socket.send(payload);
-        }
-      }
+     case ChatEvents.GAME_INVITE_REPLY: {
+      await settleInvite(packet.data.message_id, packet.data.accept ? "accepted" : "declined", Number(userId));
       break;
     }
   }
@@ -440,6 +410,14 @@ export function setupWebSocket(server: http.Server) {
       ws.ping();
     }
   }, 15000);
+
+
+    // restart cleanup: timers are lost, so close every invite still pending
+  prisma.message
+    .findMany({ where: { kind: "game_invite", meta: { path: ["status"], equals: "pending" } } })
+    .then((rows) => Promise.all(rows.map((m) => settleInvite(m.id, "expired"))))
+    .catch(console.error);
+
 
   console.log("[CHAT-SERVICE] WebSocket server initialized");
 }

@@ -34,6 +34,7 @@ export default function useChat(token: string | null, friendId: number) {
       .then((data: Message[]) => {
         if (stale) return;
         setHistory([...data].reverse()); // API returns newest first
+        setLive((prev) => prev.filter((m) => !data.some((h) => h.id === m.id)));
         setStatus('ok');
       })
       .catch(() => {
@@ -104,6 +105,7 @@ export default function useChat(token: string | null, friendId: number) {
         case ChatEvents.READ: {
           const { reader_id, read_at } = packet.data;
           setReadAt((p) => ({ ...p, [reader_id]: read_at }));
+          // setReadAt((p) => (p[reader_id] && p[reader_id] >= read_at ? p : { ...p, [reader_id]: read_at }));
           break;
         }
         case ChatEvents.ERROR:

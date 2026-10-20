@@ -21,7 +21,7 @@ export interface ChatMessageIncoming {
   created_at: string; // ISO string
   read_at: string | null;
   kind: "text" | "game_invite";
-  meta: { gameId?: string; status?: "pending" | "accepted" | "declined" } | null;
+  meta: { gameId?: string; status?: "pending" | "accepted" | "declined" | "expired" } | null;
 }
 
 export interface ChatPresenceEvent {
