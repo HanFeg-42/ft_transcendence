@@ -49,7 +49,13 @@ export function Sidebar({ friends, selectedId, onSelect, onNewChat, open }: {
             }`} 
           >
             <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-              <Avatar iconName={'packmann'} size="sm" />
+              {friend.avatar ? (
+              <img 
+                src={friend.avatar}
+                alt={`${friend.username} avatar`}
+                className="w-10 h-10 object-cover"
+              />) : (<Avatar iconName={'packmann'} size="sm" />)
+              }
             </span>
             <span className="font-vt323 text-white text-lg uppercase truncate flex-1">{friend.username}</span>
             <span
@@ -127,7 +133,13 @@ export function Header({ friend, blocked, onToggleBlock, onInvite, inviteDisable
           </button>
 
         <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-          <Avatar iconName={'gost-pink-3d'} size="sm" />
+          {friend.avatar ? (
+              <img 
+                src={friend.avatar}
+                alt={`${friend.username} avatar`}
+                className="w-10 h-10 object-cover"
+              />) : (<Avatar iconName={'packmann'} size="sm" />)
+          }
         </span>
         <div className="min-w-0">
           <span className="font-pixelify text-white text-lg uppercase block truncate">{friend.username}</span>
@@ -257,7 +269,15 @@ export function NewChatModal({ friends, onSelect, onClose }: {
                 onClose();
               }}
             >
-              <Avatar iconName={'packman-blue-3d'} size="sm" status={friend.status} />
+              <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
+                {friend.avatar ? (
+                    <img 
+                      src={friend.avatar}
+                      alt={`${friend.username} avatar`}
+                      className="w-10 h-10 object-cover"
+                    />) : (<Avatar iconName={'packmann'} size="sm" />)
+                }
+              </span>
               {friend.username}
             </button>
           ))}

@@ -2,6 +2,7 @@ export interface Friend {
   id: number;
   username: string;
   status: 'online' | 'offline';
+  avatar: string | null;
 }
 
 // Temporary friends list until the friends service is connected.

@@ -10,6 +10,7 @@ import MessageList from './MessageList';
 import { Sidebar, Header, NewChatModal, GameInviteModal } from './Parts';
 import { type Friend, NO_GLOW, routeMap } from './helpers';
 // import Avatar from '../../components/ui/Avatar';
+// import Avatar from '../../components/ui/Avatar';
 
 export default function Chat() {
   const { user, token } = useAuth();
@@ -30,7 +31,7 @@ export default function Chat() {
     if (!token) return;
     fetch('/api/chat/friends', { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setFriendList(data.map((f: any) => ({ id: f.id, username: f.username, status: f.online ? 'online' : 'offline'}))))
+      .then((data) => setFriendList(data.map((f: any) => ({ id: f.id, username: f.username, status: f.online ? 'online' : 'offline', avatar: f.avatar ?? null}))))
       .catch(console.error);
   }, [token]);
 
