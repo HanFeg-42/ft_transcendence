@@ -3,7 +3,8 @@ import { WebSocketServer, WebSocket, RawData } from "ws";
 import { randomUUID } from "crypto";
 // Import shared WebSocket contract rules (event names and payload shapes)
 import {
-  GameEvents,
+  GameServerEvents,
+  GameClientEvents,
   PlayerInputPayload,
   GameState,
   JoinGamePayload,
@@ -83,7 +84,6 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 
 // Handle messages from the frontend
 function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
-  console.log(`[GAME-SERVICE] Player ${userId} sent message`);
   // Convert incoming binary buffer into a plain text string
   const rawText = rawData.toString();
 
@@ -93,18 +93,60 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     packet = JSON.parse(rawText);
   } catch (err) {
     console.warn("[GAME-SERVICE] Invalid JSON received, ignoring:", rawText);
+    ws.send(
+      JSON.stringify({
+        event: GameServerEvents.ERROR,
+        data: { message: "Invalid JSON" },
+      }),
+    );
     return; // drop the bad message, keep the connection and service alive
   }
 
-  if (!packet || typeof packet !== "object") return;
-  if (!packet.data || typeof packet.data !== "object") return;
-
-  // --- Join a room ---
-  if (packet.event === GameEvents.JOIN_GAME) {
+  if (
+    !packet ||
+    typeof packet !== "object" ||
+    !packet.data ||
+    typeof packet.data !== "object"
+  ) {
+    ws.send(
+      JSON.stringify({
+        event: GameServerEvents.ERROR,
+        data: { message: "Invalid message" },
+      }),
+    );
+    return;
+  }
+  if (!Object.values(GameClientEvents).includes(packet.event)) {
+    ws.send(
+      JSON.stringify({
+        event: GameServerEvents.ERROR,
+        data: { message: "Unknown event" },
+      }),
+    );
+    return;
+  }
+  if (packet.event === GameClientEvents.JOIN_GAME) {
+    // --- Join a room ---
     const { gameId, mazeId }: JoinGamePayload = packet.data;
-    if (!gameId || typeof gameId !== "string") return;
+    if (!gameId || typeof gameId !== "string") {
+      ws.send(
+        JSON.stringify({
+          event: GameServerEvents.ERROR,
+          data: { message: "Invalid gameId" },
+        }),
+      );
+      return;
+    }
     for (const sockets of gameRooms.values()) {
-      if (sockets.has(ws)) return;
+      if (sockets.has(ws)) {
+        ws.send(
+          JSON.stringify({
+            event: GameServerEvents.ERROR,
+            data: { message: "Already in a game" },
+          }),
+        );
+        return;
+      }
     }
     const existing = getSession(gameId);
     if (
@@ -144,7 +186,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     playerSocket.set(userId, ws);
 
     const state: GameState = joinSession(gameId, userId, mazeId);
-    broadcast(gameId, GameEvents.GAME_STATE, state);
+    broadcast(gameId, GameServerEvents.GAME_STATE, state);
 
     if (state.players.length === 2) {
       if (activeLoops.has(gameId) || pendingStarts.has(gameId)) return;
@@ -157,7 +199,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         const loopId = setInterval(() => {
           try {
             if (state.players.every((p) => p.connected)) tick(state);
-            broadcast(gameId, GameEvents.GAME_STATE, state);
+            broadcast(gameId, GameServerEvents.GAME_STATE, state);
             if (state.status !== "playing") {
               saveMatch(state, startedAt);
               reportResult(state);
@@ -186,33 +228,55 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   }
 
   // Check if incoming packet matches the player movement event
-  if (packet.event === GameEvents.PLAYER_INPUT) {
+  if (packet.event === GameClientEvents.PLAYER_INPUT) {
     // Type-cast the payload to enforce shared interface rules
     const input: PlayerInputPayload = packet.data;
-    if (
-      !input.gameId ||
-      typeof input.gameId !== "string" ||
-      !["UP", "DOWN", "LEFT", "RIGHT"].includes(input.direction)
-    )
-      return;
-    const state = getSession(input.gameId);
-    if (!state) return;
-    applyInput(state, userId, input.direction);
-    if (!gameRooms.has(input.gameId)) {
-      console.warn(
-        `[GAME-SERVICE] PLAYER_INPUT for unknown room ${input.gameId}, ignoring`,
+    if (!input.gameId || typeof input.gameId !== "string") {
+      ws.send(
+        JSON.stringify({
+          event: GameServerEvents.ERROR,
+          data: { message: "Invalid gameId" },
+        }),
       );
       return;
     }
+    if (!["UP", "DOWN", "LEFT", "RIGHT"].includes(input.direction)) {
+      ws.send(
+        JSON.stringify({
+          event: GameServerEvents.ERROR,
+          data: { message: "Invalid direction" },
+        }),
+      );
+      return;
+    }
+    const state = getSession(input.gameId);
+    if (!state) {
+      ws.send(
+        JSON.stringify({
+          event: GameServerEvents.ERROR,
+          data: { message: "Game not found" },
+        }),
+      );
+      return;
+    }
+    applyInput(state, userId, input.direction);
   }
 
-  if (packet.event === GameEvents.QUEUE) {
+  if (packet.event === GameClientEvents.QUEUE) {
     if (!queuedPlayer) {
       queuedPlayer = { userId, ws };
       return;
-    } else if (queuedPlayer.userId === userId) return;
+    } else if (queuedPlayer.userId === userId) {
+      ws.send(
+        JSON.stringify({
+          event: GameServerEvents.ERROR,
+          data: { message: "Already queued" },
+        }),
+      );
+      return;
+    }
     const message = JSON.stringify({
-      event: GameEvents.MATCH_FOUND,
+      event: GameServerEvents.MATCH_FOUND,
       data: { gameId: randomUUID() },
     });
     ws.send(message);
@@ -220,7 +284,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     queuedPlayer = null;
   }
 
-  if (packet.event === GameEvents.LEAVE_QUEUE) {
+  if (packet.event === GameClientEvents.LEAVE_QUEUE) {
     if (queuedPlayer?.ws === ws) queuedPlayer = null;
   }
 }
@@ -244,7 +308,7 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
     const state = getSession(gameId);
     if (state?.status === "waiting") {
       removePlayer(userId, state);
-      broadcast(gameId, GameEvents.GAME_STATE, state);
+      broadcast(gameId, GameServerEvents.GAME_STATE, state);
       const startId = pendingStarts.get(gameId);
       if (startId) {
         clearTimeout(startId);

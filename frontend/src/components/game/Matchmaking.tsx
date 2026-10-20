@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { GameEvents } from "../../../../shared/types/game-types";
+import {
+  GameClientEvents,
+  GameServerEvents,
+} from "../../../../shared/types/game-types";
 import PixelButton from "../ui/PixelButton";
 
 const Matchmaking = ({
@@ -17,10 +20,11 @@ const Matchmaking = ({
     if (!token) return;
     const ws = new WebSocket(url);
     ws.onopen = () =>
-      ws.send(JSON.stringify({ event: GameEvents.QUEUE, data: {} }));
+      ws.send(JSON.stringify({ event: GameClientEvents.QUEUE, data: {} }));
     ws.onmessage = (msg: MessageEvent) => {
       const packet = JSON.parse(msg.data);
-      if (packet.event === GameEvents.MATCH_FOUND) onMatch(packet.data.gameId);
+      if (packet.event === GameServerEvents.MATCH_FOUND)
+        onMatch(packet.data.gameId);
     };
     return () => ws.close();
   }, []);

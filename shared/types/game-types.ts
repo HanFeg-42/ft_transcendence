@@ -11,18 +11,20 @@
 
 // --- Event names -----------------------------------------------------
 //A central list of every action that can happen over the WebSocket pipe
-export const GameEvents = {
-  JOIN_GAME: "joinGame", // client -> server: join a match
+export const GameServerEvents = {
   GAME_START: "gameStart", // server -> client: match found, starting
-  PLAYER_INPUT: "playerInput", // client -> server: movement/direction
   GAME_STATE: "gameState", // server -> client: authoritative state tick
   GAME_OVER: "gameOver", // server -> client: match ended
-  QUEUE: "queue", // client -> server: find me an opponent
-  LEAVE_QUEUE: "leaveQueue", // client -> server: cancel the search
   MATCH_FOUND: "matchFound", // server -> client: opponent found, join this game
+  ERROR: "error", // server -> client: bad payload
 } as const;
 
-export type GameEvent = (typeof GameEvents)[keyof typeof GameEvents];
+export const GameClientEvents = {
+  JOIN_GAME: "joinGame", // client -> server: join a match
+  PLAYER_INPUT: "playerInput", // client -> server: movement/direction
+  QUEUE: "queue", // client -> server: find me an opponent
+  LEAVE_QUEUE: "leaveQueue", // client -> server: cancel the search
+} as const;
 
 // --- Payload shapes ----------------------------------------------------
 //1.Data sent by the client when joining a match
@@ -58,6 +60,10 @@ export interface GameOverPayload {
   gameId: string;
   winnerId: string;
   finalScores: Record<string, number>;
+}
+
+export interface ErrorPayload {
+  message: string;
 }
 
 export type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
