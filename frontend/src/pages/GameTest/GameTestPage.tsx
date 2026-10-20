@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import React, { useState } from 'react';
 import MazeUI from '../../components/game/MazeUI';
 import { useLocalGame } from '../../hooks/useLocalGame';
@@ -54,8 +55,9 @@ const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
                         {state.status === 'won' ? 'WIN 🏆' : 'GAME OVER'}
                     </h1>
                     <h1 className={styles.gameOverScore}>
-                        Final Score : {state.players[0]?.score ?? 0}
+                        Score : {state.players[0]?.score ?? 0}
                     </h1>
+                    <div className='flex flex-row gap-6'>
                     <PixelButton 
                         variant="outline-green" 
                         size="lg" 
@@ -63,6 +65,12 @@ const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
                     >
                         RESTART
                     </PixelButton>
+                    <a href='/home' className="inline-flex">
+                        <PixelButton variant='danger-red' size='lg'>
+                            QUIT
+                        </PixelButton>
+                    </a>
+                    </div>
                 </div>
             )}
         </>
@@ -72,6 +80,17 @@ const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
 const GameTestPage: React.FC = () => {
     const [gameMode, setGameMode] = useState<null | 1 | 2>(null);
 
+    const [searchParams] = useSearchParams();
+    const urlMode = searchParams.get('mode');
+
+    if (urlMode === 'local' && gameMode === null) {
+        return (
+            <>
+                <RotDev />
+                <GameMenu onSelectMode={(mode) => setGameMode(mode)} />
+            </>
+        );
+    }
 
     if (gameMode === null) {
         return (

@@ -84,8 +84,9 @@ const variantStyles: Record<
   "danger-red": {
     bg: "bg-red-950",
     glow: "shadow-[inset_0_0_15px_rgba(239,68,68,0.6)]",
-    borderColor: "border-red-500",
+    borderColor: "border-red-500/70",
     dropShadow: "drop-shadow-glow-red",
+    textColor: "text-red-700",
   },
   "warning-yellow": {
     bg: "bg-amber-950",

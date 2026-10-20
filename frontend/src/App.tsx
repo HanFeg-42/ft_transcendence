@@ -8,7 +8,7 @@ import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Game from "./pages/GameTest/GameTestPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-// import DesignSystem from './pages/DesignSystem'
+import Choose from './pages/GameTest/chooseGameMode';
 // import Nav from './pages/NavbarTest'
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
@@ -34,7 +34,7 @@ function App() {
         <Route path="/game" element={<Game />} />
         <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
       </Route>
-      {/* <Route path="/DesignSystem" element={<DesignSystem />} /> */}
+      <Route path="/choose" element={<Choose/>} />
       {/* <Route path="/NavbarTest" element={<Nav />} /> */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
