@@ -56,7 +56,7 @@ export default function Chat() {
   // Tell the server we read this chat: on new messages, friend change, and when the tab regains focus.
   useEffect(() => {
     const markRead = () => {
-      if (document.visibilityState === 'visible') sendRead(friendId);
+      if (friendId && document.visibilityState === 'visible') sendRead(friendId);
     };
     markRead();
     document.addEventListener('visibilitychange', markRead);
@@ -107,6 +107,16 @@ export default function Chat() {
     );
   }
 
+  if (chat.reconnecting) {
+    return (
+      <Background>
+        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
+        <main className="flex-1 flex items-center justify-center">
+          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase animate-pulse">Reconnecting…</h1>
+        </main>
+      </Background>
+    );
+  }
 
   if (!friend) {
     return (
@@ -167,11 +177,14 @@ export default function Chat() {
             )
           )}
 
+            {chat.error && <p className="px-4 font-vt323 text-lg text-pacova-pink">{chat.error}</p>}
+
           <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
             <Input
               className={`min-w-0 w-full !border-pacova-pink !bg-[#080B1A] !text-white placeholder:!text-white/50 !text-lg sm:!text-xl !py-3 disabled:opacity-40 ${NO_GLOW} focus:!shadow-none focus:[box-shadow:none!important]`}
               value={draft}
               type="text"
+              maxLength={1000}
               disabled={blocked}
               onChange={(e) => handleDraftChange(e.target.value)}
               placeholder={blocked ? 'You cannot message this user' : 'Type a message...'}

@@ -9,6 +9,7 @@ export const ChatEvents = {
   GAME_INVITE: "gameInvite",
   GAME_INVITE_REPLY: "gameInviteReply",
   NOTIFICATION: "notification",
+  ERROR: "error",
 } as const;
 
 // A stored message (text, game invit). Used by the websocket AND the REST history.
@@ -44,4 +45,5 @@ export type ChatServerMessage =
   | { event: typeof ChatEvents.PRESENCE; data: ChatPresenceEvent }
   | { event: typeof ChatEvents.TYPING; data: { sender_id: number } }
   | { event: typeof ChatEvents.READ; data: { reader_id: number; read_at: string } }
-  | { event: typeof ChatEvents.NOTIFICATION; data: NotificationSocketData };
+  | { event: typeof ChatEvents.NOTIFICATION; data: NotificationSocketData }
+  | { event: typeof ChatEvents.ERROR; data: { message: string } };

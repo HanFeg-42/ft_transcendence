@@ -19,10 +19,13 @@ export default function useChat(token: string | null, friendId: number) {
   const [typing, setTyping] = useState<Record<number, boolean>>({});
   const [readAt, setReadAt] = useState<Record<number, string>>({});
   const socket = useRef<WebSocket | null>(null);
+  const [error, setError] = useState('');
+  const [reconnecting, setReconnecting] = useState(false);
+
 
   // History + block status, reloaded when the selected friend changes.
   useEffect(() => {
-    if (!token || !friendId) return;
+    if (!token || !friendId || reconnecting) return;
     let stale = false;
     setStatus('loading');
 
@@ -47,23 +50,31 @@ export default function useChat(token: string | null, friendId: number) {
     return () => {
       stale = true;
     };
-  }, [token, friendId]);
+  }, [token, friendId, reconnecting]);
 
   // One websocket for the whole page.
   useEffect(() => {
     if (!token) return;
-    const ws = new WebSocket(`wss://${window.location.host}/api/chat/ws?token=${token}`);
-    socket.current = ws;
+    let ws: WebSocket;
+    let retries = 0;
+    let closed = false;
+    let retryTimer: ReturnType<typeof setTimeout>;
     const timers: Record<number, ReturnType<typeof setTimeout>> = {};
 
-    // Show "typing..." for a user; it switches itself off after 2s.
-    const showTyping = (id: number, on: boolean) => {
-      clearTimeout(timers[id]);
-      setTyping((p) => ({ ...p, [id]: on }));
-      if (on) timers[id] = setTimeout(() => setTyping((p) => ({ ...p, [id]: false })), 2000);
-    };
-
-    ws.onmessage = (event) => {
+    const connect = () => {
+      ws = new WebSocket(`wss://${window.location.host}/api/chat/ws?token=${token}`);
+      socket.current = ws;
+      ws.onopen = () => {
+        retries = 0;
+        setReconnecting(false);
+      };
+      ws.onclose = () => {
+        if (closed) return;
+        setReconnecting(true);
+        retryTimer = setTimeout(connect, Math.min(1000 * 2 ** retries++, 15000)); // 1s, 2s, 4s ... max 15s
+      };
+      
+      ws.onmessage = (event) => {
       let packet: ChatServerMessage;
       try {
         packet = JSON.parse(event.data);
@@ -95,10 +106,32 @@ export default function useChat(token: string | null, friendId: number) {
           setReadAt((p) => ({ ...p, [reader_id]: read_at }));
           break;
         }
+        case ChatEvents.ERROR:
+          setError(packet.data.message);
+          setTimeout(() => setError(''), 3000);
+          break;
       }
     };
 
+    };
+    connect();
+
+
+    
+    
+
+    // Show "typing..." for a user; it switches itself off after 2s.
+    const showTyping = (id: number, on: boolean) => {
+      clearTimeout(timers[id]);
+      setTyping((p) => ({ ...p, [id]: on }));
+      if (on) timers[id] = setTimeout(() => setTyping((p) => ({ ...p, [id]: false })), 2000);
+    };
+
+    
+
     return () => {
+      closed = true;
+      clearTimeout(retryTimer);
       Object.values(timers).forEach(clearTimeout);
       ws.close();
     };
@@ -127,8 +160,10 @@ export default function useChat(token: string | null, friendId: number) {
     presence,
     typing,
     readAt,
+    error,
     iBlockedThem,
     toggleBlock,
+    reconnecting,
     sendMessage: (receiver_id: number, content: string) =>
       send({ event: ChatEvents.MESSAGE, data: { receiver_id, content } }),
     sendTyping: (receiver_id: number) =>

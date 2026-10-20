@@ -16,6 +16,68 @@ import {
 import { notifyUser } from "../notifications/notifyUser";
 import { NotificationTypes } from "../../../shared/types/notification-types";
 
+
+
+
+
+const AUTH_URL = process.env.AUTH_SERVICE_URL || "http://auth:3001";
+const hits = new WeakMap<WebSocket, number[]>(); // recent send times per socket
+const known = new Set<number>(); // user ids already confirmed to exist
+
+function sendError(ws: WebSocket, message: string) {
+  if (ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ event: ChatEvents.ERROR, data: { message } }));
+}
+
+async function validate(ws: WebSocket, p: any, myId: string): Promise<string | null> {
+  if (!p || typeof p.data !== "object" || !p.data) return "Malformed packet";
+  const d = p.data;
+  const e = p.event;
+
+  // rate limit: 20 messages/invites per 10s per socket
+  if (e === ChatEvents.MESSAGE || e === ChatEvents.GAME_INVITE) {
+    const now = Date.now();
+    const recent = (hits.get(ws) ?? []).filter((t) => now - t < 10_000);
+    recent.push(now);
+    hits.set(ws, recent);
+    if (recent.length > 20) return "Too many messages, slow down";
+  }
+
+  // content: trimmed, non-empty, max 1000 (saved trimmed)
+  if (e === ChatEvents.MESSAGE) {
+    if (typeof d.content !== "string" || !d.content.trim()) return "Message cannot be empty";
+    d.content = d.content.trim();
+    if (d.content.length > 1000) return "Message too long (max 1000 characters)";
+  }
+
+  // target user: integer, not me, exists
+  if ([ChatEvents.MESSAGE, ChatEvents.TYPING, ChatEvents.GAME_INVITE, ChatEvents.READ].includes(e)) {
+    const id = e === ChatEvents.READ ? d.sender_id : d.receiver_id;
+    if (!Number.isSafeInteger(id) || id <= 0 || id === Number(myId)) return "Invalid user id";
+    if (!known.has(id)) {
+      const r = await fetch(`${AUTH_URL}/users/${id}`).catch(() => null);
+      if (!r?.ok) return r?.status === 404 ? "User not found" : "Could not verify user, try again";
+      known.add(id);
+    }
+  }
+  return null;
+}
+
+
+async function isBlocked(a: number, b: number): Promise<boolean> {
+  const row = await prisma.blockedUser.findFirst({
+    where: {
+      OR: [
+        { blockerId: a, blockedId: b },
+        { blockerId: b, blockedId: a },
+      ],
+    },
+  });
+  return !!row;
+}
+
+
+
 // 1. Handling New Connections (handleConnection)
 async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   const userId = req.headers["x-user-id"] as string | undefined;
@@ -25,14 +87,18 @@ async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
     return;
   }
 
-  console.log("[CHAT-SERVICE] Client connected:", userId);
+  // console.log("[CHAT-SERVICE] Client connected:", userId);
 
   const wasOffline = !onlineUsers.has(userId);
   const sockets = onlineUsers.get(userId) ?? new Set<WebSocket>();
   sockets.add(ws);
   onlineUsers.set(userId, sockets);
 
-  ws.on("message", (rawData: RawData) => handleMessage(ws, rawData, userId));
+  ws.on("message", (rawData: RawData) => 
+    handleMessage(ws, rawData, userId).catch(() => sendError(ws, "Something went wrong")),
+  );
+
+
   ws.on("close", (code) => handleClose(ws, code, userId));
   ws.on("error", (err) => handleError(ws, err));
 
@@ -51,6 +117,11 @@ async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   }
 }
 
+
+
+
+
+
 // 2. Handling Incoming Messages (handleMessage)
 async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   const rawText = rawData.toString();
@@ -59,30 +130,22 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   try {
     packet = JSON.parse(rawText);
   } catch (err) {
-    console.warn("[CHAT-SERVICE] Invalid JSON received, ignoring:", rawText);
-    return;
+    return sendError(ws, "Invalid JSON");
   }
+
+
+  const error = await validate(ws, packet, userId);
+  if (error) return sendError(ws, error);
+
+
+
 
   switch (packet.event) {
     case ChatEvents.MESSAGE: {
       const outgoing = packet.data;
-      console.log(`[CHAT-SERVICE] Message from ${userId}:`, outgoing);
+      // console.log(`[CHAT-SERVICE] Message from ${userId}:`, outgoing);
 
-      const isBlocked = await prisma.blockedUser.findUnique({
-        where: {
-          blockerId_blockedId: {
-            blockerId: outgoing.receiver_id,
-            blockedId: Number(userId),
-          },
-        },
-      });
-
-      if (isBlocked) {
-        console.log(
-          `[CHAT-SERVICE] Message from ${userId} to ${outgoing.receiver_id} dropped — blocked`,
-        );
-        break;
-      }
+      if (await isBlocked(outgoing.receiver_id, Number(userId))) break;   // MESSAGE
 
       const saved = await prisma.message.create({
         data: {
@@ -147,17 +210,9 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const friendId = outgoing.sender_id;
       const currentUserId = Number(userId);
 
-      // 1. Check block status (don't send read receipts if blocked)
-      const isBlocked = await prisma.blockedUser.findFirst({
-        where: {
-          OR: [
-            { blockerId: friendId, blockedId: currentUserId },
-            { blockerId: currentUserId, blockedId: friendId },
-          ],
-        },
-      });
+      
+      if (await isBlocked(friendId, currentUserId)) break;                // READ
 
-      if (isBlocked) break;
 
       const now = new Date();
 
@@ -200,12 +255,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const receiverId = outgoing.receiver_id;
       const senderId = Number(userId);
 
-      const isBlocked = await prisma.blockedUser.findUnique({
-        where: {
-          blockerId_blockedId: { blockerId: receiverId, blockedId: senderId },
-        },
-      });
-      if (isBlocked) break;
+     
+      if (await isBlocked(receiverId, senderId)) break;                   // TYPING
 
       const typingEvent: ChatServerMessage = {
         event: ChatEvents.TYPING,
@@ -226,15 +277,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const { receiver_id } = packet.data;
       const senderId = Number(userId);
 
-      const isBlocked = await prisma.blockedUser.findFirst({
-        where: {
-          OR: [
-            { blockerId: receiver_id, blockedId: senderId },
-            { blockerId: senderId, blockedId: receiver_id },
-          ],
-        },
-      });
-      if (isBlocked) break;
+      
+      if (await isBlocked(receiver_id, senderId)) break;                  // GAME_INVITE
 
       const saved = await prisma.message.create({
         data: {
@@ -347,9 +391,13 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   }
 }
 
+
+
+
+
 // 3. Handling Disconnection (handleClose)
 async function handleClose(ws: WebSocket, code: number, userId: string) {
-  console.log(`[CHAT-SERVICE] Client disconnected: ${userId} (Code: ${code})`);
+  // console.log(`[CHAT-SERVICE] Client disconnected: ${userId} (Code: ${code})`);
 
   const sockets = onlineUsers.get(userId);
   if (!sockets) return;
@@ -363,15 +411,35 @@ async function handleClose(ws: WebSocket, code: number, userId: string) {
   }
 }
 
+
+
+
 // 4. Error Handling & Initialization (setupWebSocket)
 function handleError(ws: WebSocket, err: Error) {
   console.error("[CHAT-SERVICE] Socket error:", err.message);
 }
 
+
+
+
+
 export function setupWebSocket(server: http.Server) {
   const wss = new WebSocketServer({ server });
+  const alive = new WeakSet<WebSocket>();
+
   wss.on("connection", (ws, req) => {
+    alive.add(ws);
+    ws.on("pong", () => alive.add(ws)); // browsers answer pings automatically
     handleConnection(ws, req);
   });
+
+  setInterval(() => {
+    for (const ws of wss.clients) {
+      if (!alive.has(ws)) { ws.terminate(); continue; }
+      alive.delete(ws);
+      ws.ping();
+    }
+  }, 15000);
+
   console.log("[CHAT-SERVICE] WebSocket server initialized");
 }
