@@ -11,12 +11,12 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Choose from './pages/Game/chooseGameMode';
 // import Nav from './pages/NavbarTest'
 import Profile from "./pages/profile";
-import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
 import Privacy from "./pages/legal/PrivacyPolicy";
 import Terms from "./pages/legal/TermsOfService";
 import FriendsTest from "./pages/FriendsTest";
 
+import OnlineGame from "./pages/OnlineGame";
 
 /** Renders the application's route configuration. */
 function App() {
@@ -35,7 +35,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         {/* <Route path="/game" element={<Game />} /> */}
         <Route path="/game" element={<Game />} />
-        <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
+        <Route path="/game/online" element={<OnlineGame />} /> {/* TEMP */}
       </Route>
       <Route path="/choose" element={<Choose/>} />
       {/* <Route path="/NavbarTest" element={<Nav />} /> */}

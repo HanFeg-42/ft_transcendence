@@ -23,6 +23,8 @@ export function useLocalGame(playerId: string = 'player-1', playersCount: number
                 lives: 3,
                 score: 0,
                 connected: true,
+                pelletsEaten: 0,
+                ghostsEaten: 0,
             };
             state.players.push(player2);
             setFrame(f => f + 1);
