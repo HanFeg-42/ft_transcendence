@@ -20,7 +20,7 @@ export default function Leaderboard() {
     setError(null);
 
     try {
-      const data = await getLeaderboard(token, 10);
+      const data = await getLeaderboard(token, 100);
       setEntries(data);
     } catch {
       setError("Failed to load the leaderboard. Please try again.");
