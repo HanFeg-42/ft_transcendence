@@ -8,7 +8,7 @@ import GameMenu from '../../components/game/GameMenu';
 import PixelButton from '../../components/ui/PixelButton';
 import type { Direction } from '../../../../shared/types/game-types';
 import HudPlayer from '../../components/game/HudPlayer';
-import styles from './GameTestPage.module.css';
+import styles from './GamePage.module.css';
 import { RotDev } from '../../components/game/RotateDevice';
 import MobileControls from "../../components/game/MobileControls";
 
@@ -77,7 +77,7 @@ const GameSession: React.FC<{ gameMode: 1 | 2 }> = ({ gameMode }) => {
     );
 };
 
-const GameTestPage: React.FC = () => {
+const GamePage: React.FC = () => {
     const [gameMode, setGameMode] = useState<null | 1 | 2>(null);
 
     const [searchParams] = useSearchParams();
@@ -104,4 +104,4 @@ const GameTestPage: React.FC = () => {
     return <GameSession key={gameMode} gameMode={gameMode} />;
 };
 
-export default GameTestPage;
+export default GamePage;

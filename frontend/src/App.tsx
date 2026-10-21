@@ -6,9 +6,9 @@ import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
-import Game from "./pages/GameTest/GameTestPage";
+import Game from "./pages/Game/GamePage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import Choose from './pages/GameTest/chooseGameMode';
+import Choose from './pages/Game/chooseGameMode';
 // import Nav from './pages/NavbarTest'
 import Profile from "./pages/profile";
 import GameWs from "./pages/GameWs"; // TEMP
