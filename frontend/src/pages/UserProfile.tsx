@@ -7,7 +7,7 @@ import ProfileCard from '../components/ui/ProfileCard';
 import PixelButton from '../components/ui/PixelButton';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, type ProfileData } from '../services/userService';
-import { routeMap } from './Chat/constants';
+import { routeMap } from './Chat/helpers';
 
 // Read-only view of SOMEONE ELSE's profile, reached from Chat's
 // "View Profile" menu item (ConversationHeader.tsx -> /profile/:userId).

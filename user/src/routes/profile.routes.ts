@@ -141,6 +141,54 @@ router.get('/me', async (req: Request, res: Response) => {
     return res.status(500).json({ error: err.message });
   }
 });
+///////////////////////
+
+
+/** GET /profiles?ids=1,2,3 */
+router.get('/profiles', async (req: Request, res: Response) => {
+  const rawIds = req.query.ids;
+
+  if (typeof rawIds !== 'string' || !rawIds.trim()) {
+    return res.status(400).json({ error: 'ids query parameter is required' });
+  }
+
+  const ids = [...new Set(
+    rawIds.split(',').map((id) => Number(id.trim()))
+  )];
+
+  if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+    return res.status(400).json({ error: 'Invalid user ids' });
+  }
+
+  try {
+    const profiles = await prisma.profile.findMany({
+      where: { userId: { in: ids } },
+      select: {
+        userId: true,
+        avatarUrl: true,
+      },
+    });
+
+    return res.json(
+      profiles.map((profile) => ({
+        id: profile.userId,
+        avatarUrl: profile.avatarUrl,
+      }))
+    );
+  } catch (err) {
+    console.error('[USER] getProfiles error:', err);
+    return res.status(500).json({ error: 'Failed to fetch profiles' });
+  }
+});
+
+
+
+////////////////////
+
+
+
+
+
 
 // GET /profile/:id
 router.get('/:id', async (req: Request, res: Response) => {
