@@ -24,5 +24,5 @@ const server = http.createServer(app); // creates a server
 setupWebSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`[CHAT] Service running on port ${PORT}`);
+  // console.log(`[CHAT] Service running on port ${PORT}`);
 });

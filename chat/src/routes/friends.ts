@@ -7,8 +7,15 @@ import { WebSocket } from 'ws';
 
 const router = Router();
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth:3001';
+
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://user:3004';
 // 
-type PublicUser = { id: number; username: string; avatar: string | null };
+// type PublicUser = { id: number; username: string; avatar: string | null };
+type PublicUser = {
+  id: number;
+  username: string;
+  avatar: string | null;
+};
 type Relation = 'self' | 'friend' | 'incoming_request' | 'outgoing_request' | 'blocked' | 'none';
 
 function currentUserId(req: Request): number | null {
@@ -30,18 +37,100 @@ function parseBigIntId(raw: string): bigint | null {
     return null;
   }
 }
-// 
+
+
+
+
 async function getPublicUsers(): Promise<PublicUser[]> {
   const response = await fetch(`${AUTH_SERVICE_URL}/users`);
-  if (!response.ok) throw new Error(`Auth service returned ${response.status}`);
+
+  if (!response.ok) {
+    throw new Error(`Auth service returned ${response.status}`);
+  }
+
   const data: unknown = await response.json();
-  if (!Array.isArray(data)) throw new Error('Invalid users response from auth service');
-  return data.filter((user): user is PublicUser =>
-    user !== null && typeof user === 'object' &&
-    Number.isSafeInteger((user as PublicUser).id) &&
-    typeof (user as PublicUser).username === 'string'
+
+  if (!Array.isArray(data)) {
+    throw new Error('Invalid users response from auth service');
+  }
+
+  const users: PublicUser[] = data.flatMap((user): PublicUser[] => {
+    if (user === null || typeof user !== 'object') {
+      return [];
+    }
+
+    const item = user as {
+      id?: unknown;
+      username?: unknown;
+      avatar?: unknown;
+    };
+
+    if (
+      typeof item.id !== 'number' ||
+      !Number.isSafeInteger(item.id) ||
+      typeof item.username !== 'string'
+    ) {
+      return [];
+    }
+
+    return [{
+      id: item.id,
+      username: item.username,
+      avatar: typeof item.avatar === 'string' ? item.avatar : null,
+    }];
+  });
+
+  if (users.length === 0) {
+    return users;
+  }
+
+  const ids = users.map(user => user.id).join(',');
+  const profileResponse = await fetch(
+    `${USER_SERVICE_URL}/profile/profiles?ids=${ids}`
   );
+
+  if (!profileResponse.ok) {
+    throw new Error(`User profile service returned ${profileResponse.status}`);
+  }
+
+  const profiles: unknown = await profileResponse.json();
+
+  if (!Array.isArray(profiles)) {
+    throw new Error('Invalid profiles response from user service');
+  }
+
+  const avatars = new Map<number, string | null>();
+
+  for (const profile of profiles) {
+    if (profile === null || typeof profile !== 'object') {
+      continue;
+    }
+
+    const item = profile as {
+      id?: unknown;
+      avatarUrl?: unknown;
+    };
+
+    if (
+      typeof item.id === 'number' &&
+      Number.isSafeInteger(item.id)
+    ) {
+      avatars.set(
+        item.id,
+        typeof item.avatarUrl === 'string' ? item.avatarUrl : null
+      );
+    }
+  }
+
+  return users.map(user => ({
+    ...user,
+    avatar: avatars.has(user.id)
+      ? avatars.get(user.id)!
+      : user.avatar,
+  }));
 }
+
+///////////////////////
 // 
 function sendToUser(userId: number, event: string, data: Record<string, unknown>) {
   const sockets = onlineUsers.get(String(userId));
@@ -77,20 +166,54 @@ async function getRelation(userId: number, otherId: number): Promise<Relation> {
 }
 // 
 // 
+// async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
+//   for (let attempt = 0; ; attempt++) {
+//     try {
+//       return await prisma.$transaction(work, { isolationLevel: 'Serializable' });
+//     } catch (error) {
+//       const code = typeof error === 'object' && error !== null && 'code' in error
+//         ? (error as { code?: string }).code
+//         : undefined;
+//       if ((code === 'P2034' || code === 'P2002') && attempt < 2) continue;
+//       throw error;
+//     }
+//   }
+// }
+// P2034: Prisma transaction conflict.
+
+// 40001: PostgreSQL serialization failure.
+// 
+// TransactionWriteConflict: conflict f transaction.
+
 async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     try {
-      return await prisma.$transaction(work, { isolationLevel: 'Serializable' });
+      return await prisma.$transaction(work, {
+        isolationLevel: 'Serializable',
+      });
     } catch (error) {
-      const code = typeof error === 'object' && error !== null && 'code' in error
-        ? (error as { code?: string }).code
-        : undefined;
-      if ((code === 'P2034' || code === 'P2002') && attempt < 2) continue;
+      const err = error as {
+        code?: string;
+        cause?: {
+          originalCode?: string;
+          kind?: string;
+        };
+      };
+
+      const retryable =
+        err.code === 'P2034' ||
+        err.code === 'P2002' ||
+        err.cause?.originalCode === '40001' ||
+        err.cause?.kind === 'TransactionWriteConflict';
+
+      if (retryable && attempt < 2) {
+        continue;
+      }
+
       throw error;
     }
   }
 }
-// 
 function handleError(res: Response, error: unknown) {
   console.error('[CHAT] Friends route error:', error);
   return res.status(500).json({ error: 'Internal server error' });
