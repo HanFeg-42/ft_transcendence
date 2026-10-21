@@ -194,14 +194,14 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const startId = setTimeout(() => {
         pendingStarts.delete(gameId);
         state.status = "playing";
-        const startedAt = new Date();
+        state.startedAt = Date.now();
 
         const loopId = setInterval(() => {
           try {
             if (state.players.every((p) => p.connected)) tick(state);
             broadcast(gameId, GameServerEvents.GAME_STATE, state);
             if (state.status !== "playing") {
-              saveMatch(state, startedAt);
+              saveMatch(state);
               reportResult(state);
               activeLoops.delete(gameId);
               gameRooms.delete(gameId);
@@ -327,7 +327,7 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
       if (state?.status !== "playing") gameRooms.delete(gameId);
       else {
         const forfeitId = forfeitTimers.get(gameId);
-        if (gameId) {
+        if (forfeitId) {
           clearTimeout(forfeitId);
           forfeitTimers.delete(gameId);
         }
@@ -337,6 +337,8 @@ function handleClose(ws: WebSocket, code: number, userId: string) {
           activeLoops.delete(gameId);
           abandonTimers.delete(gameId);
           gameRooms.delete(gameId);
+          state.status = "abandoned";
+          saveMatch(state);
           endSession(gameId);
         }, ABANDON_DELAY_MS);
 

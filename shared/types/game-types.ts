@@ -67,7 +67,7 @@ export interface ErrorPayload {
 }
 
 export type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
-export type GameStatus = "waiting" | "playing" | "won" | "lost" | "finished";
+export type GameStatus = "waiting" | "playing" | "won" | "lost" | "finished" | "abandoned";
 
 export interface Tile {
   x: number;
@@ -104,6 +104,7 @@ export interface GameState {
   pellets: boolean[][];
   timeRemaining: number;
   timeLimit?: number;
+  startedAt?: number;
   winnerId?: string;
   vulnerableTimer: number;
   mazeId: string;
