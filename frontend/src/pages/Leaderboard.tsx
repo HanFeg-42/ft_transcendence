@@ -11,6 +11,7 @@ import {
 // Copy the routeMap from Home.tsx and add LEADERBOARD (they must match)
 const routeMap: Record<string, string> = {
   HOME: "/home",
+  LEADERBOARD: "/leaderboard",
   PROFILE: "/profile",
   CHAT: "/chat",
   NOTIFICATION: "/notifications",
