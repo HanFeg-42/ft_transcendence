@@ -6,9 +6,11 @@ import Badge from "../components/ui/Badge";
 import { DEFAULT_MAZE_ID, MAZES } from "../engine/maze";
 import GameRoom from "../components/game/GameRoom";
 import Matchmaking from "../components/game/Matchmaking";
+import { useSearchParams } from "react-router-dom";
 
 const GameWs = () => {
-  const [gameRoom, setGameRoom] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const [gameRoom, setGameRoom] = useState<string | null>(searchParams.get("gameId"));
   const [roomInput, setRoomInput] = useState<string>("");
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
   const [joinError, setJoinError] = useState<string | null>(null);
