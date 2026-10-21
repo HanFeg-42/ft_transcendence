@@ -31,9 +31,9 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
           className="w-[200%] h-[200%] -ml-[50%] grid-animation"
           style={{ 
             backgroundImage: `
-              linear-gradient(to right, rgba(142, 214, 3, 0.4) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(142, 214, 3, 0.4) 1px, transparent 1px)
-            `, 
+              linear-gradient(to right, rgba(243, 32, 119, 0.4) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(243, 32, 119, 0.4) 1px, transparent 1px)
+            `,
             backgroundSize: '40px 40px',
             transform: 'perspective(180px) rotateX(65deg)',
             transformOrigin: 'top center'
