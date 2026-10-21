@@ -1,6 +1,6 @@
 import express from "express";
 import http from "http";
-import { setupWebSocket } from './wsTypes';
+import { setupWebSocket } from './websocket';
 import matchRoutes from "./routes/match.routes";
 import statsRoutes from "./routes/stats.routes";
 import leaderboardRoutes from "./routes/leaderboard.routes";

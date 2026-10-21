@@ -11,8 +11,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import DesignSystem from './pages/DesignSystem'
 // import Nav from './pages/NavbarTest'
 import Profile from "./pages/profile";
-import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
+import OnlineGame from "./pages/OnlineGame";
 
 /** Renders the application's route configuration. */
 function App() {
@@ -30,7 +30,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         {/* <Route path="/game" element={<Game />} /> */}
         <Route path="/game" element={<Game />} />
-        <Route path="/game-ws" element={<GameWs />} /> {/* TEMP */}
+        <Route path="/game/online" element={<OnlineGame />} /> {/* TEMP */}
       </Route>
       {/* <Route path="/DesignSystem" element={<DesignSystem />} />
       <Route path="/NavbarTest" element={<Nav />} /> */}

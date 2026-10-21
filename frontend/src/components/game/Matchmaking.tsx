@@ -9,9 +9,11 @@ import PixelButton from "../ui/PixelButton";
 const Matchmaking = ({
   onMatch,
   onCancel,
+  onError,
 }: {
   onMatch: (gameId: string) => void;
   onCancel: () => void;
+  onError: (message: string) => void;
 }) => {
   const { token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
@@ -25,6 +27,7 @@ const Matchmaking = ({
       const packet = JSON.parse(msg.data);
       if (packet.event === GameServerEvents.MATCH_FOUND)
         onMatch(packet.data.gameId);
+      if (packet.event === GameServerEvents.ERROR) onError(packet.data.message);
     };
     return () => ws.close();
   }, []);

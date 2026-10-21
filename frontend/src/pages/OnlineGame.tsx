@@ -8,19 +8,23 @@ import GameRoom from "../components/game/GameRoom";
 import Matchmaking from "../components/game/Matchmaking";
 import { useSearchParams } from "react-router-dom";
 
-const GameWs = () => {
+const OnlineGame = () => {
   const [searchParams] = useSearchParams();
-  const [gameRoom, setGameRoom] = useState<string | null>(searchParams.get("gameId"));
+  const [gameRoom, setGameRoom] = useState<string | null>(
+    searchParams.get("gameId"),
+  );
   const [roomInput, setRoomInput] = useState<string>("");
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
-  const [joinError, setJoinError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState<boolean>(false);
 
-  const handleJoinError = (message: string) => {
+  const handleError = (message: string) => {
     setGameRoom(null);
     setRoomInput("");
-    setJoinError(message);
+    setSearching(false);
+    setError(message);
   };
+
   if (!gameRoom && searching) {
     return (
       <ArenaBackground>
@@ -31,6 +35,7 @@ const GameWs = () => {
               setGameRoom(gameId);
             }}
             onCancel={() => setSearching(false)}
+            onError={handleError}
           />
         </div>
       </ArenaBackground>
@@ -40,17 +45,27 @@ const GameWs = () => {
     return (
       <ArenaBackground>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          {joinError && <Badge variant="red">{joinError}</Badge>}
+          {error && <Badge variant="red">{error}</Badge>}
           <Input
             placeholder="Enter room name"
             value={roomInput}
             onChange={(e) => setRoomInput(e.target.value)}
             className="text-center"
           />
-          <PixelButton onClick={() => setGameRoom(roomInput)}>
+          <PixelButton
+            onClick={() => {
+              setError(null);
+              setGameRoom(roomInput);
+            }}
+          >
             Join gameroom
           </PixelButton>
-          <PixelButton onClick={() => setSearching(true)}>
+          <PixelButton
+            onClick={() => {
+              setError(null);
+              setSearching(true);
+            }}
+          >
             Find a match
           </PixelButton>
           <select
@@ -69,12 +84,8 @@ const GameWs = () => {
     );
   return (
     <ArenaBackground>
-      <GameRoom
-        gameId={gameRoom}
-        onFullRoom={handleJoinError}
-        mazeId={mazeId}
-      />
+      <GameRoom gameId={gameRoom} onError={handleError} mazeId={mazeId} />
     </ArenaBackground>
   );
 };
-export default GameWs;
+export default OnlineGame;

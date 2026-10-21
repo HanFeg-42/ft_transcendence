@@ -25,11 +25,11 @@ const KEY_MAP: Record<string, Direction> = {
 
 const GameRoom = ({
   gameId,
-  onFullRoom,
+  onError,
   mazeId,
 }: {
   gameId: string;
-  onFullRoom: (message: string) => void;
+  onError: (message: string) => void;
   mazeId: string;
 }) => {
   const { user, token } = useAuth();
@@ -38,7 +38,7 @@ const GameRoom = ({
   const {
     gameState: state,
     // isConnected,
-    isRoomFull,
+    error,
     sendPlayerInput,
   } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId);
 
@@ -61,10 +61,10 @@ const GameRoom = ({
     draw(ctx, state);
   }, [state]);
   useEffect(() => {
-    if (isRoomFull) {
-      onFullRoom("This room is full, try another one");
+    if (error && !state) {
+      onError(error);
     }
-  }, [isRoomFull]);
+  }, [error]);
   if (!state)
     return (
       <p className="font-vt323 text-2xl text-pacova-pink text-center mt-10">

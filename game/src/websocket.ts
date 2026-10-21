@@ -142,7 +142,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
         ws.send(
           JSON.stringify({
             event: GameServerEvents.ERROR,
-            data: { message: "Already in a game" },
+            data: { message: "This connection already joined a game" },
           }),
         );
         return;
@@ -154,7 +154,12 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       existing.players.length >= 2 &&
       !existing.players.some((p) => p.id === userId)
     ) {
-      ws.close(1008, "Room full");
+      ws.send(
+        JSON.stringify({
+          event: GameServerEvents.ERROR,
+          data: { message: "This room is full, try another one" },
+        }),
+      );
       return;
     }
     const rejoining = existing?.players.find((p) => p.id === userId);
@@ -270,7 +275,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       ws.send(
         JSON.stringify({
           event: GameServerEvents.ERROR,
-          data: { message: "Already queued" },
+          data: { message: "You're already searching for a match" },
         }),
       );
       return;
