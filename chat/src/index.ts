@@ -1,3 +1,4 @@
+import friendsRouter from './routes/friends';
 import express from 'express';
 import http from 'http';
 import { setupWebSocket } from './ws/websocket';
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(messagesRouter);
 app.use(blocksRouter);
 app.use(notificationsRouter);
+app.use(friendsRouter);
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', service: 'chat' });
@@ -22,5 +24,5 @@ const server = http.createServer(app); // creates a server
 setupWebSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`[CHAT] Service running on port ${PORT}`);
+  // console.log(`[CHAT] Service running on port ${PORT}`);
 });

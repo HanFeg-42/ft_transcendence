@@ -15,6 +15,8 @@ import GameWs from "./pages/GameWs"; // TEMP
 import UserProfile from "./pages/UserProfile";
 import Privacy from "./pages/legal/PrivacyPolicy";
 import Terms from "./pages/legal/TermsOfService";
+import FriendsTest from "./pages/FriendsTest";
+
 
 /** Renders the application's route configuration. */
 function App() {
@@ -28,6 +30,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/friends-test" element={<FriendsTest />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         {/* <Route path="/game" element={<Game />} /> */}
