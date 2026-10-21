@@ -64,5 +64,6 @@ export function directionToNearest(state: GameState, botId: string, isTarget: (t
         }); 
 
     }
+    
     return null;
 }
