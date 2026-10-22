@@ -8,6 +8,7 @@ export const MOCK_FRIENDS: Friend[] = [
 
 export const routeMap: Record<string, string> = {
   HOME: '/home',
+  LEADERBOARD: "/leaderboard",
   PROFILE: '/profile',
   CHAT: '/chat',
   NOTIFICATION: '/notifications',
