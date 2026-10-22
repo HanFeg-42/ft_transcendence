@@ -45,6 +45,7 @@ const GameRoom = ({
     isConnected,
     error,
     sendPlayerInput,
+    gaveUp,
   } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId);
 
   useEffect(() => {
@@ -137,7 +138,15 @@ const GameRoom = ({
         )}
         {!isConnected && state.status === "playing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
-            <Badge variant="yellow">Connection lost, reconnecting...</Badge>
+            <Badge variant="yellow">
+              {gaveUp ? "Connection lost" : "Connection lost, reconnecting..."}
+            </Badge>
+            {gaveUp && (
+              <>
+                <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
+                <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -11,7 +11,8 @@ import type {
 import type { GameState } from "../../../shared/types/game-types";
 
 const RECONNECT_DELAY_MS = 2000;
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 3;
+const CONNECT_TIMEOUT_MS = 3000;
 
 export function useGameSocket(
   url: string,
@@ -22,6 +23,7 @@ export function useGameSocket(
   const socketRef = useRef<WebSocket | null>(null);
   const gameOverRef = useRef<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
+  const [gaveUp, setGaveUp] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +69,9 @@ export function useGameSocket(
     const connect = () => {
       const ws = new WebSocket(url);
       socketRef.current = ws;
+      window.setTimeout(() => {
+        if (ws.readyState === WebSocket.CONNECTING) ws.close();
+      }, CONNECT_TIMEOUT_MS);
 
       // Open connection handler
       ws.onopen = () => {
@@ -89,8 +94,11 @@ export function useGameSocket(
       ws.onclose = (event: CloseEvent) => {
         handleClose(event);
         setIsConnected(false);
-        if (stopped || gameOverRef.current || event.code === 4000) return;
-        if (attempts >= MAX_RECONNECT_ATTEMPTS) return;
+        if (stopped || gameOverRef.current) return;
+        if (attempts >= MAX_RECONNECT_ATTEMPTS || event.code === 4000) {
+          setGaveUp(true);
+          return;
+        }
         attempts++;
         retryId = window.setTimeout(() => {
           connect();
@@ -135,5 +143,5 @@ export function useGameSocket(
     );
   }
 
-  return { isConnected, sendPlayerInput, gameState, error };
+  return { isConnected, sendPlayerInput, gameState, error, gaveUp };
 }
