@@ -60,7 +60,7 @@ export default function SelectMode() {
         </div>
 
         {/* Bouton de confirmation */}
-        <PixelButton variant="outline-magenta" size="lg" className="mt-4" onClick={handleContinue}>
+        <PixelButton variant="outline-green" size="lg" className="mt-4" onClick={handleContinue}>
           CONTINUE
         </PixelButton>
       </main>

@@ -14,7 +14,9 @@ import Profile from "./pages/user/profile";
 import UserProfile from "./pages/user/UserProfile";
 import Privacy from "./pages/legal/PrivacyPolicy";
 import Terms from "./pages/legal/TermsOfService";
+import Leaderboard from "./pages/Leaderboard";
 import FriendsTest from "./pages/FriendsTest";
+import NotFound from "./pages/NotFound";
 
 import OnlineGame from "./pages/OnlineGame";
 
@@ -33,17 +35,17 @@ function App() {
         <Route path="/friends-test" element={<FriendsTest />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
-        {/* <Route path="/game" element={<Game />} /> */}
         <Route path="/game" element={<Game />} />
         <Route path="/game/online" element={<OnlineGame />} /> {/* TEMP */}
+        {/* <Route path="/game-ws" element={<GameWs />} />  */}
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Route>
       <Route path="/choose" element={<Choose/>} />
       {/* <Route path="/NavbarTest" element={<Nav />} /> */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
-      {/* <Route path="/DesignSystem" element={<DesignSystem />} />
-      <Route path="/NavbarTest" element={<Nav />} /> */}
-    </Routes>
+      <Route path="*" element={<NotFound />} />
+     </Routes>
   );
 }
 
