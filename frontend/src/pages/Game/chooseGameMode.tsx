@@ -5,6 +5,10 @@ import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
 import GameModeCard from '../../components/ui/GameModeCard';
 import PixelButton from '../../components/ui/PixelButton';
+// import { routeMap } from '../Chat/helpers';
+import { handleSelectTab } from '../user/profile';
+
+
 
 export default function SelectMode() {
   const [selectedMode, setSelectedMode] = useState('LOCAL');
@@ -14,14 +18,14 @@ export default function SelectMode() {
     if (selectedMode === 'LOCAL') {
         navigate('/game?mode=local');
     } else if (selectedMode === 'REMOTE') {
-        alert('Remote mode coming soon!');
+        navigate('/game/online');
     } else if (selectedMode === 'BOT') {
         alert('Bot mode coming soon!');
     }
 };
   return (
     <Background>
-      <Navbar activeTab="HOME" />
+      <Navbar activeTab="HOME" onSelectTab={(tab) => handleSelectTab(tab, navigate)}/>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
         {/* Titre de sélection */}

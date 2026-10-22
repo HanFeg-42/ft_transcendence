@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
 import ProfileCard from '../../components/profile/ProfileCard';
-import GameUI from '../../components/profile/GameUI';
+import MatchHistory from '../../components/profile/MatchHistory';
 import Card from '../../components/ui/Card';
 import { ICONS } from '../../utils/icons';
 import { useNavigate } from 'react-router-dom';
@@ -17,15 +17,7 @@ import ghostHanterImg from '../../assets/achievement/ghost-hanter.png';
 import pacManiacImg from '../../assets/achievement/pac-maniac.png';
 import speederImg from '../../assets/achievement/speeder.png';
 import tournamentImg from '../../assets/achievement/tournament.png';
-
-const routeMap: Record<string, string> = {
-  HOME: '/home',
-  LEADERBOARD: "/leaderboard",
-  PROFILE: '/profile',
-  CHAT: '/chat',
-  NOTIFICATION: '/notifications',
-  SETTINGS: '/settings',
-};
+import { routeMap } from '../Chat/helpers';
 
 const ACHIEVEMENT_IMAGES: Record<string, string> = {
   'champion': championImg,
@@ -36,10 +28,16 @@ const ACHIEVEMENT_IMAGES: Record<string, string> = {
   'tournament-player': tournamentImg,
 };
 
+
+export function handleSelectTab(tab: string, navigate: (path:string) => void){
+  const path = routeMap[tab];
+  if (path) navigate(path);
+};
+
 /** Renders the responsive user profile dashboard. */
 export default function Profile() { // 2. Nom de composant en Majuscule
-  const navigate = useNavigate();
   const { userId } = useParams();
+  const navigate = useNavigate();
   const { token } = useAuth(); // 3. Extraire le token du contexte React
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -59,10 +57,6 @@ export default function Profile() { // 2. Nom de composant en Majuscule
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [token, userId]);
-  const handleSelectTab = (tab: string) => {
-    const path = routeMap[tab];
-    if (path) navigate(path);
-  };
 
   const handleSave = async (data: { username?: string; bio?: string; avatar?: string }) => {
     if (!token) throw new Error('No token');
@@ -72,7 +66,7 @@ export default function Profile() { // 2. Nom de composant en Majuscule
 
   return (
     <Background>
-      <Navbar activeTab="PROFILE" onSelectTab={handleSelectTab} />
+      <Navbar activeTab="PROFILE" onSelectTab={(tab) => handleSelectTab(tab, navigate)} />
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
@@ -109,7 +103,7 @@ export default function Profile() { // 2. Nom de composant en Majuscule
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch flex-1">
             <div className="md:col-span-2 flex flex-col h-full">
-              <GameUI />
+              <MatchHistory />
             </div>
 
             <div className="md:col-span-1 flex h-full">
