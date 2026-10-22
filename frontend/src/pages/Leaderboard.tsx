@@ -60,9 +60,9 @@ export default function Leaderboard() {
       <Navbar activeTab="LEADERBOARD" onSelectTab={handleSelectTab} />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
-        <h1 className="font-pixelify text-pacova-green text-3xl uppercase mb-6">
+        {/* <h1 className="font-pixelify text-pacova-green text-3xl uppercase mb-6">
           Leaderboard
-        </h1>
+        </h1> */}
 
         {loading ? (
           <p role="status" className="font-vt323 text-xl text-white">
