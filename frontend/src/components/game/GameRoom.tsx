@@ -37,7 +37,7 @@ const GameRoom = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const {
     gameState: state,
-    // isConnected,
+    isConnected,
     error,
     sendPlayerInput,
   } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId);
@@ -126,6 +126,11 @@ const GameRoom = ({
               {"Opponent disconnected, Forfeit in "}
               <Countdown seconds={15} />s
             </Badge>
+          </div>
+        )}
+        {!isConnected && state.status === "playing" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
+            <Badge variant="yellow">Connection lost, reconnecting...</Badge>
           </div>
         )}
       </div>
