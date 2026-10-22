@@ -17,6 +17,7 @@ import Privacy from "./pages/legal/PrivacyPolicy";
 import Terms from "./pages/legal/TermsOfService";
 import Leaderboard from "./pages/Leaderboard";
 import FriendsTest from "./pages/FriendsTest";
+import NotFound from "./pages/NotFound";
 
 
 /** Renders the application's route configuration. */
@@ -42,7 +43,8 @@ function App() {
       {/* <Route path="/NavbarTest" element={<Nav />} /> */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
-    </Routes>
+      <Route path="*" element={<NotFound />} />
+     </Routes>
   );
 }
 
