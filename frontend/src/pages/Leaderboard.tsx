@@ -16,7 +16,6 @@ const routeMap: Record<string, string> = {
   CHAT: "/chat",
   NOTIFICATION: "/notifications",
   SETTINGS: "/settings",
-  LEADERBOARD: "/leaderboard",
 };
 
 export default function Leaderboard() {
