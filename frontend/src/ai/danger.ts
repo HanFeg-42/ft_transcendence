@@ -1,97 +1,171 @@
+
 import type {GameState, Direction, Chaser, Tile} from '../../../shared/types/game-types'
 import {MAZES, isWall} from '../engine/maze'
-import {ahead} from '../engine/movement'
-import { directions, directionToNearest } from './pathfinding';
+import {ahead, TICKS_PER_TILE} from '../engine/movement'
+import {directions, directionToNearest} from './pathfinding'
+import {distanceMap} from './distance'
+import {
+    isDangerous,
+    ghostArrivalMap,
+    POWER_SAFETY_TICKS,
+    SAFE_MARGIN
+} from './safety'
 
-
-
-
-const DANGER_RADIUS: number  = 3;
-
+const DANGER_RADIUS: number = 3;
 
 function manhattan(a: Tile, b: Tile): number
 {
-    const horizontalDiff = Math.abs(a.x - b.x);
-    const verticalDiff = Math.abs(a.y - b.y);
-  
-    return horizontalDiff + verticalDiff;
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
-
-function isDangerous(state: GameState, chaser: Chaser): boolean
-{
-    if(state.vulnerableTimer > 0 && !chaser.isEaten)
-        return false;
-    return true;
-}
-
+export {isDangerous};
 
 export function threatsNear(state: GameState, botId: string): Chaser[]
 {
     const bot = state.players.find(player => player.id === botId);
-    if(!bot)
+    if (!bot)
         return [];
 
-    const dangerChasers =  state.chasers.filter(chaser => (isDangerous(state, chaser) && 
-            (manhattan(bot.tile, chaser.tile) <= DANGER_RADIUS)))
-
-    return dangerChasers;
+    return state.chasers.filter(chaser =>
+        isDangerous(state, chaser) &&
+        manhattan(bot.tile, chaser.tile) <= DANGER_RADIUS
+    );
 }
 
-
-export function escapeDirection(state: GameState, botId: string, threats: Chaser[]): Direction | null
+export function escapeDirection(
+    state: GameState,
+    botId: string,
+    threats: Chaser[]
+): Direction | null
 {
     const bot = state.players.find(player => player.id === botId);
-    if(!bot)
+    if (!bot || threats.length === 0)
         return null;
 
     const maze = MAZES[state.mazeId];
+    const height = maze.length;
+    const width = maze[0]?.length ?? 0;
 
-    const freeDirections = directions.filter(dir => !isWall(maze, ahead(bot.tile, dir)));
-    if(freeDirections.length === 0)
+    if (width === 0 || height === 0)
         return null;
 
+    const freeDirections = directions.filter(dir =>
+        !isWall(maze, ahead(bot.tile, dir))
+    );
 
+    if (freeDirections.length === 0)
+        return null;
 
-    let bestScore = -Infinity;
+    // Include all dangerous ghosts, even those outside DANGER_RADIUS.
+    const ghostArrival = ghostArrivalMap(state);
+
     let bestDirection: Direction | null = null;
+    let bestSafeArea = -1;
+    let bestManhattanScore = -Infinity;
 
-
-    for (const dir of freeDirections) {
-        // Calculate the next tile the bot would land on
+    for (const dir of freeDirections)
+    {
         const nextTile = ahead(bot.tile, dir);
 
-        // For that next tile, calculate the Manhattan distance to every threat
-        const distances = threats.map(threat => manhattan(nextTile, threat.tile));
+        const botDistances = distanceMap(
+            nextTile,
+            width,
+            height,
+            (x, y) => isWall(maze, { x, y })
+        );
 
-        // Find the lowest (minimum) distance among those threats. 
-        // This is our safety score for this direction.
-        const score = Math.min(...distances);
+        let safeArea = 0;
 
-        // If this score is higher than our current bestScore, update our tracking variables
-        if (score > bestScore) {
-            bestScore = score;
+        for (let y = 0; y < height; y++)
+        {
+            for (let x = 0; x < width; x++)
+            {
+                const botDistance = botDistances[y][x];
+                const ghostDistance = ghostArrival[y][x];
+
+                if (botDistance === Infinity)
+                    continue;
+
+                const botArrival = botDistance + 1;
+
+                if (ghostDistance - botArrival >= SAFE_MARGIN)
+                    safeArea++;
+            }
+        }
+
+        const manhattanScore = Math.min(
+            ...threats.map(threat =>
+                manhattan(nextTile, threat.tile)
+            )
+        );
+
+        if (
+            safeArea > bestSafeArea ||
+            (
+                safeArea === bestSafeArea &&
+                manhattanScore > bestManhattanScore
+            )
+        ) {
+            bestSafeArea = safeArea;
+            bestManhattanScore = manhattanScore;
             bestDirection = dir;
         }
     }
 
-    // 5. Return the safest direction found
-    return bestDirection;   
+    return bestDirection;
 }
 
-
-
-export function directionToEatableChaser(state: GameState, botId: string): Direction | null
+export function directionToEatableChaser(
+    state: GameState,
+    botId: string
+): Direction | null
 {
-    if(state.vulnerableTimer <= 0) return null;
-    
+    if (state.vulnerableTimer <= 0)
+        return null;
 
-    return directionToNearest(state, botId, (tile) => {
-        return state.chasers.some((chaser) => {
-          const isOnTile = chaser.tile.x === tile.x && chaser.tile.y === tile.y;
-          const isNotEaten = !chaser.isEaten;
-        
-          return isOnTile && isNotEaten;
+    const targetChaser = (tile: Tile): boolean =>
+    {
+        return state.chasers.some(chaser =>
+        {
+            if (chaser.isEaten)
+                return false;
+
+            const targetTile = chaser.dir
+                ? ahead(chaser.tile, chaser.dir)
+                : chaser.tile;
+
+            return tile.x === targetTile.x && tile.y === targetTile.y;
         });
-      });
+    };
+
+    let result = directionToNearest(
+        state,
+        botId,
+        targetChaser,
+        false
+    );
+
+    if (result === null)
+    {
+        result = directionToNearest(
+            state,
+            botId,
+            targetChaser,
+            true
+        );
+    }
+
+    if (result === null)
+        return null;
+
+    const MAX_CHASE_STEPS = 8;
+    const estimatedTicks = result.steps * TICKS_PER_TILE;
+
+    if (result.steps > MAX_CHASE_STEPS)
+        return null;
+
+    if (estimatedTicks + POWER_SAFETY_TICKS >= state.vulnerableTimer)
+        return null;
+
+    return result.direction;
 }
