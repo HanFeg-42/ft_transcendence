@@ -93,7 +93,7 @@ export default function SignUp() {
             {/* Retro Header */}
             <div className="text-center mb-1">
               <h1 className="font-pixelify text-pacova-green text-xl tracking-wider uppercase">
-                ▼ ▼ CREATE ACCOUNT ▼ ▼
+                ▼  CREATE ACCOUNT  ▼
               </h1>
             </div>
 
