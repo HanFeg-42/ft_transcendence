@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Background from '../components/ui/Background';
-import Navbar from '../components/ui/Navbar';
-import ProfileCard from '../components/ui/ProfileCard';
-import GameUI from '../components/ui/GameUI';
-import Card from '../components/ui/Card';
-import { ICONS } from '../utils/icons';
+import Background from '../../components/ui/Background';
+import Navbar from '../../components/ui/Navbar';
+import ProfileCard from '../../components/profile/ProfileCard';
+import GameUI from '../../components/profile/GameUI';
+import Card from '../../components/ui/Card';
+import { ICONS } from '../../utils/icons';
 import { useNavigate } from 'react-router-dom';
-import { getMyProfile, updateMyProfile, getProfileById, type ProfileData } from '../services/userService';
-import { useAuth } from '../context/AuthContext';
-import EditProfileModal from '../components/ui/EditProfileModal';
+import { getMyProfile, updateMyProfile, getProfileById, type ProfileData } from '../../services/userService';
+import { useAuth } from '../../context/AuthContext';
+import EditProfileModal from '../../components/profile/EditProfileModal';
 
-import championImg from '../assets/achievement/champion.png';
-import cherrysImg from '../assets/achievement/cherrys.png';
-import ghostHanterImg from '../assets/achievement/ghost-hanter.png';
-import pacManiacImg from '../assets/achievement/pac-maniac.png';
-import speederImg from '../assets/achievement/speeder.png';
-import tournamentImg from '../assets/achievement/tournament.png';
+import championImg from '../../assets/achievement/champion.png';
+import cherrysImg from '../../assets/achievement/cherrys.png';
+import ghostHanterImg from '../../assets/achievement/ghost-hanter.png';
+import pacManiacImg from '../../assets/achievement/pac-maniac.png';
+import speederImg from '../../assets/achievement/speeder.png';
+import tournamentImg from '../../assets/achievement/tournament.png';
 
 const routeMap: Record<string, string> = {
   HOME: '/home',

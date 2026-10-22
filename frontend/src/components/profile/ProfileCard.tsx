@@ -1,6 +1,6 @@
 import React from 'react';
-import PixelButton from './PixelButton';
-import Card from './Card';
+import PixelButton from '../ui/PixelButton';
+import Card from '../ui/Card';
 
 interface ProfileCardProps {
   username?: string;

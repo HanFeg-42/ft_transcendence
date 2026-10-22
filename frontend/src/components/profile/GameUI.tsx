@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
-import Card from "./Card"; // Assurez-vous que le chemin est correct
+import Card from "../ui/Card"; // Assurez-vous que le chemin est correct
 import { useAuth } from "../../context/AuthContext";
 import {
   getMatchHistory,
