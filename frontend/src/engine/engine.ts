@@ -39,6 +39,8 @@ export const createGame = (
       step: 0,
       lives: 3,
       score: 0,
+      pelletsEaten: 0,
+      ghostsEaten: 0,
       connected: true,
     },
   ];

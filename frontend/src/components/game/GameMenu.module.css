@@ -1,7 +1,7 @@
 .menuOverlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.9);
+    /* background-color: rgba(0, 0, 0, 0.5); */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -11,46 +11,35 @@
 }
 
 .title {
-    font-size: 48px;
-    color: #ffff00;
-    /* text-shadow: 0 0 20px #ffff00, 0 0 40px #ffff00; */
-    margin-bottom: 10px;
-}
-
-.subtitle {
-    font-size: 12px;
-    color: #8A1353;
-    text-shadow: 0 0 10px #8A1353;
+    font-size: 22px;
+    color: #8ED603;
+    text-shadow: 0 0 10px #8ED603;
     margin-bottom: 50px;
+    animation: float 3s ease-in-out infinite;
 }
 
 .buttonGroup {
     display: flex;
-    gap: 20px;
+    flex-direction: row; /* Puts buttons side by side */
+    justify-content: center;
+    align-items: center;
+    gap: 24px; /* 💡 This adds exactly 24px of spacing between your buttons */
 }
 
-.menuBtn {
-    font-family: 'Press Start 2P', monospace;
-    padding: 20px 40px;
-    font-size: 16px;
-    background-color: transparent;
-    color: #00ffff;
-    border: 2px solid #00ffff;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 0 10px #00ffff;
-    transition: all 0.2s;
-}
-
-.menuBtn:hover {
-    background-color: #00ffff;
-    color: #000;
-    box-shadow: 0 0 30px #00ffff;
-    transform: scale(1.05);
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
 }
 
 /* Responsive mobile */
 @media (max-width: 900px) {
-    .title { font-size: 32px; }
+    .title { font-size: 12px; }
     .menuBtn { padding: 15px 20px; font-size: 12px; }
 }

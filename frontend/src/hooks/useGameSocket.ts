@@ -1,17 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 // Import shared WebSocket contract rules (event names and payload shapes)
-import { GameEvents } from "../../../shared/types/game-types";
+import {
+  GameClientEvents,
+  GameServerEvents,
+} from "../../../shared/types/game-types";
 import type {
   PlayerInputPayload,
   Direction,
 } from "../../../shared/types/game-types";
 import type { GameState } from "../../../shared/types/game-types";
 
-export function useGameSocket(url: string, gameId: string, username: string, mazeId?: string) {
+export function useGameSocket(
+  url: string,
+  gameId: string,
+  username: string,
+  mazeId?: string,
+) {
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [isRoomFull, setIsRoomFull] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // 1. Establish connection to the backend server
@@ -20,12 +28,11 @@ export function useGameSocket(url: string, gameId: string, username: string, maz
 
     // Open connection handler
     ws.onopen = () => {
-      console.log("[GAME-CLIENT] Connected to server");
       setIsConnected(true);
       ws.send(
         JSON.stringify({
-          event: GameEvents.JOIN_GAME,
-          data: { gameId, username, mazeId},
+          event: GameClientEvents.JOIN_GAME,
+          data: { gameId, username, mazeId },
         }),
       );
     };
@@ -38,8 +45,6 @@ export function useGameSocket(url: string, gameId: string, username: string, maz
     // Listen for client disconnects
     ws.onclose = (event: CloseEvent) => {
       handleClose(event);
-      if (event.code === 1008 && event.reason === "Room full")
-        setIsRoomFull(true);
       setIsConnected(false);
     };
 
@@ -67,12 +72,13 @@ export function useGameSocket(url: string, gameId: string, username: string, maz
       );
       return; // drop the bad message, keep the connection alive
     }
-
     // Check if incoming packet matches game state update
-    if (packet.event === GameEvents.GAME_STATE) {
-      console.log("[GAME-CLIENT] Game state update received:", packet.data);
+    if (packet.event === GameServerEvents.GAME_STATE) {
       setGameState(packet.data);
       // Render updated positions, score, pellets...
+    }
+    if (packet.event === GameServerEvents.ERROR) {
+      setError(packet.data.message);
     }
   }
 
@@ -103,11 +109,11 @@ export function useGameSocket(url: string, gameId: string, username: string, maz
     // Result sent over wire: '{"event":"playerInput","data":{"gameId":"game-1","direction":"up"}}'
     socketRef.current.send(
       JSON.stringify({
-        event: GameEvents.PLAYER_INPUT,
+        event: GameClientEvents.PLAYER_INPUT,
         data: payload,
       }),
     );
   }
 
-  return { isConnected, sendPlayerInput, gameState, isRoomFull };
+  return { isConnected, sendPlayerInput, gameState, error };
 }
