@@ -6,6 +6,7 @@ import { MAZES } from "../../engine/maze";
 import { useGameSocket } from "../../hooks/useGameSocket";
 import { draw } from "../../utils/render";
 import type { Direction } from "../../../../shared/types/game-types";
+import PixelButton from "../ui/PixelButton";
 
 const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
@@ -25,12 +26,16 @@ const KEY_MAP: Record<string, Direction> = {
 
 const GameRoom = ({
   gameId,
-  onError,
   mazeId,
+  onError,
+  onPlayAgain,
+  onBackToMenu,
 }: {
   gameId: string;
-  onError: (message: string) => void;
   mazeId: string;
+  onError: (message: string) => void;
+  onPlayAgain: () => void;
+  onBackToMenu: () => void;
 }) => {
   const { user, token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
@@ -118,6 +123,8 @@ const GameRoom = ({
                   ? "You won"
                   : "You lost!"}
             </Badge>
+            <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
+            <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
           </div>
         )}
         {isOpponentAway && (
