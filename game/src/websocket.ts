@@ -26,6 +26,7 @@ const abandonTimers = new Map<string, NodeJS.Timeout>();
 const ABANDON_DELAY_MS = 30000;
 const forfeitTimers = new Map<string, NodeJS.Timeout>();
 const FORFEIT_DELAY_MS = 15000;
+const HEARTBEAT_INTERVAL_MS = 5000;
 let queuedPlayer: { userId: string; ws: WebSocket } | null = null;
 // Send a message to every socket currently in a given room
 // Send a message to every socket currently in a given room
@@ -58,6 +59,9 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 
   console.log("[GAME-SERVICE] Client connected:", userId);
 
+  let isAlive = true;
+  ws.on("pong", () => (isAlive = true));
+
   // Listen for incoming data packets from the client
   ws.on("message", (rawData: RawData) => {
     try {
@@ -67,8 +71,18 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
     }
   });
 
+  const hearbeatId = setInterval(() => {
+    if (!isAlive) {
+      ws.terminate();
+      return;
+    }
+    isAlive = false;
+    ws.ping();
+  }, HEARTBEAT_INTERVAL_MS);
+
   // Listen for client disconnects (tab closed, lost connection)
   ws.on("close", (code) => {
+    clearInterval(hearbeatId);
     try {
       handleClose(ws, code, userId);
     } catch (e) {
