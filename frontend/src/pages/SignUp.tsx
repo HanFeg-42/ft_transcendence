@@ -156,6 +156,28 @@ export default function SignUp() {
               {loading ? "CREATING ACCOUNT..." : "SIGN UP"}
             </PixelButton>
 
+            <p className="mt-3 text-center text-sm text-gray-400">
+              By signing up, you agree to our{" "}
+              <Link
+                to="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pacova-green underline"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                to="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pacova-green underline"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+
             {/* Footer Navigation Link */}
             <div className="text-center border-t border-pacova-green/30 pt-3 mt-1 font-vt323 text-sm"> {/* 💡 Reduced text size to text-sm and compact padding */}
               <span className="text-gray-400">

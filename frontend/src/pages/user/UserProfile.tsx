@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Background from '../components/ui/Background';
-import Navbar from '../components/ui/Navbar';
-import Card from '../components/ui/Card';
-import ProfileCard from '../components/ui/ProfileCard';
-import PixelButton from '../components/ui/PixelButton';
-import { useAuth } from '../context/AuthContext';
-import { getProfile, type ProfileData } from '../services/userService';
-import { routeMap } from './Chat/constants';
+import Background from '../../components/ui/Background';
+import Navbar from '../../components/ui/Navbar';
+import Card from '../../components/ui/Card';
+import ProfileCard from '../../components/profile/ProfileCard';
+import PixelButton from '../../components/ui/PixelButton';
+import { useAuth } from '../../context/AuthContext';
+import { getProfile, type ProfileData } from '../../services/userService';
+import { routeMap } from '../Chat/helpers';
 
 // Read-only view of SOMEONE ELSE's profile, reached from Chat's
 // "View Profile" menu item (ConversationHeader.tsx -> /profile/:userId).

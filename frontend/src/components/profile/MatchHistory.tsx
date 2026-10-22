@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
-import Card from "./Card"; // Assurez-vous que le chemin est correct
+import Card from "../ui/Card"; // Assurez-vous que le chemin est correct
 import { useAuth } from "../../context/AuthContext";
 import {
   getMatchHistory,
@@ -25,7 +25,7 @@ interface Match {
   opponentColor?: "red" | "blue" | "orange" | "purple" | "pink";
 }
 
-export const GameUI: React.FC = () => {
+export const MatchHistory: React.FC = () => {
   // Vos données d'historique basées sur la maquette Figma
   const { token } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
@@ -142,4 +142,4 @@ export const GameUI: React.FC = () => {
   );
 };
 
-export default GameUI;
+export default MatchHistory;

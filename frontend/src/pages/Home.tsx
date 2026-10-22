@@ -8,6 +8,7 @@ import PixelButton from "../components/ui/PixelButton";
 
 const routeMap: Record<string, string> = {
   HOME: "/home",
+  LEADERBOARD: "/leaderboard",
   PROFILE: "/profile",
   CHAT: "/chat",
   NOTIFICATION: "/notifications",
@@ -60,7 +61,7 @@ export default function Home() {
         <PixelButton
           variant="filled-pink"
           size="lg"
-          onClick={() => navigate("/game")}
+          onClick={() => navigate("/choose")}
           className="self-start"
         >
           PLAY NOW
