@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import Card from './Card';
-import PixelButton from './PixelButton';
+import Card from '../ui/Card';
+import PixelButton from '../ui/PixelButton';
 import type { ProfileData } from '../../services/userService';
 
 interface EditProfileModalProps {

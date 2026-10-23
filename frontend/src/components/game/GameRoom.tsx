@@ -1,13 +1,12 @@
-import { useAuth } from "../context/AuthContext";
-import { useGameSocket } from "../hooks/useGameSocket";
-import Input from "../components/ui/Input";
-import PixelButton from "../components/ui/PixelButton";
-import { useState, useEffect, useRef } from "react";
-import type { Direction } from "../../../shared/types/game-types";
-import ArenaBackground from "../components/ui/ArenaBackground";
-import Badge from "../components/ui/Badge";
-import { draw } from "../utils/render";
-import { DEFAULT_MAZE_ID, MAZES } from "../engine/maze";
+import { useRef, useEffect } from "react";
+import Countdown from "../../components/game/Countdown";
+import Badge from "../../components/ui/Badge";
+import { useAuth } from "../../context/AuthContext";
+import { MAZES } from "../../engine/maze";
+import { useGameSocket } from "../../hooks/useGameSocket";
+import { draw } from "../../utils/render";
+import type { Direction } from "../../../../shared/types/game-types";
+import PixelButton from "../ui/PixelButton";
 
 const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
@@ -25,39 +24,28 @@ const KEY_MAP: Record<string, Direction> = {
   ArrowRight: "RIGHT",
 };
 
-const Countdown = ({ seconds }: { seconds: number }) => {
-  const [remaining, setRemaining] = useState<number>(seconds);
-
-  useEffect(() => {
-    let secondsLeft = remaining;
-    const interval = setInterval(() => {
-      secondsLeft--;
-      setRemaining(secondsLeft);
-      if (secondsLeft <= 0) clearInterval(interval);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return <span>{remaining}</span>;
-};
-
 const GameRoom = ({
   gameId,
-  onFullRoom,
   mazeId,
+  onError,
+  onPlayAgain,
+  onBackToMenu,
 }: {
   gameId: string;
-  onFullRoom: (message: string) => void;
   mazeId: string;
+  onError: (message: string) => void;
+  onPlayAgain: () => void;
+  onBackToMenu: () => void;
 }) => {
   const { user, token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const {
     gameState: state,
-    // isConnected,
-    isRoomFull,
+    isConnected,
+    error,
     sendPlayerInput,
+    gaveUp,
   } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId);
 
   useEffect(() => {
@@ -79,10 +67,10 @@ const GameRoom = ({
     draw(ctx, state);
   }, [state]);
   useEffect(() => {
-    if (isRoomFull) {
-      onFullRoom("This room is full, try another one");
+    if (error && !state) {
+      onError(error);
     }
-  }, [isRoomFull]);
+  }, [error]);
   if (!state)
     return (
       <p className="font-vt323 text-2xl text-pacova-pink text-center mt-10">
@@ -136,6 +124,8 @@ const GameRoom = ({
                   ? "You won"
                   : "You lost!"}
             </Badge>
+            <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
+            <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
           </div>
         )}
         {isOpponentAway && (
@@ -146,59 +136,22 @@ const GameRoom = ({
             </Badge>
           </div>
         )}
+        {!isConnected && state.status === "playing" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
+            <Badge variant="yellow">
+              {gaveUp ? "Connection lost" : "Connection lost, reconnecting..."}
+            </Badge>
+            {gaveUp && (
+              <>
+                <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
+                <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-const GameWs = () => {
-  const [gameRoom, setGameRoom] = useState<string | null>(null);
-  const [roomInput, setRoomInput] = useState<string>("");
-  const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
-  const [joinError, setJoinError] = useState<string | null>(null);
-
-  const handleJoinError = (message: string) => {
-    setGameRoom(null);
-    setRoomInput("");
-    setJoinError(message);
-  };
-
-  if (!gameRoom)
-    return (
-      <ArenaBackground>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          {joinError && <Badge variant="red">{joinError}</Badge>}
-          <Input
-            placeholder="Enter room name"
-            value={roomInput}
-            onChange={(e) => setRoomInput(e.target.value)}
-            className="text-center"
-          />
-          <PixelButton onClick={() => setGameRoom(roomInput)}>
-            Join gameroom
-          </PixelButton>
-          <select
-            value={mazeId}
-            onChange={(e) => setMazeId(e.target.value)}
-            className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
-          >
-            {Object.keys(MAZES).map((id) => (
-              <option key={id} value={id}>
-                {id}
-              </option>
-            ))}
-          </select>
-        </div>
-      </ArenaBackground>
-    );
-  return (
-    <ArenaBackground>
-      <GameRoom
-        gameId={gameRoom}
-        onFullRoom={handleJoinError}
-        mazeId={mazeId}
-      />
-    </ArenaBackground>
-  );
-};
-export default GameWs;
+export default GameRoom;

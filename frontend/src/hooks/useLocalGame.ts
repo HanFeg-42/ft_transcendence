@@ -8,7 +8,6 @@ export function useLocalGame(playerId: string = 'player-1', playersCount: number
     const stateRef = useRef<GameState>(createGame(playerId));
     const [, setFrame] = useState(0);
 
-    // ⭐ Ajoute un 2ème joueur si demandé (une seule fois)
     useEffect(() => {
         const state = stateRef.current;
         
@@ -24,15 +23,16 @@ export function useLocalGame(playerId: string = 'player-1', playersCount: number
                 lives: 3,
                 score: 0,
                 connected: true,
+                pelletsEaten: 0,
+                ghostsEaten: 0,
             };
             state.players.push(player2);
             setFrame(f => f + 1);
         }
     }, [playersCount]);
 
-    useEffect(() => {     // Boucle de jeu
+    useEffect(() => {     
         const interval = setInterval(() => { //funct deja existante en js execute une fonction en boucle
-            //lire state
             const state = stateRef.current;
             
             if (state.status === 'playing'){

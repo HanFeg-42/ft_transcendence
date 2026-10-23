@@ -52,9 +52,13 @@ export async function getOrCreateProfile(userId: number) {
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
-        avatarUrl = authUser.avatar ?? null;
+        avatarUrl = authUser.avatar || '/default-avatar2.png';
       }
-    } catch (err) {
+      else {
+        avatarUrl = '/default-avatar2.png';
+      } 
+    }
+    catch (err) {
       console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
     }
     
