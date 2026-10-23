@@ -1,3 +1,3 @@
-interface AchievementsProps {
-  achievements: Achievement[];
-}
+// interface AchievementsProps {
+//   achievements: Achievement[];
+// }
