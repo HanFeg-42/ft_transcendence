@@ -75,7 +75,6 @@ export function useGameSocket(
 
       // Open connection handler
       ws.onopen = () => {
-        attempts = 0;
         setIsConnected(true);
         ws.send(
           JSON.stringify({
@@ -87,6 +86,7 @@ export function useGameSocket(
 
       // Listen for incoming messages from the backend
       ws.onmessage = (event: MessageEvent) => {
+        attempts = 0;
         handleMessage(event);
       };
 
