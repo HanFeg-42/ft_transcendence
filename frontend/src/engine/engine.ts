@@ -13,8 +13,7 @@ import {
 import { findChaserSpawns, findSpawn, parsePellets, isWall } from "./maze";
 
 import { stepPlayer, stepChaser, ahead } from "./movement";
-
-const TICKS_PER_SECOND = 30;
+import { TICKS_PER_SECOND } from "../../../shared/data/game-data";
 
 export const createGame = (
   playerId: string,

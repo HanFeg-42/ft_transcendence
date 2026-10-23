@@ -7,6 +7,10 @@ import { useGameSocket } from "../../hooks/useGameSocket";
 import { draw } from "../../utils/render";
 import type { Direction } from "../../../../shared/types/game-types";
 import PixelButton from "../ui/PixelButton";
+import {
+  START_DELAY_MS,
+  FORFEIT_DELAY_MS,
+} from "../../../../shared/data/game-data";
 
 const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
@@ -28,6 +32,7 @@ const GameRoom = ({
   gameId,
   mazeId,
   timeLimit,
+  difficulty,
   onError,
   onPlayAgain,
   onBackToMenu,
@@ -35,6 +40,7 @@ const GameRoom = ({
   gameId: string;
   mazeId: string;
   timeLimit: number;
+  difficulty: string;
   onError: (message: string) => void;
   onPlayAgain: () => void;
   onBackToMenu: () => void;
@@ -48,7 +54,14 @@ const GameRoom = ({
     error,
     sendPlayerInput,
     gaveUp,
-  } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId, timeLimit);
+  } = useGameSocket(
+    url,
+    gameId,
+    user?.username ?? "guest",
+    mazeId,
+    timeLimit,
+    difficulty,
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -89,7 +102,7 @@ const GameRoom = ({
         ))}
         {state.players.length === 2 ? (
           <p>
-            Starting in <Countdown seconds={3} />
+            Starting in <Countdown seconds={START_DELAY_MS / 1000} />
           </p>
         ) : (
           <p>Waiting for another player...</p>
@@ -134,7 +147,7 @@ const GameRoom = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
             <Badge variant="yellow">
               {"Opponent disconnected, Forfeit in "}
-              <Countdown seconds={15} />s
+              <Countdown seconds={FORFEIT_DELAY_MS / 1000} />s
             </Badge>
           </div>
         )}

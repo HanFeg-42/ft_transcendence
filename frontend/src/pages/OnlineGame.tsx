@@ -3,7 +3,12 @@ import PixelButton from "../components/ui/PixelButton";
 import { useState } from "react";
 import ArenaBackground from "../components/ui/ArenaBackground";
 import Badge from "../components/ui/Badge";
-import { DEFAULT_MAZE_ID, MAZES } from "../../../shared/data/game-data";
+import {
+  DEFAULT_DIFFICULTY,
+  DEFAULT_MAZE_ID,
+  DIFFICULTIES,
+  MAZES,
+} from "../../../shared/data/game-data";
 import {
   DEFAULT_TIME_LIMIT,
   TIME_LIMITS,
@@ -20,6 +25,7 @@ const OnlineGame = () => {
   const [roomInput, setRoomInput] = useState<string>("");
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
   const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
+  const [difficulty, setDifficulty] = useState<string>(DEFAULT_DIFFICULTY);
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState<boolean>(false);
 
@@ -74,6 +80,18 @@ const OnlineGame = () => {
             Find a match
           </PixelButton>
           <select
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
+          >
+            {Object.keys(DIFFICULTIES).map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+
+          <select
             value={timeLimit}
             onChange={(e) => setTimeLimit(Number(e.target.value))}
             className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
@@ -110,6 +128,7 @@ const OnlineGame = () => {
         }}
         mazeId={mazeId}
         timeLimit={timeLimit}
+        difficulty={difficulty}
       />
     </ArenaBackground>
   );

@@ -1,7 +1,7 @@
 import React from "react";
 import type { GameState } from "../../../../shared/types/game-types";
 import { MAZES, DEFAULT_MAZE_ID } from "../../../../shared/data/game-data";
-import { TICKS_PER_TILE } from "../../engine/movement";
+import { TICKS_PER_TILE } from "../../../../shared/data/game-data";
 import styles from "./MazeUI.module.css";
 import { useCellSize } from "../../hooks/useCellSize";
 

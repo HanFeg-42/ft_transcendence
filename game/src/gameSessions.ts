@@ -8,9 +8,10 @@ export const joinSession = (
   playerId: string,
   mazeId?: string,
   timeLimit?: number,
+  difficulty?: string,
 ) => {
   if (!sessions.has(gameId)) {
-    const state: GameState = createGame(playerId, timeLimit, mazeId); // The player might be able to choose match duration later
+    const state: GameState = createGame(playerId, timeLimit, mazeId, difficulty); // The player might be able to choose match duration later
     state.status = "waiting";
     sessions.set(gameId, state);
   } else addPlayer(playerId, sessions.get(gameId)!);

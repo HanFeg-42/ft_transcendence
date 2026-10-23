@@ -33,6 +33,7 @@ export interface JoinGamePayload {
   username: string;
   mazeId?: string;
   timeLimit?: number;
+  difficulty?: string;
 }
 //2.Data sent when a player presses an arrow key
 export interface PlayerInputPayload {
@@ -114,4 +115,5 @@ export interface GameState {
   winnerId?: string;
   vulnerableTimer: number;
   mazeId: string;
+  difficulty?: string; // optional until its added to the local game
 }

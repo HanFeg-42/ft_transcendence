@@ -1,5 +1,9 @@
-export const DEFAULT_MAZE_ID = "circuit";
+export const TICKS_PER_TILE = 8;
+export const TICKS_PER_SECOND = 30;
+export const START_DELAY_MS = 3000;
+export const FORFEIT_DELAY_MS = 15000;
 
+export const DEFAULT_MAZE_ID = "circuit";
 export const MAZES: Record<string, string[]> = {
   circuit: [
     "###################",
@@ -71,3 +75,11 @@ export const MAZES: Record<string, string[]> = {
 
 export const TIME_LIMITS: number[] = [120, 240, 360];
 export const DEFAULT_TIME_LIMIT = 240;
+
+export const DIFFICULTIES: Record<string, number> = {
+  easy: 14,
+  normal: 10,
+  hard: 8,
+};
+
+export const DEFAULT_DIFFICULTY = "normal";

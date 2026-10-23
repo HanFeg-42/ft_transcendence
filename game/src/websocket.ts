@@ -13,6 +13,11 @@ import { endSession, getSession, joinSession } from "./gameSessions";
 import { applyInput, tick, removePlayer, finishMatch } from "./engine/engine";
 import saveMatch from "./services/saveMatchHistory";
 import { reportResult } from "./services/reportResult";
+import {
+  START_DELAY_MS,
+  FORFEIT_DELAY_MS,
+  TICKS_PER_SECOND,
+} from "../../shared/data/game-data";
 
 // --- Room registry ---------------------------------------------------
 // Tracks which sockets belong to which match. Lives at module scope so
@@ -21,11 +26,9 @@ const gameRooms = new Map<string, Set<WebSocket>>();
 const playerSocket = new Map<string, WebSocket>();
 const activeLoops = new Map<string, NodeJS.Timeout>();
 const pendingStarts = new Map<string, NodeJS.Timeout>();
-const START_DELAY_MS = 3000;
 const abandonTimers = new Map<string, NodeJS.Timeout>();
 const ABANDON_DELAY_MS = 30000;
 const forfeitTimers = new Map<string, NodeJS.Timeout>();
-const FORFEIT_DELAY_MS = 15000;
 const HEARTBEAT_INTERVAL_MS = 5000;
 let queuedPlayer: { userId: string; ws: WebSocket } | null = null;
 // Send a message to every socket currently in a given room
@@ -141,7 +144,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   }
   if (packet.event === GameClientEvents.JOIN_GAME) {
     // --- Join a room ---
-    const { gameId, mazeId, timeLimit }: JoinGamePayload = packet.data;
+    const { gameId, mazeId, timeLimit, difficulty }: JoinGamePayload = packet.data;
     if (!gameId || typeof gameId !== "string") {
       ws.send(
         JSON.stringify({
@@ -204,7 +207,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     }
     playerSocket.set(userId, ws);
 
-    const state: GameState = joinSession(gameId, userId, mazeId, timeLimit);
+    const state: GameState = joinSession(gameId, userId, mazeId, timeLimit, difficulty);
     broadcast(gameId, GameServerEvents.GAME_STATE, state);
 
     if (state.players.length === 2) {
@@ -234,7 +237,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
             endSession(gameId);
             clearInterval(loopId);
           }
-        }, 1000 / 30);
+        }, 1000 / TICKS_PER_SECOND);
 
         activeLoops.set(gameId, loopId);
       }, START_DELAY_MS);

@@ -1,7 +1,6 @@
 import type { Chaser, Direction, Player, Tile } from "../../../shared/types/game-types";
 import { isWall } from "./maze";
-
-export const TICKS_PER_TILE = 8;
+import { TICKS_PER_TILE } from "../../../shared/data/game-data";
 
 export const ahead = (tile: Tile, dir: Direction) => {
   switch (dir) {
