@@ -5,15 +5,13 @@ import type {
   Tile,
   Direction,
 } from "../../../shared/types/game-types";
-import {
-  findChaserSpawns,
-  findSpawn,
-  parsePellets,
-  isWall,
-  DEFAULT_MAZE_ID,
-  MAZES,
-} from "./maze";
+import { DEFAULT_MAZE_ID, MAZES } from "../../../shared/data/game-data";
+import { findChaserSpawns, findSpawn, parsePellets, isWall } from "./maze";
 import { stepPlayer, stepChaser, ahead } from "./movement";
+import {
+  TIME_LIMITS,
+  DEFAULT_TIME_LIMIT,
+} from "../../../shared/data/game-data";
 
 const CENTER_OFFSET = 4;
 const TICKS_PER_SECOND = 30;
@@ -48,12 +46,18 @@ export const removePlayer = (playerId: string, state: GameState) =>
 
 export const createGame = (
   playerId: string,
-  timeLimit: number = 360,
+  timeLimit: number = DEFAULT_TIME_LIMIT,
   mazeId: string = DEFAULT_MAZE_ID,
 ): GameState => {
   if (!Object.keys(MAZES).includes(mazeId)) {
     console.warn(`[GAME] Unknown map "${mazeId}", using "${DEFAULT_MAZE_ID}"`);
     mazeId = DEFAULT_MAZE_ID;
+  }
+  if (!TIME_LIMITS.includes(timeLimit)) {
+    console.warn(
+      `[GAME] Invalid time limit "${timeLimit}", using ${DEFAULT_TIME_LIMIT}`,
+    );
+    timeLimit = DEFAULT_TIME_LIMIT;
   }
 
   const maze = MAZES[mazeId];

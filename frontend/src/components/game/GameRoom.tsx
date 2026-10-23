@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import Countdown from "../../components/game/Countdown";
 import Badge from "../../components/ui/Badge";
 import { useAuth } from "../../context/AuthContext";
-import { MAZES } from "../../engine/maze";
+import { MAZES } from "../../../../shared/data/game-data";
 import { useGameSocket } from "../../hooks/useGameSocket";
 import { draw } from "../../utils/render";
 import type { Direction } from "../../../../shared/types/game-types";
@@ -27,12 +27,14 @@ const KEY_MAP: Record<string, Direction> = {
 const GameRoom = ({
   gameId,
   mazeId,
+  timeLimit,
   onError,
   onPlayAgain,
   onBackToMenu,
 }: {
   gameId: string;
   mazeId: string;
+  timeLimit: number;
   onError: (message: string) => void;
   onPlayAgain: () => void;
   onBackToMenu: () => void;
@@ -46,7 +48,7 @@ const GameRoom = ({
     error,
     sendPlayerInput,
     gaveUp,
-  } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId);
+  } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId, timeLimit);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

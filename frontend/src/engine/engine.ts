@@ -1,25 +1,24 @@
-import type {
-  GameState,
-  Player,
-  Chaser,
-  Tile,
-  Direction,
-} from "../../../shared/types/game-types";
 import {
-  findChaserSpawns,
-  findSpawn,
-  parsePellets,
-  isWall,
+  DEFAULT_TIME_LIMIT,
   DEFAULT_MAZE_ID,
   MAZES,
-} from "./maze";
+} from "../../../shared/data/game-data";
+import {
+  type GameState,
+  type Player,
+  type Chaser,
+  type Tile,
+  type Direction,
+} from "../../../shared/types/game-types";
+import { findChaserSpawns, findSpawn, parsePellets, isWall } from "./maze";
+
 import { stepPlayer, stepChaser, ahead } from "./movement";
 
 const TICKS_PER_SECOND = 30;
 
 export const createGame = (
   playerId: string,
-  timeLimit: number = 360,
+  timeLimit: number = DEFAULT_TIME_LIMIT,
   mazeId: string = DEFAULT_MAZE_ID,
 ): GameState => {
   if (!Object.keys(MAZES).includes(mazeId)) {

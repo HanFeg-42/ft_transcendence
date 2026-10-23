@@ -3,7 +3,7 @@ import type {
   Direction,
   GameState,
 } from "../../../shared/types/game-types";
-import { MAZES } from "../engine/maze";
+import { MAZES } from "../../../shared/data/game-data";
 import { TICKS_PER_TILE } from "../engine/movement";
 import { ahead } from "../engine/movement";
 

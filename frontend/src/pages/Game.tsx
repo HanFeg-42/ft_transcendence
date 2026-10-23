@@ -5,13 +5,15 @@ import type {
   Direction,
   GameStatus,
 } from "../../../shared/types/game-types";
-// import { ahead, TICKS_PER_TILE } from "../engine/movement";
 import ArenaBackground from "../components/ui/ArenaBackground";
 import Badge from "../components/ui/Badge";
 import PixelButton from "../components/ui/PixelButton";
 import { draw } from "../utils/render";
-import { DEFAULT_MAZE_ID, MAZES } from "../engine/maze";
-// import Badge from "../components/ui/Badge";
+import {
+  DEFAULT_TIME_LIMIT,
+  DEFAULT_MAZE_ID,
+  MAZES,
+} from "../../../shared/data/game-data";
 
 const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
@@ -33,7 +35,9 @@ export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const intervalRef = useRef<number>(undefined);
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
-  const stateRef = useRef<GameState>(createGame("local", 360, mazeId));
+  const stateRef = useRef<GameState>(
+    createGame("local", DEFAULT_TIME_LIMIT, mazeId),
+  );
   const [started, setStarted] = useState<boolean>(false);
   const maze = MAZES[mazeId];
 
@@ -60,7 +64,7 @@ export default function Game() {
 
     if (!ctx) return;
 
-    stateRef.current = createGame("local", 360, mazeId);
+    stateRef.current = createGame("local", DEFAULT_TIME_LIMIT, mazeId);
 
     setHud({
       players: stateRef.current.players.map(({ score, lives }) => ({
@@ -77,7 +81,7 @@ export default function Game() {
     players: { score: number; lives: number }[];
     timeRemaining: number;
     status: GameStatus;
-  }>({ players: [], timeRemaining: 360, status: "playing" });
+  }>({ players: [], timeRemaining: DEFAULT_TIME_LIMIT, status: "playing" });
 
   useEffect(() => {
     if (!started) return;
@@ -94,7 +98,7 @@ export default function Game() {
 
     if (!ctx) return;
 
-    stateRef.current = createGame("local", 360, mazeId);
+    stateRef.current = createGame("local", DEFAULT_TIME_LIMIT, mazeId);
 
     setHud({
       players: stateRef.current.players.map(({ score, lives }) => ({

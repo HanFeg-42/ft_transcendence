@@ -32,8 +32,8 @@ export interface JoinGamePayload {
   gameId: string;
   username: string;
   mazeId?: string;
+  timeLimit?: number;
 }
-
 //2.Data sent when a player presses an arrow key
 export interface PlayerInputPayload {
   gameId: string;
@@ -67,7 +67,13 @@ export interface ErrorPayload {
 }
 
 export type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
-export type GameStatus = "waiting" | "playing" | "won" | "lost" | "finished" | "abandoned";
+export type GameStatus =
+  | "waiting"
+  | "playing"
+  | "won"
+  | "lost"
+  | "finished"
+  | "abandoned";
 
 export interface Tile {
   x: number;

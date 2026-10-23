@@ -3,7 +3,11 @@ import PixelButton from "../components/ui/PixelButton";
 import { useState } from "react";
 import ArenaBackground from "../components/ui/ArenaBackground";
 import Badge from "../components/ui/Badge";
-import { DEFAULT_MAZE_ID, MAZES } from "../engine/maze";
+import { DEFAULT_MAZE_ID, MAZES } from "../../../shared/data/game-data";
+import {
+  DEFAULT_TIME_LIMIT,
+  TIME_LIMITS,
+} from "../../../shared/data/game-data";
 import GameRoom from "../components/game/GameRoom";
 import Matchmaking from "../components/game/Matchmaking";
 import { useSearchParams } from "react-router-dom";
@@ -15,6 +19,7 @@ const OnlineGame = () => {
   );
   const [roomInput, setRoomInput] = useState<string>("");
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
+  const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState<boolean>(false);
 
@@ -69,13 +74,24 @@ const OnlineGame = () => {
             Find a match
           </PixelButton>
           <select
+            value={timeLimit}
+            onChange={(e) => setTimeLimit(Number(e.target.value))}
+            className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
+          >
+            {TIME_LIMITS.map((seconds) => (
+              <option key={seconds} value={seconds}>
+                {seconds / 60} min
+              </option>
+            ))}
+          </select>
+          <select
             value={mazeId}
             onChange={(e) => setMazeId(e.target.value)}
             className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
           >
-            {Object.keys(MAZES).map((id) => (
-              <option key={id} value={id}>
-                {id}
+            {Object.keys(MAZES).map((maze) => (
+              <option key={maze} value={maze}>
+                {maze}
               </option>
             ))}
           </select>
@@ -93,6 +109,7 @@ const OnlineGame = () => {
           setSearching(true);
         }}
         mazeId={mazeId}
+        timeLimit={timeLimit}
       />
     </ArenaBackground>
   );

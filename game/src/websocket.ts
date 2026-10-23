@@ -141,7 +141,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   }
   if (packet.event === GameClientEvents.JOIN_GAME) {
     // --- Join a room ---
-    const { gameId, mazeId }: JoinGamePayload = packet.data;
+    const { gameId, mazeId, timeLimit }: JoinGamePayload = packet.data;
     if (!gameId || typeof gameId !== "string") {
       ws.send(
         JSON.stringify({
@@ -204,7 +204,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     }
     playerSocket.set(userId, ws);
 
-    const state: GameState = joinSession(gameId, userId, mazeId);
+    const state: GameState = joinSession(gameId, userId, mazeId, timeLimit);
     broadcast(gameId, GameServerEvents.GAME_STATE, state);
 
     if (state.players.length === 2) {
