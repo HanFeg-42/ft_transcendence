@@ -4,11 +4,12 @@ import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import Background from "../components/ui/Background";
 import Navbar from "../components/ui/Navbar";
-import TwoFactorSetup from "../components/TwoFactorSetup";
+// import TwoFactorSetup from "../components/TwoFactorSetup";
 import PixelButton from "../components/ui/PixelButton";
 
 const routeMap: Record<string, string> = {
   HOME: "/home",
+  LEADERBOARD: "/leaderboard",
   PROFILE: "/profile",
   CHAT: "/chat",
   NOTIFICATION: "/notifications",
@@ -61,12 +62,12 @@ export default function Home() {
           {/* Welcome, {user?.username}! - add translate */}
         </p>
 
-        <TwoFactorSetup />
+        {/* <TwoFactorSetup /> */}
 
         <PixelButton
           variant="filled-pink"
           size="lg"
-          onClick={() => navigate("/game")}
+          onClick={() => navigate("/choose")}
           className="self-start"
         >
           {t("playNow")}

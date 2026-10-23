@@ -6,15 +6,18 @@ import "./index.css";
 import App from "./App.tsx";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthProvider>
-      <NotificationProvider>
+    <ErrorBoundary>
+      <AuthProvider>
         <BrowserRouter>
-          <App />
+          <NotificationProvider>
+            <App />
+          </NotificationProvider>
         </BrowserRouter>
-      </NotificationProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

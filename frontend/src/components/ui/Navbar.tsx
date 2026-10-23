@@ -11,7 +11,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab = "HOME",
   onSelectTab,
 }) => {
-  const navItems = ["HOME", "PROFILE", "CHAT", "NOTIFICATION", "SETTINGS"];
+  const navItems = ["HOME", "LEADERBOARD", "PROFILE", "CHAT", "NOTIFICATION", "SETTINGS"];
   const { unreadCount } = useNotifications();
   const { t } = useTranslation();
   const navLabels: Record<string, string> = {

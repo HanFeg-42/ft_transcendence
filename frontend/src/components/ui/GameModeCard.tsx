@@ -30,8 +30,8 @@ export const GameModeCard: React.FC<GameModeCardProps> = ({
         transition-all duration-200
         hover:scale-105
         ${selected 
-          ? 'border-pacova-pink shadow-neon-pink' 
-          : 'border-pacova-green/60 shadow-neon-green/40 hover:border-pacova-green'
+          ? ' shadow-neon-pink border-pacova-pink/70 hover:border-pacova-pink/90' 
+          : ' shadow-neon-green/40 hover:border-pacova-green/70'
         }
       `}
     >
