@@ -47,6 +47,8 @@ services:
     depends_on:
       - auth
       - game
+      - chat
+      - user
     networks:
       - pacova
 
