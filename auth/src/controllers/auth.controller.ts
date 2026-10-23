@@ -1,17 +1,27 @@
+
 import type { Request, Response } from "express";
 import { loginUser } from "../services/auth.service";
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
 
-  if (!email || !password) {
+  // 1. Validate input types and required fields.
+  if (
+    typeof email !== "string" ||
+    typeof password !== "string" ||
+    !email.trim() ||
+    !password
+  ) {
     return res.status(400).json({
       error: "email and password are required",
     });
   }
 
+  // 2. Normalize email to match registration behavior.
+  const normalizedEmail = email.trim().toLowerCase();
+
   try {
-    const result = await loginUser(email, password, res);
+    const result = await loginUser(normalizedEmail, password, res);
 
     if (result.requiresTwoFactor) {
       return res.status(200).json({
