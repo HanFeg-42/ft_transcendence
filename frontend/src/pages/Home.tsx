@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
@@ -18,6 +19,8 @@ const routeMap: Record<string, string> = {
 export default function Home() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
@@ -30,7 +33,8 @@ export default function Home() {
       navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      setLogoutError("Could not log out. Please try again.");
+      setLogoutError(t("logoutError"));
+      // "Could not log out. Please try again.");
     } finally {
       setIsLoggingOut(false);
     }
@@ -49,11 +53,13 @@ export default function Home() {
 
       <main className="flex-1 max-w-4xl mx-auto w-full p-6 flex flex-col gap-6">
         <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">
-          Pacova Dashboard
+          {t("dashboard")}
+          {/* Pacova Dashboard - add translate*/}
         </h1>
 
         <p className="font-vt323 text-gray-300 text-xl">
-          Welcome, {user?.username}!
+          {t("welcome", { username: user?.username ?? "" })}
+          {/* Welcome, {user?.username}! - add translate */}
         </p>
 
         {/* <TwoFactorSetup /> */}
@@ -64,14 +70,16 @@ export default function Home() {
           onClick={() => navigate("/choose")}
           className="self-start"
         >
-          PLAY NOW
+          {t("playNow")}
+          {/* PLAY NOW - add translate */}
         </PixelButton>
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}
           className="font-vt323 text-pacova-pink text-lg underline self-start uppercase disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoggingOut ? "Logging out..." : "Logout"}
+          {isLoggingOut ? t("loggingOut") : t("logout")}
+          {/* {isLoggingOut ? "Logging out..." : "Logout"} - add translate */}
         </button>
 
         {logoutError && (
