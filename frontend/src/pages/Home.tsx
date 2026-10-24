@@ -1,10 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
 import Background from "../components/ui/Background";
 import Navbar from "../components/ui/Navbar";
-// import TwoFactorSetup from "../components/TwoFactorSetup";
 import PixelButton from "../components/ui/PixelButton";
 
 const routeMap: Record<string, string> = {
@@ -17,28 +15,9 @@ const routeMap: Record<string, string> = {
 };
 
 export default function Home() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    setLogoutError("");
-
-    try {
-      await logout();
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      setLogoutError(t("logoutError"));
-      // "Could not log out. Please try again.");
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
 
   const handleSelectTab = (tab: string) => {
     const path = routeMap[tab];
@@ -62,8 +41,6 @@ export default function Home() {
           {/* Welcome, {user?.username}! - add translate */}
         </p>
 
-        {/* <TwoFactorSetup /> */}
-
         <PixelButton
           variant="filled-pink"
           size="lg"
@@ -71,20 +48,7 @@ export default function Home() {
           className="self-start"
         >
           {t("playNow")}
-          {/* PLAY NOW - add translate */}
         </PixelButton>
-        <button
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="font-vt323 text-pacova-pink text-lg underline self-start uppercase disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoggingOut ? t("loggingOut") : t("logout")}
-          {/* {isLoggingOut ? "Logging out..." : "Logout"} - add translate */}
-        </button>
-
-        {logoutError && (
-          <p className="font-vt323 text-red-400 text-lg">{logoutError}</p>
-        )}
       </main>
     </Background>
   );
