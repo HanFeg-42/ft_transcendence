@@ -1,6 +1,8 @@
 import React from 'react';
 import PixelButton from '../ui/PixelButton';
 import Card from '../ui/Card';
+import { Link } from 'react-router-dom';
+
 
 interface ProfileCardProps {
   username?: string;
@@ -97,6 +99,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             <span className="text-pacova-green font-bold text-2xl drop-shadow-[0_0_8px_rgba(142,214,3,0.6)]">
               {stats.winRate}%
             </span>
+          </div>
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <Link to="/friends-test" >
+            <span className="text-gray-400 tracking-wider">👤 FREINDS </span> 
+            </Link>
           </div>
         </div>
       </div>
