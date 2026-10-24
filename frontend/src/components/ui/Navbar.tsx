@@ -16,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { t } = useTranslation();
   const navLabels: Record<string, string> = {
   HOME: t("home"),
+  LEADERBOARD: t("leaderboard"),
   PROFILE: t("profile"),
   CHAT: t("chat"),
   NOTIFICATION: t("notification"),
