@@ -59,6 +59,13 @@ const resources = {
       footerTerms: "Terms of Service",
       homeHeadline: "ARE YOU READY TO CHAMP OR BE CHAMPED",
       homeTagline: "YOUR NEXT ARCADE ADVENTURE AWAITS.",
+      welcomeTitle: "LEVEL UP",
+      welcomeJoin: "JOIN THE ARENA...",
+      welcomeDescription:
+        "Challenge your friends, master the maze, and become the ultimate PACOVA champion.",
+      login: "LOGIN",
+      signup: "SIGN UP",
+      welcomeWith: "WITH",
     },
   },
   fr: {
@@ -121,6 +128,13 @@ const resources = {
       footerTerms: "Conditions d'utilisation",
       homeHeadline: "PRÊT À DEVENIR UN CHAMPION OU À ÊTRE BATTU ?",
       homeTagline: "VOTRE PROCHAINE AVENTURE D'ARCADE VOUS ATTEND.",
+      welcomeTitle: "PASSEZ AU NIVEAU SUPÉRIEUR",
+      welcomeJoin: "REJOIGNEZ L'ARÈNE...",
+      welcomeDescription:
+        "Défiez vos amis, maîtrisez le labyrinthe et devenez le champion ultime de PACOVA.",
+      login: "CONNEXION",
+      signup: "S'INSCRIRE",
+      welcomeWith: "AVEC",
     },
   },
   ar: {
@@ -172,6 +186,13 @@ const resources = {
       footerTerms: "شروط الخدمة",
       homeHeadline: "هل أنت مستعد لتصبح بطلاً أم تُهزم؟",
       homeTagline: "مغامرتك القادمة في عالم الألعاب بانتظارك.",
+      welcomeTitle: "ارتقِ إلى المستوى التالي",
+      welcomeJoin: "انضم إلى ساحة المنافسة...",
+      welcomeDescription:
+        "تحدَّ أصدقاءك، وأتقن المتاهة، وكن بطل باكوفا بلا منازع.",
+      login: "تسجيل الدخول",
+      signup: "إنشاء حساب",
+      welcomeWith: "مع",
     },
   },
 };

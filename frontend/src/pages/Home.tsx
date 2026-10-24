@@ -32,7 +32,7 @@ export default function Home() {
       <main className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 items-center gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-2 lg:gap-x-12 lg:gap-y-4 lg:px-10 lg:py-8">
         {/* Headline and supporting text */}
         <section className="order-1 min-w-0 text-center lg:col-start-1 lg:row-start-1 lg:text-left">
-          <h1 className="font-pixelify text-3xl font-bold uppercase leading-relaxed text-pacova-green drop-shadow-[0_0_12px_rgba(255,20,147,0.55)] sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
+          <h1 className="font-press-start text-2xl font-bold uppercase leading-relaxed text-white drop-shadow-[0_0_12px_rgba(255,20,147,0.6)] sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
             {t("homeHeadline")}
           </h1>
 
