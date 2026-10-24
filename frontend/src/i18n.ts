@@ -53,7 +53,12 @@ const resources = {
       themeName: "Pacova Neon",
       themeDescription: "Dark background with neon accents",
       chooseLanguage: "Choose your interface language.",
-
+      // Footer
+      footerLegal: "Legal",
+      footerPrivacy: "Privacy Policy",
+      footerTerms: "Terms of Service",
+      homeHeadline: "ARE YOU READY TO CHAMP OR BE CHAMPED",
+      homeTagline: "YOUR NEXT ARCADE ADVENTURE AWAITS.",
     },
   },
   fr: {
@@ -110,6 +115,12 @@ const resources = {
       themeName: "Pacova Neon",
       themeDescription: "Fond sombre avec des accents néon",
       chooseLanguage: "Choisissez la langue de votre interface.",
+      // Footer
+      footerLegal: "Mentions légales",
+      footerPrivacy: "Politique de confidentialité",
+      footerTerms: "Conditions d'utilisation",
+      homeHeadline: "PRÊT À DEVENIR UN CHAMPION OU À ÊTRE BATTU ?",
+      homeTagline: "VOTRE PROCHAINE AVENTURE D'ARCADE VOUS ATTEND.",
     },
   },
   ar: {
@@ -155,6 +166,12 @@ const resources = {
       themeName: "Pacova Neon",
       themeDescription: "خلفية داكنة مع ألوان نيون",
       chooseLanguage: "اختر لغة الواجهة.",
+      // Footer
+      footerLegal: "قانوني",
+      footerPrivacy: "سياسة الخصوصية",
+      footerTerms: "شروط الخدمة",
+      homeHeadline: "هل أنت مستعد لتصبح بطلاً أم تُهزم؟",
+      homeTagline: "مغامرتك القادمة في عالم الألعاب بانتظارك.",
     },
   },
 };
