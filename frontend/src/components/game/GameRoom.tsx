@@ -6,6 +6,7 @@ import { MAZES } from "../../engine/maze";
 import { useGameSocket } from "../../hooks/useGameSocket";
 import { draw } from "../../utils/render";
 import type { Direction } from "../../../../shared/types/game-types";
+import PixelButton from "../ui/PixelButton";
 
 const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
@@ -25,21 +26,26 @@ const KEY_MAP: Record<string, Direction> = {
 
 const GameRoom = ({
   gameId,
-  onError,
   mazeId,
+  onError,
+  onPlayAgain,
+  onBackToMenu,
 }: {
   gameId: string;
-  onError: (message: string) => void;
   mazeId: string;
+  onError: (message: string) => void;
+  onPlayAgain: () => void;
+  onBackToMenu: () => void;
 }) => {
   const { user, token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const {
     gameState: state,
-    // isConnected,
+    isConnected,
     error,
     sendPlayerInput,
+    gaveUp,
   } = useGameSocket(url, gameId, user?.username ?? "guest", mazeId);
 
   useEffect(() => {
@@ -118,6 +124,8 @@ const GameRoom = ({
                   ? "You won"
                   : "You lost!"}
             </Badge>
+            <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
+            <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
           </div>
         )}
         {isOpponentAway && (
@@ -126,6 +134,19 @@ const GameRoom = ({
               {"Opponent disconnected, Forfeit in "}
               <Countdown seconds={15} />s
             </Badge>
+          </div>
+        )}
+        {!isConnected && state.status === "playing" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
+            <Badge variant="yellow">
+              {gaveUp ? "Connection lost" : "Connection lost, reconnecting..."}
+            </Badge>
+            {gaveUp && (
+              <>
+                <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
+                <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
+              </>
+            )}
           </div>
         )}
       </div>

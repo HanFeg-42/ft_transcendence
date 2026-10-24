@@ -47,6 +47,8 @@ services:
     depends_on:
       - auth
       - game
+      - chat
+      - user
     networks:
       - pacova
 
@@ -56,7 +58,7 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: frontend
     ports:
-      - "8443:443"
+      - "443:443"
     depends_on:
       - api-gateway
     networks:
@@ -87,6 +89,7 @@ services:
         condition: service_healthy
     volumes:
       - ./user/uploads:/app/user/uploads
+      # Development convenience: lets `prisma migrate dev` write new migrations to the host
       - ./user/prisma/migrations:/app/user/prisma/migrations
     networks:
       - pacova

@@ -84,7 +84,16 @@ const OnlineGame = () => {
     );
   return (
     <ArenaBackground>
-      <GameRoom gameId={gameRoom} onError={handleError} mazeId={mazeId} />
+      <GameRoom
+        gameId={gameRoom}
+        onError={handleError}
+        onBackToMenu={() => setGameRoom(null)}
+        onPlayAgain={() => {
+          setGameRoom(null);
+          setSearching(true);
+        }}
+        mazeId={mazeId}
+      />
     </ArenaBackground>
   );
 };
