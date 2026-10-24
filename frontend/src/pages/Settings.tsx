@@ -20,6 +20,7 @@ import languageIcon from "../assets/icons/lang.png";
 
 const routeMap: Record<string, string> = {
   HOME: "/home",
+  LEADERBOARD: "/leaderboard",
   PROFILE: "/profile",
   CHAT: "/chat",
   NOTIFICATION: "/notifications",
