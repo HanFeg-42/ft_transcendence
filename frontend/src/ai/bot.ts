@@ -8,104 +8,59 @@ import {
     escapeDirection,
     directionToEatableChaser
 } from './danger'
-import {isDangerous} from './safety'
+
+
+
+export type BotDifficulty = "easy" | "normal" | "hard";
+
+const DIFFICULTY = {
+    easy:   { dangerRadius: 1, chaseSteps: 2 },
+    normal: { dangerRadius: 2, chaseSteps: 4 },
+    hard:   { dangerRadius: 3, chaseSteps: 8 },
+} as const;
+
+
 
 export function chooseDirection(
     state: GameState,
-    botId: string
-): Direction | null
-{
+    botId: string,
+    difficulty: BotDifficulty = "hard"
+): Direction | null {
     const bot = state.players.find(player => player.id === botId);
     if (!bot)
         return null;
 
-    const nearestChaser = state.chasers.reduce((nearest, chaser) =>
-    {
-        const distance = Math.abs(bot.tile.x - chaser.tile.x)
-            + Math.abs(bot.tile.y - chaser.tile.y);
+    const config = DIFFICULTY[difficulty];
 
-        const nearestDistance = Math.abs(bot.tile.x - nearest.tile.x)
-            + Math.abs(bot.tile.y - nearest.tile.y);
-
-        return distance < nearestDistance ? chaser : nearest;
-    }, state.chasers[0]);
-
-    const chaserInfo = nearestChaser
-        ? `${nearestChaser.id}@(${nearestChaser.tile.x},${nearestChaser.tile.y})`
-        : 'none';
-
-    const threats = threatsNear(state, botId);
+    // 1. Escape only ghosts that are genuine nearby threats.
+    const threats = threatsNear(state, botId, config.dangerRadius);
 
     if (threats.length > 0)
     {
-        const direction = escapeDirection(state, botId, threats);
-
-        console.log(
-            `[BOT FLEE] tile=(${bot.tile.x},${bot.tile.y})`,
-            `dir=${direction}`,
-            `nearestChaser=${chaserInfo}`,
-            `threatCount=${threats.length}`,
-            `power=${state.vulnerableTimer}`
-        );
-
-        return direction;
+        const escape = escapeDirection(state, botId, threats);
+        if (escape)
+            return escape;
     }
 
-    const eatGhosts = directionToEatableChaser(state, botId);
+    // 2. Chase a vulnerable ghost only if it is close enough.
+    const eatGhost = directionToEatableChaser(state, botId, config.chaseSteps);
+    if (eatGhost)
+        return eatGhost;
 
-    if (eatGhosts)
+    // 3. Main objective: collect pellets.
+    const pelletDirection = directionToNearestPellet(state, botId);
+    if (pelletDirection)
+        return pelletDirection;
+
+    // 4. No safe pellet route: escape only nearby threats.
+    if (threats.length > 0)
     {
-        console.log(
-            `[BOT CHASE GHOST] tile=(${bot.tile.x},${bot.tile.y})`,
-            `dir=${eatGhosts}`,
-            `nearestChaser=${chaserInfo}`,
-            `power=${state.vulnerableTimer}`
-        );
-
-        return eatGhosts;
+        const escape = escapeDirection(state, botId, threats);
+        if (escape)
+            return escape;
     }
 
-    const pelletD = directionToNearestPellet(state, botId);
-
-    if (pelletD)
-    {
-        console.log(
-            `[BOT PELLET] tile=(${bot.tile.x},${bot.tile.y})`,
-            `dir=${pelletD}`,
-            `nearestChaser=${chaserInfo}`,
-            `power=${state.vulnerableTimer}`
-        );
-
-        return pelletD;
-    }
-
-    // No safe pellet was found. Try to move toward a safer area.
-    const dangerousChasers = state.chasers.filter(chaser =>
-        isDangerous(state, chaser)
-    );
-
-    if (dangerousChasers.length > 0)
-    {
-        const escapeD = escapeDirection(
-            state,
-            botId,
-            dangerousChasers
-        );
-
-        if (escapeD)
-        {
-            console.log(
-                `[BOT SAFE AREA] tile=(${bot.tile.x},${bot.tile.y})`,
-                `dir=${escapeD}`,
-                `nearestChaser=${chaserInfo}`,
-                `threatCount=${dangerousChasers.length}`,
-                `power=${state.vulnerableTimer}`
-            );
-
-            return escapeD;
-        }
-    }
-
+    // 5. Last resort: take a valid direction instead of getting stuck.
     const maze = MAZES[state.mazeId];
 
     const freeDirections = directions.filter(dir =>
@@ -113,20 +68,7 @@ export function chooseDirection(
     );
 
     if (freeDirections.length === 0)
-    {
-        console.log(`[BOT STUCK] tile=(${bot.tile.x},${bot.tile.y})`);
         return null;
-    }
 
-    const randomPos = Math.floor(Math.random() * freeDirections.length);
-    const direction = freeDirections[randomPos];
-
-    console.log(
-        `[BOT RANDOM] tile=(${bot.tile.x},${bot.tile.y})`,
-        `dir=${direction}`,
-        `nearestChaser=${chaserInfo}`,
-        `power=${state.vulnerableTimer}`
-    );
-
-    return direction;
+    return freeDirections[Math.floor(Math.random() * freeDirections.length)];
 }

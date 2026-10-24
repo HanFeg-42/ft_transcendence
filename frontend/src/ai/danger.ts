@@ -11,7 +11,8 @@ import {
     SAFE_MARGIN
 } from './safety'
 
-const DANGER_RADIUS: number = 3;
+const DANGER_RADIUS = 3;
+// const MAX_CHASE_STEPS = 3;
 
 function manhattan(a: Tile, b: Tile): number
 {
@@ -20,15 +21,17 @@ function manhattan(a: Tile, b: Tile): number
 
 export {isDangerous};
 
-export function threatsNear(state: GameState, botId: string): Chaser[]
-{
+export function threatsNear(
+    state: GameState,
+    botId: string,
+    radius: number = DANGER_RADIUS
+): Chaser[] {
     const bot = state.players.find(player => player.id === botId);
-    if (!bot)
-        return [];
+    if (!bot) return [];
 
     return state.chasers.filter(chaser =>
         isDangerous(state, chaser) &&
-        manhattan(bot.tile, chaser.tile) <= DANGER_RADIUS
+        manhattan(bot.tile, chaser.tile) <= radius
     );
 }
 
@@ -56,12 +59,11 @@ export function escapeDirection(
     if (freeDirections.length === 0)
         return null;
 
-    // Include all dangerous ghosts, even those outside DANGER_RADIUS.
-    const ghostArrival = ghostArrivalMap(state);
+    const ghostArrival = ghostArrivalMap(state, botId);
 
     let bestDirection: Direction | null = null;
     let bestSafeArea = -1;
-    let bestManhattanScore = -Infinity;
+    let bestDistanceScore = -Infinity;
 
     for (const dir of freeDirections)
     {
@@ -93,7 +95,7 @@ export function escapeDirection(
             }
         }
 
-        const manhattanScore = Math.min(
+        const distanceScore = Math.min(
             ...threats.map(threat =>
                 manhattan(nextTile, threat.tile)
             )
@@ -103,11 +105,11 @@ export function escapeDirection(
             safeArea > bestSafeArea ||
             (
                 safeArea === bestSafeArea &&
-                manhattanScore > bestManhattanScore
+                distanceScore > bestDistanceScore
             )
         ) {
             bestSafeArea = safeArea;
-            bestManhattanScore = manhattanScore;
+            bestDistanceScore = distanceScore;
             bestDirection = dir;
         }
     }
@@ -117,10 +119,14 @@ export function escapeDirection(
 
 export function directionToEatableChaser(
     state: GameState,
-    botId: string
-): Direction | null
-{
+    botId: string,
+    maxChaseSteps: number = 8
+): Direction | null {
     if (state.vulnerableTimer <= 0)
+        return null;
+
+    const bot = state.players.find(player => player.id === botId);
+    if (!bot)
         return null;
 
     const targetChaser = (tile: Tile): boolean =>
@@ -133,6 +139,19 @@ export function directionToEatableChaser(
             const targetTile = chaser.dir
                 ? ahead(chaser.tile, chaser.dir)
                 : chaser.tile;
+
+            // Don't chase a frightened ghost that's much closer
+            // to the human player than to the bot.
+            const human = state.players.find(player => player.id !== botId);
+
+            if (human)
+            {
+                const botDistance = manhattan(bot.tile, targetTile);
+                const humanDistance = manhattan(human.tile, targetTile);
+
+                if (humanDistance < botDistance)
+                    return false;
+            }
 
             return tile.x === targetTile.x && tile.y === targetTile.y;
         });
@@ -155,14 +174,10 @@ export function directionToEatableChaser(
         );
     }
 
-    if (result === null)
+    if (result === null || result.steps > maxChaseSteps)
         return null;
 
-    const MAX_CHASE_STEPS = 8;
     const estimatedTicks = result.steps * TICKS_PER_TILE;
-
-    if (result.steps > MAX_CHASE_STEPS)
-        return null;
 
     if (estimatedTicks + POWER_SAFETY_TICKS >= state.vulnerableTimer)
         return null;

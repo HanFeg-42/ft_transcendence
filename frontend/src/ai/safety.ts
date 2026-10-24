@@ -9,6 +9,11 @@ export const POWER_SAFETY_TICKS = POWER_SAFETY_TILES * TICKS_PER_TILE;
 export const SAFE_MARGIN = 2;
 export const MIN_ESCAPE_AREA = 12;
 
+function manhattan(a: Tile, b: Tile): number
+{
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+}
+
 export function isDangerous(state: GameState, chaser: Chaser): boolean
 {
     if (chaser.isEaten)
@@ -17,7 +22,10 @@ export function isDangerous(state: GameState, chaser: Chaser): boolean
     return state.vulnerableTimer <= POWER_SAFETY_TICKS;
 }
 
-export function ghostArrivalMap(state: GameState): number[][]
+export function ghostArrivalMap(
+    state: GameState,
+    botId?: string
+): number[][]
 {
     const maze = MAZES[state.mazeId];
     const height = maze.length;
@@ -28,9 +36,30 @@ export function ghostArrivalMap(state: GameState): number[][]
         () => Array(width).fill(Infinity)
     );
 
+    const bot = state.players.find(player => player.id === botId);
+    const human = bot
+        ? state.players.find(player => player.id !== botId)
+        : undefined;
+
     const dangerousChasers = state.chasers.filter(chaser =>
-        isDangerous(state, chaser)
-    );
+    {
+        if (!isDangerous(state, chaser))
+            return false;
+
+        // If the human is clearly closer, don't treat this ghost
+        // as an immediate threat to the bot everywhere in the maze.
+        // Still treat it as dangerous when it is next to the bot.
+        if (bot && human)
+        {
+            const botDistance = manhattan(bot.tile, chaser.tile);
+            const humanDistance = manhattan(human.tile, chaser.tile);
+
+            if (botDistance > 1 && humanDistance <= botDistance - 2)
+                return false;
+        }
+
+        return true;
+    });
 
     for (const chaser of dangerousChasers)
     {

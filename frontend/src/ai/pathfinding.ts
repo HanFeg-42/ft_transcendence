@@ -31,7 +31,6 @@ type PathResult = {
 type CanEnter = (tile: Tile, steps: number) => boolean;
 type IsValidTarget = (tile: Tile, steps: number) => boolean;
 
-// Find a pellet only if the path is safe and enough escape area remains.
 export function directionToNearestPellet(
     state: GameState,
     botId: string
@@ -40,7 +39,9 @@ export function directionToNearestPellet(
     const maze = MAZES[state.mazeId];
     const height = maze.length;
     const width = maze[0]?.length ?? 0;
-    const ghostArrival = ghostArrivalMap(state);
+
+    // Evaluate danger relative to this bot, not every player equally.
+    const ghostArrival = ghostArrivalMap(state, botId);
 
     const canEnter: CanEnter = (tile, steps) =>
     {
@@ -70,11 +71,8 @@ export function directionToNearestPellet(
 
                 const ghostArrivalTime = ghostArrival[y][x];
 
-                if (
-                    steps + distance + SAFE_MARGIN <= ghostArrivalTime
-                ) {
+                if (steps + distance + SAFE_MARGIN <= ghostArrivalTime)
                     safeArea++;
-                }
             }
         }
 
@@ -168,10 +166,7 @@ export function directionToNearest(
             const neighborKey = key(neighbor);
             const nextSteps = item.steps + 1;
 
-            if (isWall(maze, neighbor))
-                return;
-
-            if (visited.has(neighborKey))
+            if (isWall(maze, neighbor) || visited.has(neighborKey))
                 return;
 
             if (canEnter && !canEnter(neighbor, nextSteps))
