@@ -115,5 +115,5 @@ export interface GameState {
   winnerId?: string;
   vulnerableTimer: number;
   mazeId: string;
-  difficulty?: string; // optional until its added to the local game
+  difficulty: string; // optional until its added to the local game
 }

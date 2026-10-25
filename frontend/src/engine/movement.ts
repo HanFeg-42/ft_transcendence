@@ -37,11 +37,11 @@ export const stepPlayer = (maze: string[], player: Player) => {
     }
   }
 };
-export const stepChaser = (chaser: Chaser) => {
+export const stepChaser = (chaser: Chaser, ticksPerSecond: number) => {
 
   if (chaser.dir != null) {
     chaser.step++;
-    if (chaser.step >= TICKS_PER_TILE) {
+    if (chaser.step >= ticksPerSecond) {
       chaser.tile = ahead(chaser.tile, chaser.dir);
       chaser.step = 0;
     }

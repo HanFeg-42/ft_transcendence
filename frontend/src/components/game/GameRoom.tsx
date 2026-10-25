@@ -1,18 +1,17 @@
-import { useRef, useEffect } from "react";
+import { useEffect } from "react";
 import Countdown from "../../components/game/Countdown";
 import Badge from "../../components/ui/Badge";
 import { useAuth } from "../../context/AuthContext";
-import { MAZES } from "../../../../shared/data/game-data";
 import { useGameSocket } from "../../hooks/useGameSocket";
-import { draw } from "../../utils/render";
+import "./MazeUI";
 import type { Direction } from "../../../../shared/types/game-types";
 import PixelButton from "../ui/PixelButton";
 import {
   START_DELAY_MS,
   FORFEIT_DELAY_MS,
 } from "../../../../shared/data/game-data";
+import MazeUI from "./MazeUI";
 
-const TILE_SIZE = 32;
 const KEY_MAP: Record<string, Direction> = {
   w: "UP",
   s: "DOWN",
@@ -47,7 +46,6 @@ const GameRoom = ({
 }) => {
   const { user, token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const {
     gameState: state,
     isConnected,
@@ -76,12 +74,6 @@ const GameRoom = ({
   }, []);
 
   useEffect(() => {
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx || !state) return;
-
-    draw(ctx, state);
-  }, [state]);
-  useEffect(() => {
     if (error && !state) {
       onError(error);
     }
@@ -96,6 +88,8 @@ const GameRoom = ({
     return (
       <div className="flex flex-col items-center gap-3 font-vt323 text-pacova-pink text-xl mt-10">
         <p className="text-2xl">Room {gameId}</p>
+        <p>Duration: {state.timeRemaining / 60} min</p>
+        <p>Difficulty: {state.difficulty}</p>
         <p>Map: {state.mazeId}</p>
         {state.players.map((p, i) => (
           <p key={p.id}>Player {i + 1} joined</p>
@@ -109,7 +103,6 @@ const GameRoom = ({
         )}
       </div>
     );
-  const maze = MAZES[state.mazeId];
   const myId = String(user?.id);
   const opponent = state.players.find((p) => p.id !== myId);
   const isOpponentAway = state.status === "playing" && !opponent?.connected;
@@ -125,11 +118,7 @@ const GameRoom = ({
         ))}
       </div>
       <div className="relative">
-        <canvas
-          ref={canvasRef}
-          width={maze[0].length * TILE_SIZE}
-          height={maze.length * TILE_SIZE}
-        />
+        <MazeUI state={state} mazeId={state.mazeId} />
         {state.status === "finished" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
             <Badge variant={"yellow"}>

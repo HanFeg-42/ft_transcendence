@@ -36,7 +36,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
-        <Route path="/game/online" element={<OnlineGame />} /> {/* TEMP */}
+        <Route path="/game/online" element={<OnlineGame />} />
         {/* <Route path="/game-ws" element={<GameWs />} />  */}
         <Route path="/leaderboard" element={<Leaderboard />} />
       </Route>

@@ -1,6 +1,10 @@
 import React from "react";
 import type { GameState } from "../../../../shared/types/game-types";
-import { MAZES, DEFAULT_MAZE_ID } from "../../../../shared/data/game-data";
+import {
+  MAZES,
+  DEFAULT_MAZE_ID,
+  DIFFICULTIES,
+} from "../../../../shared/data/game-data";
 import { TICKS_PER_TILE } from "../../../../shared/data/game-data";
 import styles from "./MazeUI.module.css";
 import { useCellSize } from "../../hooks/useCellSize";
@@ -18,13 +22,14 @@ const getPixelPosition = (
   dir: string | null,
   step: number,
   CellSize: number,
+  ticksPerTile: number,
 ): { x: number; y: number } => {
   const baseX = tile.x * CellSize;
   const baseY = tile.y * CellSize;
 
   if (!dir || step === 0) return { x: baseX, y: baseY };
 
-  const progress = step / TICKS_PER_TILE;
+  const progress = step / ticksPerTile;
   const offset = progress * CellSize;
 
   switch (dir) {
@@ -126,6 +131,7 @@ const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
           player.dir,
           player.step,
           CELL_SIZE,
+          TICKS_PER_TILE,
         );
         return (
           <div
@@ -149,6 +155,7 @@ const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
           chaser.dir,
           chaser.step,
           CELL_SIZE,
+          DIFFICULTIES[state.difficulty],
         );
         const color = GHOST_COLORS[chaser.id % GHOST_COLORS.length];
         return (

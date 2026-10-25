@@ -30,7 +30,7 @@ const Matchmaking = ({
       if (packet.event === GameServerEvents.ERROR) onError(packet.data.message);
     };
     return () => ws.close();
-  }, []);
+  }, [url]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4">
