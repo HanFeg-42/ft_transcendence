@@ -1,0 +1,60 @@
+/* ⭐ État par défaut : caché */
+.overlay {
+    display: none;
+}
+
+/* ⭐ Affiché seulement en mobile portrait */
+@media (max-width: 900px) and (orientation: portrait){
+    .overlay {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        background-color: #000;
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Press Start 2P', monospace;
+    }
+}
+
+.content {
+    text-align: center;
+    color: #F32077;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.phone {
+    font-size: 64px;
+}
+
+.arrow {
+    font-size: 48px;
+    color: #8ED603;
+    text-shadow: 0 0 20px #8ED603;
+    animation: rotate 2s ease-in-out infinite;
+}
+
+@keyframes rotate {
+    0%, 100% { transform: rotate(0deg); }
+    50%      { transform: rotate(90deg); }
+}
+
+.title {
+    font-size: 14px;
+    color: #8ED603;
+    text-shadow: 0 0 10px #8ED603;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.subtitle {
+    font-size: 10px;
+    color: #F32077;
+    text-shadow: 0 0 8px #F32077;
+    letter-spacing: 1px;
+    text-align: center;
+}

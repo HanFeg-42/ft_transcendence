@@ -1,53 +1,49 @@
-// shared/types/chat-types.ts
 // Contract between: frontend (chat UI) <-> chat-service
+import type { NotificationSocketData } from "./notification-types";
 
-// --- Event names -----------------------------------------------------
 export const ChatEvents = {
-  MESSAGE: "message",   // send/receive a chat message
-  TYPING: "typing",     // optional: "user is typing" indicator
+  MESSAGE: "message",
+  TYPING: "typing",
   PRESENCE: "presence",
+  READ: "read",
+  GAME_INVITE: "gameInvite",
+  GAME_INVITE_REPLY: "gameInviteReply",
+  NOTIFICATION: "notification",
+  ERROR: "error",
 } as const;
 
-export type ChatEvent = typeof ChatEvents[keyof typeof ChatEvents];
-
-// --- Payload shapes ----------------------------------------------------
-// What the client SENDS when posting a new message.
-export interface ChatMessageOutgoing {
-  receiver_id: number;
-  content: string;
-}
-
-// What the service SENDS BACK (stored + enriched with id/timestamp).
+// A stored message (text, game invit). Used by the websocket AND the REST history.
 export interface ChatMessageIncoming {
   id: number;
   sender_id: number;
   receiver_id: number;
   content: string;
   created_at: string; // ISO string
+  read_at: string | null;
+  kind: "text" | "game_invite";
+  meta: { gameId?: string; status?: "pending" | "accepted" | "declined" | "expired" } | null;
 }
-
-// Optional: "typing" indicator payload
-export interface ChatTypingEvent {
-  sender_id: number;
-  receiver_id: number;
-}
-
 
 export interface ChatPresenceEvent {
   user_id: number;
-  status: 'online' | 'offline';
+  status: "online" | "offline";
 }
 
-
-// --- Envelopes ----------------------------------------------------------
-// Ties each event name to its payload shape so both sides can switch on
-// `event` and get real type narrowing on `data`, instead of casting.
-
+// Client -> server
 export type ChatClientMessage =
-  | { event: typeof ChatEvents.MESSAGE; data: ChatMessageOutgoing };
-  // TYPING intentionally omitted here until it's actually built
+  | { event: typeof ChatEvents.MESSAGE; data: { receiver_id: number; content: string } }
+  | { event: typeof ChatEvents.TYPING; data: { receiver_id: number } }
+  | { event: typeof ChatEvents.READ; data: { sender_id: number } } // "I read messages from sender_id"
+  | { event: typeof ChatEvents.GAME_INVITE; data: { receiver_id: number } }
+  | { event: typeof ChatEvents.GAME_INVITE_REPLY; data: { message_id: number; accept: boolean } };
 
+// Server -> client (invites and replies arrive as full messages)
 export type ChatServerMessage =
   | { event: typeof ChatEvents.MESSAGE; data: ChatMessageIncoming }
-  | { event: typeof ChatEvents.TYPING; data: ChatTypingEvent }
-  | { event: typeof ChatEvents.PRESENCE; data: ChatPresenceEvent };
+  | { event: typeof ChatEvents.GAME_INVITE; data: ChatMessageIncoming }
+  | { event: typeof ChatEvents.GAME_INVITE_REPLY; data: ChatMessageIncoming }
+  | { event: typeof ChatEvents.PRESENCE; data: ChatPresenceEvent }
+  | { event: typeof ChatEvents.TYPING; data: { sender_id: number } }
+  | { event: typeof ChatEvents.READ; data: { reader_id: number; read_at: string } }
+  | { event: typeof ChatEvents.NOTIFICATION; data: NotificationSocketData }
+  | { event: typeof ChatEvents.ERROR; data: { message: string } };

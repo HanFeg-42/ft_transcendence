@@ -1,5 +1,32 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../prisma';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const userId = getUserIdFromHeader(req as Request);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `avatar_${userId}_${Date.now()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPEG, PNG, GIF, WEBP allowed'));
+  },
+});
 
 const router = Router();
 
@@ -11,12 +38,12 @@ function getUserIdFromHeader(req: Request): number | null {
 }
 
 // Helper : récupère ou crée le Profile
-async function getOrCreateProfile(userId: number) {
+export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
   
   if (!profile) {
-    // Appel au service auth pour récupérer le username
-    let displayName = `Player${userId}`;  // fallback
+    let displayName = `Player${userId}`;
+    let avatarUrl = null;  // in case of fail
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
         headers: { 'x-user-id': userId.toString() },
@@ -25,22 +52,39 @@ async function getOrCreateProfile(userId: number) {
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
+        avatarUrl = authUser.avatar || '/default-avatar.png';
       }
-    } catch (err) {
+      else {
+        avatarUrl = '/default-avatar.png';
+      } 
+    }
+    catch (err) {
       console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
-      // On garde le fallback
     }
     
     profile = await prisma.profile.create({
       data: {
         userId,
         displayName,
+        avatarUrl,
         bio: '',
         statusText: 'Ready to play',
       },
     });
-  }
   
+  
+    const achievements = await prisma.achievement.findMany();
+    await prisma.userAchievement.createMany({
+      data: achievements.map((a) => ({
+        userId,
+        achievementId: a.id,
+        progress: 0,
+        unlocked: false,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
   return profile;
 }
 
@@ -54,6 +98,29 @@ router.get('/me', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
+    const achievements = await prisma.achievement.findMany({
+      include: {
+        users: {
+          where: { userId },
+          select: { unlocked: true, progress: true, unlockedAt: true },
+        },
+      },
+    });
+
+    const formattedAchievements = achievements.map((a) => {
+      const userProgress = a.users[0];
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        image: a.image,
+        borderColor: a.borderColor,
+        textColor: a.textColor,
+        unlocked: userProgress?.unlocked ?? false,
+        progress: userProgress?.progress ?? 0,
+      };
+    });
+
     return res.json({
       id: user.userId,
       username: user.displayName,
@@ -64,10 +131,92 @@ router.get('/me', async (req: Request, res: Response) => {
       currentXp: 500,
       maxXp: 1000,
       stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
+      achievements: formattedAchievements,
     });
   } catch (err: any) {
     console.error('[USER] getMyProfile error:', err);
     return res.status(500).json({ error: err.message });
+  }
+});
+///////////////////////
+
+
+/** GET /profiles?ids=1,2,3 */
+router.get('/profiles', async (req: Request, res: Response) => {
+  const rawIds = req.query.ids;
+
+  if (typeof rawIds !== 'string' || !rawIds.trim()) {
+    return res.status(400).json({ error: 'ids query parameter is required' });
+  }
+
+  const ids = [...new Set(
+    rawIds.split(',').map((id) => Number(id.trim()))
+  )];
+
+  if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+    return res.status(400).json({ error: 'Invalid user ids' });
+  }
+
+  try {
+    const profiles = await prisma.profile.findMany({
+      where: { userId: { in: ids } },
+      select: {
+        userId: true,
+        avatarUrl: true,
+      },
+    });
+
+    return res.json(
+      profiles.map((profile) => ({
+        id: profile.userId,
+        avatarUrl: profile.avatarUrl,
+      }))
+    );
+  } catch (err) {
+    console.error('[USER] getProfiles error:', err);
+    return res.status(500).json({ error: 'Failed to fetch profiles' });
+  }
+});
+
+// GET /profile/batch?ids=1,4,7 
+/**
+ * @route GET /batch
+ * @description Retrieves multiple user profiles in a single request.
+ *              Duplicate IDs are removed, invalid IDs are ignored,
+ *              and a maximum of 100 unique valid IDs are processed.
+ *              Missing profiles may be created by getOrCreateProfile.
+ *
+ * @query {string} ids - Comma-separated list of positive integer user IDs.
+ *                       Example: ?ids=12,25,38
+ *
+ * @returns {200} Array of user profiles containing userId, username,
+ *                and avatarUrl.
+ * @returns {400} No valid user IDs were provided.
+ * @returns {500} Failed to load the requested profiles.
+ */
+router.get('/batch', async (req: Request, res: Response) => {
+  try {
+    const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
+    const ids = [...new Set(raw.split(',').map(Number))]
+      .filter((id) => Number.isInteger(id) && id > 0)
+      .slice(0, 100);
+
+    if (ids.length === 0) {
+      return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
+    }
+
+    const profiles = await Promise.all(ids.map((id) => getOrCreateProfile(id)));
+
+    return res.json(
+      profiles.map((p) => ({
+        userId: p.userId,
+        username: p.displayName,
+        avatarUrl: p.avatarUrl,
+      })),
+    );
+  } catch (err) {
+    console.error('[USER] batch profiles failed:', err);
+    return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
 
@@ -81,12 +230,40 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
+    const achievements = await prisma.achievement.findMany({
+      include: {
+        users: {
+          where: { userId },
+          select: { unlocked: true, progress: true, unlockedAt: true },
+        },
+      },
+    });
+
+    const formattedAchievements = achievements.map((a) => {
+      const userProgress = a.users[0];
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        image: a.image,
+        borderColor: a.borderColor,
+        textColor: a.textColor,
+        unlocked: userProgress?.unlocked ?? false,
+        progress: userProgress?.progress ?? 0,
+      };
+    });
+
     return res.json({
       id: user.userId,
       username: user.displayName,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       statusText: user.statusText || 'Ready to play',
+      level: 1,
+      currentXp: 500,
+      maxXp: 1000,
+      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
+      achievements: formattedAchievements,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
@@ -112,20 +289,36 @@ router.patch('/me', async (req: Request, res: Response) => {
       }
     }
 
-    const updated = await prisma.profile.upsert({
+    const updated = await prisma.profile.update({
       where: { userId },
-      update: {
-        ...(username && { displayName: username }),
-        ...(avatar && { avatarUrl: avatar }),
+      data: {
+        ...(username !== undefined && { displayName: username || null }),
+        ...(avatar !== undefined && { avatarUrl: avatar || null }),
         ...(bio !== undefined && { bio }),
       },
-      create: {
-        userId,
-        displayName: username || `Player${userId}`,
-        avatarUrl: avatar,
-        bio: bio || '',
-        statusText: 'Ready to play',
+    });
+
+    const achievements = await prisma.achievement.findMany({
+      include: {
+        users: {
+          where: { userId },
+          select: { unlocked: true, progress: true, unlockedAt: true },
+        },
       },
+    });
+
+    const formattedAchievements = achievements.map((a) => {
+      const userProgress = a.users[0];
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        image: a.image,
+        borderColor: a.borderColor,
+        textColor: a.textColor,
+        unlocked: userProgress?.unlocked ?? false,
+        progress: userProgress?.progress ?? 0,
+      };
     });
 
     return res.json({
@@ -134,10 +327,52 @@ router.patch('/me', async (req: Request, res: Response) => {
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
       statusText: updated.statusText || 'Ready to play',
+      level: 1,
+      currentXp: 500,
+      maxXp: 1000,
+      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
+      achievements: formattedAchievements,
     });
+
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }
 });
+
+router.post('/avatar', upload.single('avatar'), async (req: Request, res: Response) => {
+  const userId = getUserIdFromHeader(req);
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+  try {
+    await prisma.profile.update({
+      where: { userId },
+      data: { avatarUrl },
+    });
+
+    return res.json({ avatarUrl });
+  } catch (err: any) {
+    console.error('[USER] uploadAvatar error:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Objet créé par Multer :
+
+// {
+//   fieldname: 'avatar',
+//   originalname: 'photo.jpg',
+//   filename: 'avatar_1_1735689600000.jpg',
+//   path: '/app/user/uploads/avatars/avatar_1_xxx.jpg',
+//   size: 12345,
+//   mimetype: 'image/jpeg',
+// }
 
 export default router;

@@ -16,16 +16,16 @@ export const ahead = (tile: Tile, dir: Direction) => {
   }
 };
 
-export const stepPlayer = (player: Player) => {
+export const stepPlayer = (maze: string[], player: Player) => {
   if (player.step === 0) {
     if (player.nextDir !== null) {
-      if (!isWall(ahead(player.tile, player.nextDir))) {
+      if (!isWall(maze, ahead(player.tile, player.nextDir))) {
         player.dir = player.nextDir;
         player.nextDir = null;
       }
     }
     if (player.dir !== null) {
-      if (isWall(ahead(player.tile, player.dir))) {
+      if (isWall(maze, ahead(player.tile, player.dir))) {
         player.dir = null;
       }
     }

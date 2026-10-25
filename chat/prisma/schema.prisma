@@ -16,6 +16,9 @@ model Message {
   receiverId    Int
   content       String
   createdAt     DateTime @default(now())
+  readAt     DateTime?
+  kind       String    @default("text")
+  meta       Json?
 
   @@index([senderId, receiverId, createdAt])
 }

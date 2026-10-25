@@ -1,5 +1,4 @@
 import React from 'react';
-// import { ICONS, type IconName } from '../utils/icons';
 import { ICONS, type IconName } from '../../utils/icons';
 
 interface AvatarProps {
