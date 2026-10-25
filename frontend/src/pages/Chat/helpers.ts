@@ -16,6 +16,7 @@ export const GAME_ROUTE = '/game-ws'; // tmp
 
 export const routeMap: Record<string, string> = {
   HOME: '/home',
+  LEADERBOARD: '/leaderboard',
   PROFILE: '/profile',
   CHAT: '/chat',
   NOTIFICATION: '/notifications',

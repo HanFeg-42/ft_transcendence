@@ -1,0 +1,3 @@
+ALTER TABLE "MatchParticipant"
+  ADD COLUMN "ghostsEaten" INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN "pelletsEaten" INTEGER NOT NULL DEFAULT 0;

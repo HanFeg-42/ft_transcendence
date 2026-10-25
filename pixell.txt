@@ -1,0 +1,240 @@
+https://pixelarticons.com/
+
+
+// import { useState } from "react";
+// import { useNavigate } from "react-router-dom";
+
+// import Background from "../components/ui/Background";
+// import Navbar from "../components/ui/Navbar";
+
+// const routeMap: Record<string, string> = {
+//   HOME: "/home",
+//   PROFILE: "/profile",
+//   CHAT: "/chat",
+//   NOTIFICATION: "/notifications",
+//   SETTINGS: "/settings",
+// };
+
+// const settingsSections = [
+//   "ACCOUNT",
+//   "SECURITY",
+//   "PREFERENCES",
+//   "APPEARANCE",
+//   "LANGUAGE",
+// ];
+
+// export default function Settings() {
+//   const navigate = useNavigate();
+
+//   const [activeSection, setActiveSection] = useState("ACCOUNT");
+
+//   const handleSelectTab = (tab: string) => {
+//     const path = routeMap[tab];
+
+//     if (path) {
+//       navigate(path);
+//     }
+//   };
+
+//   return (
+//     <Background>
+//       {/* Top navigation */}
+//       <Navbar
+//         activeTab="SETTINGS"
+//         onSelectTab={handleSelectTab}
+//       />
+
+//       <main className="flex-1 w-full max-w-[1400px] mx-auto p-4">
+
+//         {/* Page title */}
+//         <div className="mb-8">
+//           <h1 className="font-pixelify text-pacova-pink text-3xl sm:text-4xl uppercase tracking-widest">
+//             Settings
+//           </h1>
+
+//           <p className="font-vt323 text-gray-400 text-xl mt-1">
+//             Manage your Pacova account and preferences.
+//           </p>
+//           </div>
+//           {/* <div class="grid grid-cols-2 gap-4">
+//           <div class="border-2 border-red-500 p-8">BOX 1</div>
+//           <div class="border-2 border-blue-500 p-8">BOX 2</div>
+//           <div class="border-2 border-red-500 p-8">BOX 3</div>
+//           <div class="border-2 border-blue-500 p-8">BOX 4</div>
+//           </div> */}
+
+//           {/* Settings layout */}
+//           <div className="grid grid-cols-2 md:grid-cols-[220px_1fr] gap-6">
+
+//             {/* LEFT MENU */}
+//             <aside className="border-2 border-pacova-pink bg-pacova-surface/80 p-4 h-fit">
+
+//               <p className="font-pixelify text-pacova-pink text-sm mb-5">
+//                 SETTINGS
+//               </p>
+
+//               <nav className="flex flex-col gap-2">
+//                 {settingsSections.map((section) => (
+//                 <button
+//                   key={section}
+//                   type="button"
+//                   onClick={() => setActiveSection(section)}
+//                   className={`
+//                     text-left px-3 py-2
+//                     font-vt323 text-xl
+//                     transition-all
+//                     ${
+//                       activeSection === section
+//                         ? "bg-pacova-pink text-white border-l-4 border-white"
+//                         : "text-gray-400 hover:text-pacova-pink hover:bg-pacova-pink/10"
+//                     }
+//                   `}
+//                   >
+//                   {section}
+//                 </button>
+//                 ))}
+//               </nav>
+
+//             </aside>
+
+//           {/* RIGHT CONTENT */}
+//           <section className="border-2 border-pacova-pink bg-pacova-surface/80 p-6 min-h-[350px]">
+
+//             {/* ACCOUNT */}
+//             {activeSection === "ACCOUNT" && (
+//               <div>
+//                 <h2 className="font-pixelify text-pacova-pink text-2xl uppercase">
+//                   Account
+//                 </h2>
+
+//                 <p className="font-vt323 text-gray-400 text-xl mt-2">
+//                   Manage your profile information.
+//                 </p>
+
+//                 <button
+//                   type="button"
+//                   onClick={() => navigate("/profile")}
+//                   className="mt-6 border-2 border-pacova-pink px-5 py-2 font-vt323 text-xl text-pacova-pink hover:bg-pacova-pink hover:text-white transition-all"
+//                 >
+//                   EDIT PROFILE
+//                 </button>
+//               </div>
+//             )}
+
+//             {/* SECURITY */}
+//             {activeSection === "SECURITY" && (
+//               <div>
+//                 <h2 className="font-pixelify text-pacova-green text-2xl uppercase">
+//                   Security
+//                 </h2>
+
+//                 <p className="font-vt323 text-gray-400 text-xl mt-2">
+//                   Manage your account security and authentication.
+//                 </p>
+
+//                 <div className="mt-6 border border-pacova-green/30 p-4">
+//                   <p className="font-vt323 text-gray-300 text-lg">
+//                     Two-factor authentication
+//                   </p>
+
+//                   <p className="font-vt323 text-gray-500 mt-1">
+//                     Security options will be available here.
+//                   </p>
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* PREFERENCES */}
+//             {activeSection === "PREFERENCES" && (
+//               <div>
+//                 <h2 className="font-pixelify text-pacova-pink text-2xl uppercase">
+//                   Preferences
+//                 </h2>
+
+//                 <p className="font-vt323 text-gray-400 text-xl mt-2">
+//                   Manage your personal preferences.
+//                 </p>
+
+//                 <div className="mt-6 flex flex-col gap-3">
+
+//                   <div className="flex items-center justify-between border border-pacova-pink/30 p-4">
+//                     <span className="font-vt323 text-gray-300 text-lg">
+//                       Notifications
+//                     </span>
+
+//                     <span className="font-vt323 text-gray-500">
+//                       COMING SOON
+//                     </span>
+//                   </div>
+
+//                   <div className="flex items-center justify-between border border-pacova-pink/30 p-4">
+//                     <span className="font-vt323 text-gray-300 text-lg">
+//                       Game preferences
+//                     </span>
+
+//                     <span className="font-vt323 text-gray-500">
+//                       COMING SOON
+//                     </span>
+//                   </div>
+
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* APPEARANCE */}
+//             {activeSection === "APPEARANCE" && (
+//               <div>
+//                 <h2 className="font-pixelify text-pacova-green text-2xl uppercase">
+//                   Appearance
+//                 </h2>
+
+//                 <p className="font-vt323 text-gray-400 text-xl mt-2">
+//                   Customize your Pacova interface.
+//                 </p>
+
+//                 <div className="mt-6 border border-pacova-green/30 p-4">
+//                   <div className="flex items-center justify-between">
+//                     <span className="font-vt323 text-gray-300 text-lg">
+//                       Pacova Theme
+//                     </span>
+
+//                     <span className="font-vt323 text-pacova-green">
+//                       ACTIVE
+//                     </span>
+//                   </div>
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* LANGUAGE */}
+//             {activeSection === "LANGUAGE" && (
+//               <div>
+//                 <h2 className="font-pixelify text-pacova-pink text-2xl uppercase">
+//                   Language
+//                 </h2>
+
+//                 <p className="font-vt323 text-gray-400 text-xl mt-2">
+//                   Choose your interface language.
+//                 </p>
+
+//                 <div className="mt-6 border border-pacova-pink/30 p-4">
+//                   <div className="flex items-center justify-between">
+//                     <span className="font-vt323 text-gray-300 text-lg">
+//                       Interface language
+//                     </span>
+
+//                     <span className="font-vt323 text-pacova-pink">
+//                       ENGLISH
+//                     </span>
+//                   </div>
+//                 </div>
+//               </div>
+//             )}
+
+//           </section>
+
+//         </div>
+//       </main>
+//     </Background>
+//   );
+// }
