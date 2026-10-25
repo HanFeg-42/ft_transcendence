@@ -9,7 +9,7 @@ export interface StatsData{
 }
 
 export interface MatchData {
-  id: string;              // BigInt → string (via json replacer)
+  id: string;             
   matchId: string;
   userId: number;
   slot: number;
