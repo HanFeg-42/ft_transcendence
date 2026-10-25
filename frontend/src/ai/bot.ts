@@ -16,14 +16,12 @@ const LEVELS = {
 
 
 const DIRS: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
+const BACK: Record<Direction, Direction> = { UP: "DOWN", DOWN: "UP", LEFT: "RIGHT", RIGHT: "LEFT" };
 const DEATH = -10000;  //value of a move where the bot dies
 
-// const copy = (s: GameState, id: string): GameState => ({
-//   ...s,
-//   players: s.players.filter((p) => p.id === id).map((p) => ({ ...p })),
-//   chasers: s.chasers.map((c) => ({ ...c })),
-//   pellets: s.pellets.map((row) => [...row]),
-// });
+
+
+
 
 //takes the state and the bot’s id, and returns a new GameState
 const simulateState = (state: GameState, id: string): GameState => ({
@@ -32,6 +30,49 @@ const simulateState = (state: GameState, id: string): GameState => ({
     chasers: state.chasers.map((c) => ({...c})),
     pellets: state.pellets.map((row) => [...row]),
 });
+
+
+
+function key(tile: Tile): string
+{
+    return `${tile.x},${tile.y}`;
+}
+
+const pelletDistance = (state: GameState, from: Tile): number =>
+{
+    const maze = MAZES[state.mazeId];
+    const seen	= new Set<string>();    //Tiles already visited
+    seen.add(key(from));
+
+    let layer = [from];   //The current ring of tiles.
+    let d = 0; //The distance of the current ring.
+
+
+    while(layer.length !== 0)
+    {
+        const next: Tile[] = [];
+        for (const t of layer) {
+            if (state.pellets[t.y][t.x])
+                return d;
+
+            for (const dir of DIRS) {
+                const neighbor = ahead(t, dir);
+                const neighborKey = key(neighbor);
+
+                if(!isWall(maze, neighbor) && !seen.has(neighborKey))
+                {
+                    seen.add(neighborKey);
+                    next.push(neighbor);
+                }
+            }
+            
+        }
+        layer = next;
+        d++;
+    }
+    return 0;
+}
+
 
 
 function rank(
@@ -66,9 +107,20 @@ function rank(
             tick(newState);
 
         if(me.lives < lives) return { dir, value: DEATH };
-        return { dir, value: me.score - score };
-    });
 
+        const gained = me.score - score;
+        if(newState.status !== "playing")    //The game is over in the copy (won or lost)
+            return { dir, value: gained }
+
+        let futureValue = 0;
+        if(depth > 1)
+            futureValue = (rank(newState, me, depth - 1, BACK[dir])[0]?.value ?? 0);
+        else 
+            futureValue = -3 * pelletDistance(newState, me.tile);
+
+        return { dir, value: gained + 0.9 * futureValue };
+    })
+    .sort((a, b) => b.value - a.value);
 
 
 }
@@ -85,31 +137,18 @@ export function chooseDirection(
     if (!bot || bot.step !== 0)
         return null;
 
-    const { depth } = LEVELS[level];
-    const moves = rank(state, bot, depth);
- 
+    const { depth, mistake } = LEVELS[level];
+    let moves = rank(state, bot, depth, bot.dir ? BACK[bot.dir] : undefined);
     
-    return moves[0]?.dir ?? null;
+    if (moves[0].value <= DEATH / 2) //the best non-reverse move is deadly search again with no forbidden direction
+        moves = rank(state, bot, depth);
+    
+    const [best, ...others] = moves;
+    const safe = others.filter((m) => m.value > DEATH / 2); //the worse but survivable moves
+    const choice = Math.random() < mistake && safe.length ? 
+        safe[Math.floor(Math.random() * safe.length)] : best;
+
+
+    return choice?.dir ?? null;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
