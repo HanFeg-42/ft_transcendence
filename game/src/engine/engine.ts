@@ -36,6 +36,8 @@ export const addPlayer = (playerId: string, state: GameState) => {
     step: 0,
     lives: 3,
     score: 0,
+    pelletsEaten: 0,
+    ghostsEaten: 0,
     connected: true,
     joinedAt: Date.now(),
   });
@@ -66,6 +68,8 @@ export const createGame = (
       step: 0,
       lives: 3,
       score: 0,
+      pelletsEaten: 0,
+      ghostsEaten: 0,
       connected: true,
       joinedAt: Date.now(),
     },
@@ -189,6 +193,7 @@ export const tick = (state: GameState) => {
     if (state.pellets[player.tile.y][player.tile.x]) {
       const isPowerPellet = maze[player.tile.y][player.tile.x] == "o";
       player.score += isPowerPellet ? 50 : 10;
+      player.pelletsEaten++;
       state.pellets[player.tile.y][player.tile.x] = false;
       if (isPowerPellet) {
         state.vulnerableTimer = 300;
@@ -210,6 +215,7 @@ export const tick = (state: GameState) => {
         touchedChaser.tile = touchedChaser.spawn;
         touchedChaser.step = 0;
         player.score += 200;
+        player.ghostsEaten++;
       } else handlePlayerDeath(player, state);
     }
   });
