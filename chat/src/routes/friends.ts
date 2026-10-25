@@ -9,7 +9,7 @@ const router = Router();
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth:3001';
 
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://user:3004';
-// 
+
 // type PublicUser = { id: number; username: string; avatar: string | null };
 type PublicUser = {
   id: number;
@@ -164,25 +164,7 @@ async function getRelation(userId: number, otherId: number): Promise<Relation> {
   if (outgoing) return 'outgoing_request';
   return 'none';
 }
-// 
-// 
-// async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
-//   for (let attempt = 0; ; attempt++) {
-//     try {
-//       return await prisma.$transaction(work, { isolationLevel: 'Serializable' });
-//     } catch (error) {
-//       const code = typeof error === 'object' && error !== null && 'code' in error
-//         ? (error as { code?: string }).code
-//         : undefined;
-//       if ((code === 'P2034' || code === 'P2002') && attempt < 2) continue;
-//       throw error;
-//     }
-//   }
-// }
-// P2034: Prisma transaction conflict.
 
-// 40001: PostgreSQL serialization failure.
-// 
 // TransactionWriteConflict: conflict f transaction.
 
 async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
@@ -219,26 +201,56 @@ function handleError(res: Response, error: unknown) {
   return res.status(500).json({ error: 'Internal server error' });
 }
 
-// GET /friends — list friends with public profile data and current online status.
 router.get('/friends', async (req: Request, res: Response) => {
   const userId = currentUserId(req);
   if (!userId) return res.status(401).json({ error: 'Missing identity' });
 
   try {
     const rows = await prisma.friendship.findMany({
-      where: { OR: [{ userLowId: userId }, { userHighId: userId }] },
+      where: {
+        OR: [{ userLowId: userId }, { userHighId: userId }],
+      },
       orderBy: { createdAt: 'desc' },
     });
-    const friendIds = rows.map(row => row.userLowId === userId ? row.userHighId : row.userLowId);
-    if (friendIds.length === 0) return res.json([]);//IDs dyal friends.
 
-    const users = await getPublicUsers();// information dyal users.
-    const byId = new Map(users.map(user => [user.id, user]));//Map bach y9der yjib user directement b ID dyalo
-    const friends = friendIds.flatMap(id => {
-      const user = byId.get(id);//Lookup
-      if (!user) return [];// Filtering => kan7eydo users li ma tl9awch.
-      return [{ ...user, online: (onlineUsers.get(String(id))?.size ?? 0) > 0 }];
+    const allFriendIds = rows.map(row =>
+      row.userLowId === userId ? row.userHighId : row.userLowId
+    );
+
+    if (allFriendIds.length === 0) return res.json([]);
+
+    const blockedRows = await prisma.blockedUser.findMany({
+      where: {
+        OR: [{ blockerId: userId }, { blockedId: userId }],
+      },
+      select: { blockerId: true, blockedId: true },
     });
+
+    const blockedIds = new Set<number>();
+
+    for (const row of blockedRows) {
+      blockedIds.add(
+        row.blockerId === userId ? row.blockedId : row.blockerId
+      );
+    }
+
+    const friendIds = allFriendIds.filter(id => !blockedIds.has(id));
+
+    if (friendIds.length === 0) return res.json([]);
+
+    const users = await getPublicUsers();
+    const byId = new Map(users.map(user => [user.id, user]));
+
+    const friends = friendIds.flatMap(id => {
+      const user = byId.get(id);
+      if (!user) return [];
+
+      return [{
+        ...user,
+        online: (onlineUsers.get(String(id))?.size ?? 0) > 0,
+      }];
+    });
+
     return res.json(friends);
   } catch (error) {
     return handleError(res, error);
