@@ -121,7 +121,7 @@ export default function SignUp() {
               label={t("signup_email")}
               type="email"
               name="email"
-              placeholder={t("signup_passwordPlaceholder")}
+              placeholder={t("signup_emailPlaceholder")}
               value={formData.email}
               onChange={handleChange}
               error={te(errors.email)}
