@@ -8,9 +8,10 @@ import PixelButton from "../components/ui/PixelButton";
 
 import type { LoginFormData, LoginResponse } from "../types/auth";
 import { useAuth } from "../context/AuthContext";
-
+import { useTranslation } from "react-i18next";
 /** Renders the login form and handles user authentication. */
 export default function Login() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -47,8 +48,8 @@ export default function Login() {
     if (oauthError) {
       setError(
         oauthError === "oauth_cancelled"
-          ? "42 login was cancelled."
-          : "42 login failed. Please try again.",
+          ? t("login_err42Cancelled")
+          : t("login_err42Failed"),
       );
       return;
     }
@@ -69,7 +70,7 @@ export default function Login() {
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.error || "42 login failed. Please try again.");
+          setError(data.error || t("login_err42Failed"));
           return;
         }
 
@@ -83,14 +84,14 @@ export default function Login() {
         login(data.user, data.token);
         navigate("/home", { replace: true });
       } catch {
-        setError("Unable to connect to the server. Please try 42 login again.");
+        setError(t("login_errServer"));
       } finally {
         setLoading(false);
       }
     };
 
     void completeOAuthLogin();
-  }, [login, navigate]);
+  }, [login, navigate, t]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -121,7 +122,7 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Login failed");
+        setError(data.error || t("login_errLoginFailed"));
         return;
       }
 
@@ -143,7 +144,7 @@ export default function Login() {
       navigate("/home");
     } catch (error) {
       console.error("Login request failed:", error);
-      setError("Unable to connect to the server");
+      setError(t("login_errServer"));
     } finally {
       setLoading(false);
     }
@@ -159,7 +160,7 @@ export default function Login() {
     setSuccess("");
 
     if (twoFactorCode.length !== 6) {
-      setError("Enter the 6-digit code from your authenticator app.");
+      setError(t("login_errCodeLength"));
       return;
     }
 
@@ -180,7 +181,7 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Invalid authentication code");
+        setError(data.error || t("login_errInvalidCode"));
         return;
       }
 
@@ -190,7 +191,7 @@ export default function Login() {
       navigate("/home");
     } catch (error) {
       console.error("2FA verification request failed:", error);
-      setError("Unable to connect to the server");
+      setError(t("login_errServer"));
     } finally {
       setLoading(false);
     }
@@ -213,7 +214,10 @@ export default function Login() {
     <Background>
       <div className="flex-1 flex items-center justify-center p-4">
         {/* Largeur max ajustée à 360px pour un format plus compact et moins étiré */}
-        <Card variant="pink" className="w-[92%] sm:w-full max-w-[360px] mx-auto">
+        <Card
+          variant="pink"
+          className="w-[92%] sm:w-full max-w-[360px] mx-auto"
+        >
           {!requiresTwoFactor ? (
             <form
               onSubmit={handleSubmit}
@@ -223,26 +227,26 @@ export default function Login() {
               {/* Header */}
               <div className="text-center mb-1">
                 <h1 className="font-pixelify text-pacova-pink text-xl tracking-wider uppercase">
-                  ▼ ▼ LOGIN ▼ ▼
+                  ▼ ▼ {t("login_title")} ▼ ▼
                 </h1>
               </div>
 
               {/* Email */}
               <Input
-                label="EMAIL"
+                label={t("login_email")}
                 type="email"
                 name="email"
-                placeholder="Enter your email..."
+                placeholder={t("login_emailPlaceholder")}
                 value={formData.email}
                 onChange={handleChange}
               />
 
               {/* Password */}
               <Input
-                label="PASSWORD"
+                label={t("login_password")}
                 type="password"
                 name="password"
-                placeholder="Enter your password..."
+                placeholder={t("login_passwordPlaceholder")}
                 value={formData.password}
                 onChange={handleChange}
               />
@@ -269,13 +273,17 @@ export default function Login() {
                 disabled={loading}
                 className="w-full max-w-[180px] sm:max-w-[220px] mx-auto mt-2" // 💡 mt-4 -> mt-2 et taille max réduite pour équilibrer
               >
-                {loading ? "LOGGING IN..." : "LOGIN"}
+                {loading ? t("login_loggingIn") : t("login_button")}
               </PixelButton>
 
               {/* Divider */}
-              <div className="flex items-center my-0.5"> {/* 💡 my-1 -> my-0.5 */}
+              <div className="flex items-center my-0.5">
+                {" "}
+                {/* 💡 my-1 -> my-0.5 */}
                 <div className="flex-1 border-t border-pacova-pink/30"></div>
-                <span className="px-3 font-vt323 text-gray-400 text-sm">OR</span>
+                <span className="px-3 font-vt323 text-gray-400 text-sm">
+                  {t("login_or")}
+                </span>
                 <div className="flex-1 border-t border-pacova-pink/30"></div>
               </div>
 
@@ -288,17 +296,17 @@ export default function Login() {
                 disabled={loading}
                 className="w-full max-w-[180px] sm:max-w-[220px] mx-auto mt-0.5" // 💡 mt-4 -> mt-0.5
               >
-                <span>CONTINUE WITH 42</span>
+                <span>{t("login_with42")}</span>
               </PixelButton>
 
               {/* Sign up */}
               <div className="text-center border-t border-pacova-pink/30 pt-3 mt-1 font-vt323 text-sm">
-                <span className="text-gray-400">DON'T HAVE AN ACCOUNT? </span>
+                <span className="text-gray-400">{t("login_noAccount")} </span>
                 <Link
                   to="/signup"
                   className="text-pacova-green hover:underline uppercase tracking-wide"
                 >
-                  CREATE ACCOUNT
+                  {t("login_createAccount")}v
                 </Link>
               </div>
             </form>
@@ -311,22 +319,20 @@ export default function Login() {
               {/* 2FA Header */}
               <div className="text-center mb-1">
                 <h1 className="font-pixelify text-pacova-pink text-xl tracking-wider uppercase">
-                  ▼ ▼ SECURITY ▼ ▼
+                  ▼ ▼ {t("login_security")} ▼ ▼
                 </h1>
               </div>
 
               <div className="text-center flex flex-col gap-1 font-vt323 leading-tight">
                 <p className="text-pacova-green text-base uppercase">
-                  ✓ Password verified
+                  ✓ {t("login_passwordVerified")}
                 </p>
-                <p className="text-gray-400 text-sm">
-                  Enter the 6-digit code from your authenticator app to continue.
-                </p>
+                <p className="text-gray-400 text-sm">{t("login_codeHint")}</p>
               </div>
 
               {/* 2FA Code */}
               <Input
-                label="TWO-FACTOR CODE"
+                label={t("login_twoFactorCode")}
                 type="text"
                 name="twoFactorCode"
                 placeholder="000000"
@@ -350,7 +356,7 @@ export default function Login() {
                 disabled={loading}
                 className="w-full max-w-[180px] sm:max-w-[220px] mx-auto mt-2"
               >
-                {loading ? "VERIFYING..." : "VERIFY CODE"}
+                {loading ? t("login_verifying") : t("login_verifyCode")}
               </PixelButton>
 
               {/* Retour au login */}
@@ -361,7 +367,7 @@ export default function Login() {
                   disabled={loading}
                   className="text-gray-400 hover:text-pacova-pink hover:underline uppercase tracking-wide cursor-pointer"
                 >
-                  Back to Login
+                  {t("login_backToLogin")}
                 </button>
               </div>
             </form>
