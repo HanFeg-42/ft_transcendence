@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { createGame, applyInput, tick } from '../../engine/engine';
 import { DEFAULT_MAZE_ID, MAZES, findSpawn } from '../../engine/maze';
 import { chooseDirection } from '../../ai/bot';
@@ -67,7 +68,8 @@ function finishLocalMatch(state: GameState): void {
 const Picker: React.FC<{
     icon: React.ReactNode; label: string; value: string;
     options: string[]; onChange: (v: string) => void;
-}> = ({ icon, label, value, options, onChange }) => {
+    format?: (v: string) => string; // i18n: how to display a value (value itself stays English)
+}> = ({ icon, label, value, options, onChange, format = (v) => v }) => {
     const [open, setOpen] = useState(false);
     return (
         <div className="relative w-80" tabIndex={0} onBlur={() => setOpen(false)}>
@@ -76,9 +78,9 @@ const Picker: React.FC<{
                 className="flex items-center gap-4 px-4 py-3 bg-black/60 border-2 border-pacova-green rounded-xl cursor-pointer hover:shadow-[0_0_12px_#8ED603]"
             >
                 <span className="text-3xl">{icon}</span>
-                <div className="flex-1 border-l border-pacova-green/40 pl-4">
+                <div className="flex-1 border-s border-pacova-green/40 ps-4">
                     <p className="font-vt323 text-sm text-pacova-green tracking-widest">{label}</p>
-                    <p className="font-pixelify text-2xl text-pacova-pink uppercase">{value}</p>
+                    <p className="font-pixelify text-2xl text-pacova-pink uppercase">{format(value)}</p>
                 </div>
                 <span className="text-pacova-green">{open ? '▲' : '▼'}</span>
             </div>
@@ -92,7 +94,7 @@ const Picker: React.FC<{
                                 o === value ? 'text-pacova-pink' : 'text-pacova-green'
                             }`}
                         >
-                            {o}
+                            {format(o)}
                         </li>
                     ))}
                 </ul>
@@ -119,6 +121,7 @@ const Result: React.FC<{ name: string; score: number; lives: number; win: boolea
 );
 
 const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({ mazeId, difficulty }) => {
+    const { t } = useTranslation();
     const stateRef = useRef<GameState>(createBotGame(mazeId));
     const [, setFrame] = useState(0);
 
@@ -159,7 +162,7 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({ m
 
     const won = state.winnerId === HUMAN_ID;
     const lost = state.winnerId === BOT_ID;
-    const title = won ? 'YOU WIN!' : lost ? 'BOT WINS' : 'DRAW';
+    const title = won ? t('bot_youWin') : lost ? t('bot_botWins') : t('bot_draw');
     const titleColor = won ? 'text-pacova-green drop-shadow-glow-green' : 'text-pacova-pink drop-shadow-glow-pink';
 
     return (
@@ -190,16 +193,16 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({ m
                     <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
                         <h1 className={`font-press-start text-3xl ${titleColor}`}>{title}</h1>
                         <div className="flex gap-4 w-full">
-                            <Result name="YOU" score={human.score} lives={human.lives} win={won} />
-                            <Result name="BOT" score={bot.score} lives={bot.lives} win={lost} />
+                            <Result name={t('bot_you')} score={human.score} lives={human.lives} win={won} />
+                            <Result name={t('bot_bot')} score={bot.score} lives={bot.lives} win={lost} />
                         </div>
-                        <p className="font-vt323 text-xl text-white/70">TIME {fmt(MATCH_TIME - state.timeRemaining)}</p>
+                        <p className="font-vt323 text-xl text-white/70">{t('bot_time', { time: fmt(MATCH_TIME - state.timeRemaining) })}</p>
                         <div className="flex gap-6">
                             <PixelButton variant="outline-green" size="md" onClick={() => window.location.reload()}>
-                                RESTART
+                                {t('bot_restart')}
                             </PixelButton>
                             <a href="/home" className="inline-flex">
-                                <PixelButton variant="danger-red" size="md">QUIT</PixelButton>
+                                <PixelButton variant="danger-red" size="md">{t('bot_quit')}</PixelButton>
                             </a>
                         </div>
                     </div>
@@ -210,6 +213,7 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({ m
 };
 
 const BotPage: React.FC = () => {
+    const { t } = useTranslation();
     const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
     const [difficulty, setDifficulty] = useState<BotDifficulty>('hard');
     const [started, setStarted] = useState(false);
@@ -221,23 +225,24 @@ const BotPage: React.FC = () => {
             <Background>
                 <div className="flex-1 flex flex-col items-center justify-center gap-5">
                     <RotDev />
-                    <p className="font-vt323 text-3xl text-pacova-green">▼ CHOOSE YOUR MAP & BOT LEVEL ▼</p>
+                    <p className="font-vt323 text-3xl text-pacova-green">{t('bot_chooseTitle')}</p>
 
-                    <Picker icon="🗺️" label="MAP" value={mazeId} options={Object.keys(MAZES)} onChange={setMazeId} />
+                    <Picker icon="🗺️" label={t('bot_map')} value={mazeId} options={Object.keys(MAZES)} onChange={setMazeId} />
                     <Picker
                         icon={<img src={ghostImg} alt="" className="w-8 h-8" />}
-                        label="BOT LEVEL"
+                        label={t('bot_level')}
                         value={difficulty}
                         options={['easy', 'normal', 'hard']}
                         onChange={(v) => setDifficulty(v as BotDifficulty)}
+                        format={(d) => t(`bot_${d}`)}
                     />
 
                     <div className="flex gap-4 mt-2">
                         <PixelButton variant="danger-red" size="md" onClick={() => navigate('/home')}>
-                            ← HOME
+                            {t('bot_home')}
                         </PixelButton>
                         <PixelButton variant="filled-green" size="md" onClick={() => setStarted(true)}>
-                            START
+                            {t('bot_start')}
                         </PixelButton>
                     </div>
                 </div>
