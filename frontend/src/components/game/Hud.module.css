@@ -1,0 +1,180 @@
+/* ═══════════════════════════════════════════
+   HUD — Timer + Score/Vies
+   ═══════════════════════════════════════════ */
+
+/* ═══ TIMER (en haut, centré) ═══ */
+.timerBlock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.timer {
+    color: #ffff00;
+    font-size: 36px;
+    letter-spacing: 6px;
+    text-shadow:
+        0 0 10px #ffcc00,
+        0 0 20px #ffcc00,
+        0 0 30px #ffcc00;
+    font-family: 'Press Start 2P', monospace;
+}
+
+/* ═══ BLOC JOUEUR (score + vies) ═══ */
+.playerBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Press Start 2P', monospace;
+}
+
+/* ⭐ Ligne SCORE : label + valeur côte à côte */
+.scoreLine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.label {
+    color: #8ED603;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 6px #8ED603;
+}
+
+.value {
+    color: #8ED603;
+    font-size: 18px;
+    text-shadow:
+        0 0 10px #8ED603,
+        0 0 20px #8ED603;
+}
+
+/* ═══ VIES ═══ */
+.livesLabel {
+    color: #F32077;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 6px #F32077;
+    margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════
+   CŒURS PIXEL-ART (alignement vertical)
+   ═══════════════════════════════════════════ */
+
+/* ⭐ Conteneur : alignement vertical */
+.hearts {
+    display: flex;
+    gap: 22px;                 /* Espace entre les cœurs */
+    align-items: center;
+    margin-top: 8px;
+}
+  /* --color-pacova-pink: #F32077;
+  --color-pacova-pink-dark: #8A1353;
+  --color-pacova-gray: #464446;
+  --color-pacova-green: #8ED603;
+  --color-pacova-green-dark: #333A0E;
+  --color-pacova-purple: #510950;
+  --color-pacova-bg: #0D0914;
+  --color-pacova-surface: #130718; */
+/* ⭐ Un cœur pixel-art (forme dessinée avec box-shadow) */
+.heart {
+    /* position: relative; */
+    width: 4px;               /* Taille d'un "pixel" */
+    height: 4px;
+    /* background-color: transparent; */
+    box-shadow:
+        /* Ligne 1 : ..... */
+        /* Ligne 2 : .XX.XX. */
+        -4px -4px 0 #F32077, 0 -4px 0 #F32077, 8px -4px 0 #F32077, 12px -4px 0 #F32077,
+        /* Ligne 3 : XXXXXXX */
+        -4px 0 0 #F32077, 0 0 0 #F32077, 4px 0 0 #F32077, 8px 0 0 #F32077, 12px 0 0 #F32077,
+        /* Ligne 4 : .XXXXX. */
+        -4px 4px 0 #F32077, 0 4px 0 #F32077, 4px 4px 0 #F32077, 8px 4px 0 #F32077, 12px 4px 0 #F32077,
+        /* Ligne 5 : ..XXX.. */
+        0 8px 0 #F32077, 4px 8px 0 #F32077, 8px 8px 0 #F32077,
+        /* Ligne 6 : ...X... */
+        4px 12px 0 #F32077;
+    /* ⭐ Glow néon */
+    filter: drop-shadow(0 0 4px #F32077) drop-shadow(0 0 8px #F32077);
+    /* ⭐ Animation de battement */
+    animation: heartBeat 1.2s ease-in-out infinite;
+}
+.heart:nth-child(2) { animation-delay: 0.2s; }
+.heart:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
+}
+
+/* ═══ Placeholder si pas de joueur 2 ═══ */
+.waiting {
+    color: #666;
+    font-size: 12px;
+    font-family: 'Press Start 2P', monospace;
+    text-align: center;
+    padding: 20px;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile paysage (< 900px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 900px) and (orientation: landscape) {
+    .playerBlock {
+        padding: 6px;
+        min-width: 60px;
+        gap: 4px;
+    }
+
+    .label {
+        font-size: 7px;
+        letter-spacing: 1px;
+    }
+
+    .value {
+        font-size: 10px;
+    }
+
+    .livesLabel {
+        font-size: 7px;
+        margin-top: 2px;
+    }
+
+    .hearts {
+        gap: 15px;
+    }
+
+    .heart {
+        transform: scale(0.5);
+        width: 2px;
+        height: 2px;
+        box-shadow:
+            /* Ligne 1 : ..... */
+            /* Ligne 2 : .XX.XX. */
+            -2px -2px 0 #F32077, 0 -2px 0 #F32077, 4px -2px 0 #F32077, 6px -2px 0 #F32077,
+            /* Ligne 3 : XXXXXXX */
+            -2px 0 0 #F32077, 0 0 0 #F32077, 2px 0 0 #F32077, 4px 0 0 #F32077, 6px 0 0 #F32077,
+            /* Ligne 4 : .XXXXX. */
+            -2px 2px 0 #F32077, 0 2px 0 #F32077, 2px 2px 0 #F32077, 4px 2px 0 #F32077, 6px 2px 0 #F32077,
+            /* Ligne 5 : ..XXX.. */
+            0 4px 0 #F32077, 2px 4px 0 #F32077, 4px 4px 0 #F32077,
+            /* Ligne 6 : ...X... */
+            2px 6px 0 #F32077;
+        /* ⭐ Glow néon */
+        filter: drop-shadow(0 0 2px #F32077) drop-shadow(0 0 4px #F32077);
+
+    }
+
+    .timer {
+        font-size: 16px;
+        letter-spacing: 2px;
+    }
+
+    .timerBlock {
+        padding: 4px 12px;
+    }
+}

@@ -33,7 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           credentials: "include",
         });
 
-        if (!response.ok) {
+        if (!response.ok || response.status === 204) {
           return;
         }
 
@@ -69,6 +69,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setToken(null);
   };
 
+  // Access tokens last 15 minutes: renew the token before it expires.
+  useEffect(() => {
+    if (!token) return;
+
+    const timer = setInterval(async () => {
+      try {
+        const response = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (response.status === 204 || response.status === 401) {
+          clearSession(); // the session is over
+          return;
+        }
+        if (!response.ok) return;
+
+        const data = await response.json();
+        setToken(data.token);
+      } catch {
+        // network problem: try again at the next tick
+      }
+    }, 10 * 60 * 1000);
+
+    return () => clearInterval(timer);
+  }, [token]);
+  
   const logout = async () => {
     const response = await fetch("/api/auth/logout", {
       method: "POST",

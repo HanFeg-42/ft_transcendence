@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React from "react";
 import { useNotifications } from "../../context/NotificationContext";
 
@@ -10,9 +11,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab = "HOME",
   onSelectTab,
 }) => {
-  const navItems = ["HOME", "PROFILE", "CHAT", "NOTIFICATION", "SETTINGS"];
+  const navItems = ["HOME", "LEADERBOARD", "PROFILE", "CHAT", "NOTIFICATION", "SETTINGS"];
   const { unreadCount } = useNotifications();
-
+  const { t } = useTranslation();
+  const navLabels: Record<string, string> = {
+  HOME: t("home"),
+  LEADERBOARD: t("leaderboard"),
+  PROFILE: t("profile"),
+  CHAT: t("chat"),
+  NOTIFICATION: t("notification"),
+  SETTINGS: t("settings"),
+};
   return (
     <nav className="w-full px-8 py-4 flex justify-between items-center bg-pacova-surface/80 border-b-2 border-pacova-pink shadow-neon-pink">
       {/* Logo Pacova */}
@@ -40,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               `}
             >
               <span className="flex items-center gap-2">
-                {item}
+                {navLabels[item]}
 
                 {item === "NOTIFICATION" && unreadCount > 0 && (
                   <span className="min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-pacova-pink text-black text-sm font-bold">

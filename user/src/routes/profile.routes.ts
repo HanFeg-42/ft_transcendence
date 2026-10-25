@@ -4,9 +4,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-
-
-
 const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -41,7 +38,7 @@ function getUserIdFromHeader(req: Request): number | null {
 }
 
 // Helper : récupère ou crée le Profile
-async function getOrCreateProfile(userId: number) {
+export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
   
   if (!profile) {
@@ -55,9 +52,13 @@ async function getOrCreateProfile(userId: number) {
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
-        avatarUrl = authUser.avatar ?? null;
+        avatarUrl = authUser.avatar || '/default-avatar2.png';
       }
-    } catch (err) {
+      else {
+        avatarUrl = '/default-avatar2.png';
+      } 
+    }
+    catch (err) {
       console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
     }
     
@@ -135,6 +136,96 @@ router.get('/me', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('[USER] getMyProfile error:', err);
     return res.status(500).json({ error: err.message });
+  }
+});
+///////////////////////
+
+
+/** GET /profiles?ids=1,2,3 */
+router.get('/profiles', async (req: Request, res: Response) => {
+  const rawIds = req.query.ids;
+
+  if (typeof rawIds !== 'string' || !rawIds.trim()) {
+    return res.status(400).json({ error: 'ids query parameter is required' });
+  }
+
+  const ids = [...new Set(
+    rawIds.split(',').map((id) => Number(id.trim()))
+  )];
+
+  if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+    return res.status(400).json({ error: 'Invalid user ids' });
+  }
+
+  try {
+    const profiles = await prisma.profile.findMany({
+      where: { userId: { in: ids } },
+      select: {
+        userId: true,
+        avatarUrl: true,
+      },
+    });
+
+    return res.json(
+      profiles.map((profile) => ({
+        id: profile.userId,
+        avatarUrl: profile.avatarUrl,
+      }))
+    );
+  } catch (err) {
+    console.error('[USER] getProfiles error:', err);
+    return res.status(500).json({ error: 'Failed to fetch profiles' });
+  }
+});
+
+
+
+////////////////////
+
+
+
+
+
+
+// GET /profile/batch?ids=1,4,7 
+/**
+ * @route GET /batch
+ * @description Retrieves multiple user profiles in a single request.
+ *              Duplicate IDs are removed, invalid IDs are ignored,
+ *              and a maximum of 100 unique valid IDs are processed.
+ *              Missing profiles may be created by getOrCreateProfile.
+ *
+ * @query {string} ids - Comma-separated list of positive integer user IDs.
+ *                       Example: ?ids=12,25,38
+ *
+ * @returns {200} Array of user profiles containing userId, username,
+ *                and avatarUrl.
+ * @returns {400} No valid user IDs were provided.
+ * @returns {500} Failed to load the requested profiles.
+ */
+router.get('/batch', async (req: Request, res: Response) => {
+  try {
+    const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
+    const ids = [...new Set(raw.split(',').map(Number))]
+      .filter((id) => Number.isInteger(id) && id > 0)
+      .slice(0, 100);
+
+    if (ids.length === 0) {
+      return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
+    }
+
+    const profiles = await Promise.all(ids.map((id) => getOrCreateProfile(id)));
+
+    return res.json(
+      profiles.map((p) => ({
+        userId: p.userId,
+        username: p.displayName,
+        avatarUrl: p.avatarUrl,
+      })),
+    );
+  } catch (err) {
+    console.error('[USER] batch profiles failed:', err);
+    return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
 
