@@ -306,7 +306,7 @@ export default function Login() {
                   to="/signup"
                   className="text-pacova-green hover:underline uppercase tracking-wide"
                 >
-                  {t("login_createAccount")}v
+                  {t("login_createAccount")}
                 </Link>
               </div>
             </form>
