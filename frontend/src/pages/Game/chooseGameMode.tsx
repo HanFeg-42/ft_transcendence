@@ -20,7 +20,7 @@ export default function SelectMode() {
     } else if (selectedMode === 'REMOTE') {
         navigate('/game/online');
     } else if (selectedMode === 'BOT') {
-        alert('Bot mode coming soon!');
+        navigate('/game/bot');
     }
 };
   return (
