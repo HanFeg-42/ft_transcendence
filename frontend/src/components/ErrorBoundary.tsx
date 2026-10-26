@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import i18n from "../i18n";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -34,14 +35,15 @@ export default class ErrorBoundary extends Component<
         className="min-h-screen flex flex-col items-center justify-center gap-6 bg-black px-4 text-center"
       >
         <h1 className="font-pixelify text-pacova-pink text-4xl uppercase">
-          Something went wrong
+          {i18n.t("errorBoundary.title")}
         </h1>
+
         <p className="font-vt323 text-xl text-gray-300 max-w-md">
-          An unexpected error happened. Going back to the start page usually
-          fixes it.
+          {i18n.t("errorBoundary.description")}
         </p>
+
         <a href="/" className="font-vt323 text-xl text-pacova-green underline">
-          Back to the start page
+          {i18n.t("errorBoundary.backStart")}
         </a>
       </main>
     );

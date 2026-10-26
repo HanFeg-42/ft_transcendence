@@ -374,6 +374,12 @@ const resources = {
         backHome: "Back to home",
         backStart: "Back to start",
       },
+      errorBoundary: {
+        title: "Something went wrong",
+        description:
+          "An unexpected error happened. Going back to the start page usually fixes it.",
+        backStart: "Back to the start page",
+      },
     },
   },
   fr: {
@@ -751,6 +757,12 @@ const resources = {
         backHome: "Retour à l’accueil",
         backStart: "Retour au départ",
       },
+      errorBoundary: {
+        title: "Une erreur s’est produite",
+        description:
+          "Une erreur inattendue s’est produite. Retourner à la page de départ résout généralement le problème.",
+        backStart: "Retour à la page de départ",
+      },
     },
   },
 
@@ -1114,6 +1126,12 @@ const resources = {
           "يبدو أن هذا المتاهة لا يوجد لها مخرج هنا. الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
         backHome: "العودة إلى الصفحة الرئيسية",
         backStart: "العودة إلى البداية",
+      },
+      errorBoundary: {
+        title: "حدث خطأ ما",
+        description:
+          "حدث خطأ غير متوقع. عادةً ما تؤدي العودة إلى صفحة البداية إلى حل المشكلة.",
+        backStart: "العودة إلى صفحة البداية",
       },
     },
   },
