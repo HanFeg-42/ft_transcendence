@@ -366,6 +366,14 @@ const resources = {
           },
         ],
       },
+      // not found
+      notFound: {
+        title: "Page not found",
+        description:
+          "Looks like this maze has no exit here. The page you are looking for does not exist or has been moved.",
+        backHome: "Back to home",
+        backStart: "Back to start",
+      },
     },
   },
   fr: {
@@ -735,6 +743,14 @@ const resources = {
           },
         ],
       },
+      // not found
+      notFound: {
+        title: "Page introuvable",
+        description:
+          "On dirait que ce labyrinthe n’a pas de sortie ici. La page que vous recherchez n’existe pas ou a été déplacée.",
+        backHome: "Retour à l’accueil",
+        backStart: "Retour au départ",
+      },
     },
   },
 
@@ -1090,6 +1106,14 @@ const resources = {
             paragraphs: ["للاستفسار عن هذه الشروط: {{email}}"],
           },
         ],
+      },
+      // not found 
+      notFound: {
+        title: "الصفحة غير موجودة",
+        description:
+          "يبدو أن هذا المتاهة لا يوجد لها مخرج هنا. الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+        backHome: "العودة إلى الصفحة الرئيسية",
+        backStart: "العودة إلى البداية",
       },
     },
   },
