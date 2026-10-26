@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="assets/pacova-map.png" alt="PACOVA maze" width="30%" style="min-width:140px;max-width:260px;height:auto" />
+<img src="frontend/src/assets/pacova-map.png" alt="PACOVA maze" width="30%" style="min-width:140px;max-width:260px;height:auto" />
 
 # PACOVA
 
