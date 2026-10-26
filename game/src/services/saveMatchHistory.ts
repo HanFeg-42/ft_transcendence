@@ -25,6 +25,7 @@ const saveMatch = async (state: GameState) => {
                     : "LOSS",
             score: p.score,
             pelletsEaten: p.pelletsEaten,
+            fruitsEaten: p.fruitsEaten,
             ghostsEaten: p.ghostsEaten,
             livesRemaining: p.lives,
             joinedAt: new Date(p.joinedAt!),

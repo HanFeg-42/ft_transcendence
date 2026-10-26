@@ -32,6 +32,7 @@ model MatchParticipant {
   result         String?
   score          Int      @default(0)
   pelletsEaten   Int      @default(0)
+  fruitsEaten    Int      @default(0)
   ghostsEaten    Int      @default(0)
   livesRemaining Int      @default(3)
   joinedAt       DateTime @default(now())

@@ -14,7 +14,7 @@ import {
   type Tile,
   type Direction,
 } from "../../../shared/types/game-types";
-import { findChaserSpawns, findSpawn, parsePellets, isWall } from "./maze";
+import { findChaserSpawns, findSpawn, parseCollectibles, isWall } from "./maze";
 
 import { stepPlayer, stepChaser, ahead } from "./movement";
 
@@ -54,6 +54,7 @@ export const createGame = (
       lives: 3,
       score: 0,
       pelletsEaten: 0,
+      fruitsEaten: 0,
       ghostsEaten: 0,
       connected: true,
     },
@@ -74,7 +75,8 @@ export const createGame = (
     status: "playing",
     players,
     chasers,
-    pellets: parsePellets(maze),
+    pellets: parseCollectibles(maze, [".", "o"]),
+    fruits: parseCollectibles(maze, ["F"]),
     timeRemaining: timeLimit,
     vulnerableTimer: 0,
     mazeId,
@@ -170,6 +172,10 @@ export const tick = (state: GameState) => {
         state.vulnerableTimer = 300;
         state.chasers.forEach((c) => (c.isEaten = false));
       }
+    } else if (state.fruits[player.tile.y][player.tile.x]) {
+      player.score += 100;
+      player.fruitsEaten++;
+      state.fruits[player.tile.y][player.tile.x] = false;
     }
     const touchedChaser = state.chasers.find(
       (chaser) =>

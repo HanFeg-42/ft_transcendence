@@ -31,6 +31,7 @@ export function useLocalGame(
         score: 0,
         connected: true,
         pelletsEaten: 0,
+        fruitsEaten: 0,
         ghostsEaten: 0,
       };
       state.players.push(player2);

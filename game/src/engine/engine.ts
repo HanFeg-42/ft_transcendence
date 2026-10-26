@@ -11,7 +11,7 @@ import {
   MAZES,
   DIFFICULTIES,
 } from "../../../shared/data/game-data";
-import { findChaserSpawns, findSpawn, parsePellets, isWall } from "./maze";
+import { findChaserSpawns, findSpawn, parseCollectibles, isWall } from "./maze";
 import { stepPlayer, stepChaser, ahead } from "./movement";
 import {
   TIME_LIMITS,
@@ -40,6 +40,7 @@ export const addPlayer = (playerId: string, state: GameState) => {
     lives: 3,
     score: 0,
     pelletsEaten: 0,
+    fruitsEaten: 0,
     ghostsEaten: 0,
     connected: true,
     joinedAt: Date.now(),
@@ -85,6 +86,7 @@ export const createGame = (
       lives: 3,
       score: 0,
       pelletsEaten: 0,
+      fruitsEaten: 0,
       ghostsEaten: 0,
       connected: true,
       joinedAt: Date.now(),
@@ -106,7 +108,8 @@ export const createGame = (
     status: "playing",
     players,
     chasers,
-    pellets: parsePellets(maze),
+    pellets: parseCollectibles(maze, [".", "o"]),
+    fruits: parseCollectibles(maze, ["F"]),
     timeRemaining: timeLimit,
     timeLimit,
     vulnerableTimer: 0,
@@ -208,7 +211,7 @@ export const tick = (state: GameState) => {
     stepPlayer(maze, player);
 
     if (state.pellets[player.tile.y][player.tile.x]) {
-      const isPowerPellet = maze[player.tile.y][player.tile.x] == "o";
+      const isPowerPellet = maze[player.tile.y][player.tile.x] === "o";
       player.score += isPowerPellet ? 50 : 10;
       player.pelletsEaten++;
       state.pellets[player.tile.y][player.tile.x] = false;
@@ -216,6 +219,10 @@ export const tick = (state: GameState) => {
         state.vulnerableTimer = 300;
         state.chasers.forEach((c) => (c.isEaten = false));
       }
+    } else if (state.fruits[player.tile.y][player.tile.x]) {
+      player.score += 100;
+      player.fruitsEaten++;
+      state.fruits[player.tile.y][player.tile.x] = false;
     }
     const touchedChaser = state.chasers.find(
       (chaser) =>
