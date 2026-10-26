@@ -1,178 +1,107 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useChatSocket } from '../../hooks/useChatSocket';
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
-
-import { MOCK_FRIENDS, routeMap } from './constants';
-import { useChatHistory } from './useChatHistory';
-import { useBlockStatus } from './useBlockStatus';
-import FriendsSidebar from './FriendsSidebar';
-import ConversationHeader from './ConversationHeader';
+import { Input } from '../../components/ui/Input';
+import PixelButton from '../../components/ui/PixelButton';
+import useChat from './useChat';
 import MessageList from './MessageList';
-import MessageInput from './MessageInput';
-import NewChatModal from './NewChatModal';
-import Toast from '../../components/ui/Toast';
-import type { Friend } from './types';
-
-
-
+import { Sidebar, Header, NewChatModal, GameInviteModal } from './Parts';
+import { type Friend, NO_GLOW, routeMap } from './helpers';
+// import Avatar from '../../components/ui/Avatar';
+// import Avatar from '../../components/ui/Avatar';
 
 export default function Chat() {
-  // 1. Hooks & Global Authentication Context
-  const { token, user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
-  const { messages, sendMessage, presence } = useChatSocket(
-    user && token ? `wss://${window.location.host}/api/chat/ws?token=${token}` : '',
-    user ? Number(user.id) : 0
-  );
+  const myId = user ? Number(user.id) : 0;
 
-
-  // 2. Component State Management
-  const [selectedFriend, setSelectedFriend] = useState(MOCK_FRIENDS[0]);
+  const [selectedId, setSelectedId] = useState(0);
+  const [friendList, setFriendList] = useState<Friend[]>([]);
   const [draft, setDraft] = useState('');
-  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showToast = (message: string, type: 'success' | 'error') => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast({ message, type });
-    toastTimeoutRef.current = setTimeout(() => setToast(null), 2500);
-  };
-  const [mutedIds, setMutedIds] = useState<Set<number>>(() => new Set());
-  const [clearedBefore, setClearedBefore] = useState<Record<number, string>>({});
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const lastTypingSent = useRef<Record<number, number>>({}); // per friend
+  const [friendsOpen, setFriendsOpen] = useState(false);
 
 
 
-  // 3. Unread Messages & Last-Seen Divider (useRef)
-  const lastSeenRef = useRef<Record<number, string>>({});
-  const [dividerCutoff, setDividerCutoff] = useState<string | null>(null);
-
-  const userReady = Boolean(user && token);
-
-
-  // Effect 1: Restoring Preferences from localStorage
   useEffect(() => {
-    if (!user) return;
-    try {
-      const rawMuted = localStorage.getItem(`pacova-muted-${user.id}`);
-      setMutedIds(new Set(rawMuted ? (JSON.parse(rawMuted) as number[]) : []));
-    } catch (err) {
-      console.warn('[CHAT] Failed to load muted friends from storage:', err);
-    }
-    try {
-      const rawSeen = localStorage.getItem(`pacova-lastseen-${user.id}`);
-      lastSeenRef.current = rawSeen ? JSON.parse(rawSeen) : {};
-    } catch (err) {
-      console.warn('[CHAT] Failed to load last-seen map from storage:', err);
-      lastSeenRef.current = {};
-    }
-    setDividerCutoff(lastSeenRef.current[selectedFriend.id] ?? null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+    if (!token) return;
+    fetch('/api/chat/friends', { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setFriendList(data.map((f: any) => ({ id: f.id, username: f.username, status: f.online ? 'online' : 'offline', avatar: f.avatar ?? null}))))
+      .catch(console.error);
+  }, [token]);
 
+  const friendId = friendList.some((f) => f.id === selectedId) ? selectedId : friendList[0]?.id ?? 0;
 
+  const chat = useChat(token, friendId);
+  const { conversation, sendRead } = chat;
 
-  // Effect 2: Cleanup Function on Conversation Leave
-  // ADDED: whenever you leave a friend mark that conversation as "seen right now" 
-  useEffect(() => {
-    const friendId = selectedFriend.id;
-    return () => {
-      if (!user) return;
-      lastSeenRef.current[friendId] = new Date().toISOString();
-      try {
-        localStorage.setItem(`pacova-lastseen-${user.id}`, JSON.stringify(lastSeenRef.current));
-      } catch (err) {
-        console.warn('[CHAT] Failed to persist last-seen map:', err);
-      }
-    };
-  }, [selectedFriend.id, user?.id]);
+  // Friends with their live online/offline status.
+  const friends = friendList.map((f) => ({
+    ...f,
+    status: f.id === friendId && chat.iBlockedThem ? 'offline' : chat.presence[f.id] ?? f.status,
+  }));
+  const friend = friends.find((f) => f.id === friendId) ?? friends[0];
 
-  const { historyMessages, historyLoading, historyError } = useChatHistory(
-    selectedFriend.id,
-    token,
-    userReady
-  );
-  const { blockStatus, handleToggleBlock } = useBlockStatus(selectedFriend.id, token, userReady);
+  const blocked = chat.iBlockedThem;
+  const pendingInvites = conversation.filter((m) => m.kind === 'game_invite' && m.meta?.status === 'pending');
+  const invitesForMe = pendingInvites.filter((m) => m.receiver_id === myId);
+  const incomingInvite = invitesForMe[invitesForMe.length - 1]; // latest one
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const handleSelectTab = (tab: string) => {
-    const path = routeMap[tab];
-    if (path) navigate(path);
-  };
-
-  const handleSend = () => {
-    if (!draft.trim()) return;
-    sendMessage(selectedFriend.id, draft.trim());
-    setDraft('');
-  };
-
-  // CHANGED: was a plain setSelectedFriend — now also captures the divider
-  // cutoff for the friend being opened BEFORE the leave-effect above
-  // overwrites it with "now".
-  const handleSelectFriend = (friend: Friend) => {
-    setDividerCutoff(lastSeenRef.current[friend.id] ?? null);
-    setSelectedFriend(friend);
-  };
-
-  const handleToggleMute = () => {
-    if (!user) return;
-    setMutedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(selectedFriend.id)) next.delete(selectedFriend.id);
-      else next.add(selectedFriend.id);
-      try {
-        localStorage.setItem(`pacova-muted-${user.id}`, JSON.stringify([...next]));
-      } catch (err) {
-        console.warn('[CHAT] Failed to persist muted friends:', err);
-      }
-      return next;
-    });
-  };
 
   
 
-  // 1. Clearing Conversations via REST API (handleClearConversation)
-  const handleClearConversation = () => {
-    if (!token) return;
-    const friendId = selectedFriend.id;
-
-    fetch(`/api/chat/messages/${friendId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        // Optimistic: hide immediately rather than waiting on a refetch.
-        setClearedBefore((prev) => ({ ...prev, [friendId]: new Date().toISOString() }));
-        showToast('CONVERSATION DELETED', 'success');
-      })
-      .catch((err) => {
-        console.error('[CHAT] Failed to clear conversation:', err);
-        showToast('DELETE FAILED', 'error');
-      });
-  };
-
-  const visibleFriends = user ? MOCK_FRIENDS.filter((friend) => friend.id !== Number(user.id)) : MOCK_FRIENDS;
-
-  const visibleFriendsLive = visibleFriends.map((friend) => ({
-    ...friend,
-    status: presence[friend.id] ?? friend.status,
-  }));
-
+  // Tell the server we read this chat: on new messages, friend change, and when the tab regains focus.
   useEffect(() => {
-    if (user && selectedFriend.id === Number(user.id)) {
-      const fallback = MOCK_FRIENDS.find((friend) => friend.id !== Number(user.id));
-      if (fallback) setSelectedFriend(fallback);
+    const markRead = () => {
+      if (friendId && document.visibilityState === 'visible') sendRead(friendId);
+    };
+    markRead();
+    document.addEventListener('visibilitychange', markRead);
+    return () => document.removeEventListener('visibilitychange', markRead);
+  }, [conversation.length, friendId]);
+
+  function goToTab(tab: string) {
+    if (routeMap[tab]) navigate(routeMap[tab]);
+  }
+
+  // function selectFriend(id: number) {
+  //   setSelectedId(id);
+  //   setInviteOpen(false);
+  // }
+
+  function handleSend() {
+    const text = draft.trim();
+    if (!text) return;
+    chat.sendMessage(friendId, text);
+    setDraft('');
+  }
+
+  // Update the draft and tell the friend we're typing (at most once every 2s).
+  function handleDraftChange(value: string) {
+    setDraft(value);
+    if (value.trim() && Date.now() - (lastTypingSent.current[friendId] ?? 0) > 2000) {
+      chat.sendTyping(friendId);
+      lastTypingSent.current[friendId] = Date.now();
     }
-  }, [user?.id]);
+  }
+
+  // selecting a friend closes the list
+  function selectFriend(id: number) {
+    setSelectedId(id);
+    setInviteOpen(false);
+    setFriendsOpen(false);
+  }
+
 
   if (!user || !token) {
     return (
       <Background>
-        <Navbar activeTab="CHAT" onSelectTab={handleSelectTab} />
+        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
         <main className="flex-1 flex items-center justify-center">
           <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">Loading...</h1>
         </main>
@@ -180,78 +109,106 @@ export default function Chat() {
     );
   }
 
-  const selectedFriendLive = { ...selectedFriend, status: presence[selectedFriend.id] ?? selectedFriend.status };
-  const isFriendOnline = selectedFriendLive.status === 'online';
-
-
-  // 2. Merging & Deduplicating Conversation Messages
-  const liveForFriend = messages.filter(
-    (message) => message.sender_id === selectedFriend.id || message.receiver_id === selectedFriend.id
-  );
-  let conversation = [...historyMessages, ...liveForFriend].filter(
-    (message, index, all) => all.findIndex((m) => m.id === message.id) === index
-  );
-  const cutoff = clearedBefore[selectedFriend.id];
-  if (cutoff) {
-    conversation = conversation.filter((message) => message.created_at > cutoff);
+  if (chat.reconnecting) {
+    return (
+      <Background>
+        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
+        <main className="flex-1 flex items-center justify-center">
+          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase animate-pulse">Reconnecting…</h1>
+        </main>
+      </Background>
+    );
   }
 
-
-
-  const isBlockedEitherWay = blockStatus.iBlockedThem || blockStatus.theyBlockedMe;
-  const isMutedSelected = mutedIds.has(selectedFriend.id);
-
-
-  // 3. Auto-Scrolling to Bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation.length, selectedFriend.id]);
+  if (!friend) {
+    return (
+      <Background>
+        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
+        <main className="flex-1 flex items-center justify-center">
+          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase text-center px-4">
+            {'No friends yet'}
+          </h1>
+        </main>
+      </Background>
+    );
+  }
 
   return (
     <Background>
-      <Navbar activeTab="CHAT" onSelectTab={handleSelectTab} />
+      <Navbar activeTab="CHAT" onSelectTab={goToTab} />
+      <main className="flex-1 min-h-0 h-[calc(100dvh-152px)] max-h-[calc(100dvh-152px)] sm:h-[calc(100dvh-128px)] sm:max-h-[calc(100dvh-128px)] max-w-[1320px] mx-auto w-full px-2 py-2 md:px-4 md:py-5 flex gap-5 overflow-hidden">
+        <Sidebar friends={friends} selectedId={friendId} onSelect={selectFriend} onNewChat={() => setNewChatOpen(true)} open={friendsOpen}/>
 
-      <main className="flex-1 min-h-0 h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] max-w-[1320px] mx-auto w-full px-4 py-5 flex gap-5 overflow-hidden">
-        <FriendsSidebar
-          friends={visibleFriendsLive}
-          selectedFriend={selectedFriendLive}
-          onSelectFriend={handleSelectFriend}
-          onNewChat={() => setIsNewChatOpen(true)}
-        />
-
-        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-[#050B1E] border-2 border-pacova-green-dark rounded-lg overflow-hidden">
-          <ConversationHeader
-            friend={selectedFriendLive}
-            isFriendOnline={isFriendOnline}
-            blockStatus={blockStatus}
-            onToggleBlock={handleToggleBlock}
-            isMuted={isMutedSelected}
-            onToggleMute={handleToggleMute}
-            onClearConversation={handleClearConversation}
+        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
+          <Header
+            key={friend.id}
+            friend={friend}
+            blocked={blocked}
+            onToggleBlock={chat.toggleBlock}
+            onInvite={() => setInviteOpen(true)}
+            inviteDisabled={blocked || pendingInvites.length > 0}
+            onToggleFriends={() => setFriendsOpen((o) => !o)}
           />
 
           <MessageList
             conversation={conversation}
-            selectedFriend={selectedFriendLive}
-            currentUserId={user.id}
-            historyLoading={historyLoading}
-            historyError={historyError}
-            messagesEndRef={messagesEndRef}
-            dividerCutoff={dividerCutoff}
+            friend={friend}
+            myId={myId}
+            status={chat.status}
+            isTyping={chat.typing[friendId] ?? false}
+            friendReadAt={chat.readAt[friendId] ?? null}
           />
 
-          <MessageInput draft={draft} onDraftChange={setDraft} onSend={handleSend} disabled={isBlockedEitherWay} />
+          {incomingInvite ? (
+            <GameInviteModal
+              receiver
+              name={friend.username}
+              onYes={() => chat.replyInvite(incomingInvite.id, true)}
+              onNo={() => chat.replyInvite(incomingInvite.id, false)}
+            />
+          ) : (
+            inviteOpen && (
+              <GameInviteModal
+                name={friend.username}
+                onYes={() => {
+                  chat.sendInvite(friendId);
+                  setInviteOpen(false);
+                }}
+                onNo={() => setInviteOpen(false)}
+              />
+            )
+          )}
+
+            {chat.error && <p className="px-4 font-vt323 text-lg text-pacova-pink">{chat.error}</p>}
+
+          <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
+            <Input
+              className={`min-w-0 w-full !border-pacova-pink !bg-[#080B1A] !text-white placeholder:!text-white/50 !text-lg sm:!text-xl !py-3 disabled:opacity-40 ${NO_GLOW} focus:!shadow-none focus:[box-shadow:none!important]`}
+              value={draft}
+              type="text"
+              maxLength={1000}
+              disabled={blocked}
+              onChange={(e) => handleDraftChange(e.target.value)}
+              placeholder={blocked ? 'You cannot message this user' : 'Type a message...'}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSend();
+              }}
+            />
+            <PixelButton type="button" variant="outline-green" size="lg" className={NO_GLOW} onClick={handleSend} disabled={blocked}>
+              <span className="inline-flex items-center gap-2">
+                <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor" aria-hidden="true">
+                  <path d="M21.7 3.3a1 1 0 0 0-1.03-.24l-18 6a1 1 0 0 0 .08 1.92l7.26 1.82 1.82 7.26a1 1 0 0 0 .91.76h.06a1 1 0 0 0 .9-.57l6-18a1 1 0 0 0 0-1.95ZM4.6 10.1l12.1-4.03-6.04 6.04L4.6 10.1Zm7.96 7.96-1.04-4.16 6.04-6.04-5 10.2Z" />
+                </svg>
+                <span className="hidden sm:inline">Send</span>
+              </span>
+            </PixelButton>
+          </div>
         </section>
       </main>
 
-      <NewChatModal
-        isOpen={isNewChatOpen}
-        onClose={() => setIsNewChatOpen(false)}
-        friends={visibleFriendsLive}
-        onSelectFriend={handleSelectFriend}
-      />
-
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {newChatOpen && (
+        <NewChatModal friends={friends} onSelect={selectFriend} onClose={() => setNewChatOpen(false)} />
+      )}
     </Background>
   );
 }

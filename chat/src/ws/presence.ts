@@ -23,6 +23,13 @@ export async function getMessagePartners(userId: string): Promise<number[]> {
   for (const row of rows) {
     partners.add(row.senderId === id ? row.receiverId : row.senderId);
   }
+
+  const friendships = await prisma.friendship.findMany({
+    where: { OR: [{ userLowId: id }, { userHighId: id }] },
+  });
+  for (const f of friendships) partners.add(f.userLowId === id ? f.userHighId : f.userLowId);
+
+
   return [...partners];
 }
 

@@ -5,6 +5,7 @@ export type PixelButtonVariant =
   | "outline-green"
   | "filled-green"
   | "filled-pink"
+  | "gray"
   | "olive-yellow"
   | "filled-magenta"
   | "solid-pink"
@@ -40,8 +41,8 @@ const variantStyles: Record<
   "outline-green": {
     bg: "bg-pacova-surface",
     glow: "shadow-neon-green",
-    borderColor: "border-pacova-green",
-    dropShadow: "drop-shadow-glow-green",
+    borderColor: "border-pacova-green/10",
+    dropShadow: "drop-shadow-glow-green/70",
     textColor: "text-pacova-green",
   },
   "filled-green": {
@@ -67,6 +68,12 @@ const variantStyles: Record<
     glow: "shadow-neon-pink",
     borderColor: "border-pacova-pink/30",
     dropShadow: "drop-shadow-glow-pink",
+  },  
+  "gray": {
+    bg: "bg-pacova-gray/30",
+    glow: "shadow-neon-gray",
+    borderColor: "border-pacova-gray/30",
+    dropShadow: "drop-shadow-glow-gray",
   },
   "solid-pink": {
     bg: "bg-pacova-pink",
@@ -77,21 +84,22 @@ const variantStyles: Record<
   "danger-red": {
     bg: "bg-red-950",
     glow: "shadow-[inset_0_0_15px_rgba(239,68,68,0.6)]",
-    borderColor: "border-red-500",
+    borderColor: "border-red-500/70",
     dropShadow: "drop-shadow-glow-red",
+    textColor: "text-red-700",
   },
   "warning-yellow": {
     bg: "bg-amber-950",
     glow: "shadow-[inset_0_0_12px_rgba(245,158,11,0.6)]",
-    borderColor: "border-amber-400",
+    borderColor: "border-amber-400/40",
     dropShadow: "drop-shadow-glow-yellow",
   },
 };
 
 const sizeStyles: Record<PixelButtonSize, string> = {
-  sm: "px-3 py-1 text-sm font-pixelify min-h-[32px]",
-  md: "px-4 py-1.5 sm:px-5 sm:py-2 text-sm sm:text-base font-pixelify min-h-[38px]", // 💡 Réduit le padding et min-h de 42px à 38px
-  lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-lg sm:text-xl font-pixelify min-h-[44px]",
+  sm: "px-4 py-1.5 text-base font-press-start min-h-[36px]",
+  md: "px-5 py-2 sm:px-6 sm:py-2.5 text-base sm:text-xl font-press-start min-h-[42px]",
+  lg: "px-6 py-2.5 sm:px-8 sm:py-3 text-xl sm:text-2xl font-press-start min-h-[44px]",
 };
 
 export const PixelButton: React.FC<PixelButtonProps> = ({

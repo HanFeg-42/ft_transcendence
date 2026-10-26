@@ -1,4 +1,5 @@
 import React from 'react';
+import Footer from './Footer';
 
 interface BackgroundProps {
   children: React.ReactNode;
@@ -42,7 +43,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(to bottom, #0D0914 0%, transparent 30%, #0D0914 100%)'
+            background: 'linear-gradient(to bottom, #050407ff 0%, transparent 30%, #061a04ff 100%)'
           }}
         />
       </div>
@@ -51,9 +52,10 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
       <div className="absolute inset-0 pixel-scanlines pointer-events-none z-20 opacity-30" />
 
       {/* Page Content */}
-      <div className="relative z-10 w-full min-h-screen flex flex-col justify-between">
+      <div className="relative z-10 w-full flex-1 flex flex-col justify-center">
         {children}
       </div>
+        <Footer />
     </div>
   );
 };

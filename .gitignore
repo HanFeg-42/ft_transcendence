@@ -13,10 +13,8 @@ dist/
 .DS_Store
 Thumbs.db
 
+user/uploads
+
 docker-compose.override.yml
 
 generated/
-
-docker-compose.override.yml
-
-TODO
