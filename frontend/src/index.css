@@ -21,7 +21,7 @@
 
   /* --- OMBRES / GLOW NEON --- */
   --shadow-neon-pink: 0 0 12px rgba(243, 32, 119, 0.8), inset 0 0 10px rgba(243, 32, 119, 0.5);
-  --shadow-neon-green: 0 0 12px rgba(142, 214, 3, 0.8), inset 0 0 10px rgba(142, 214, 3, 0.5a);
+  --shadow-neon-green: 0 0 12px rgba(142, 214, 3, 0.8), inset 0 0 10px rgba(142, 214, 3, 0.5);
   --shadow-neon-purple: 0 0 10px rgba(81, 9, 80, 0.8);
 
   /* --- NOMS D'OMBRES DE RECUL / GLOW (Drop Shadow) --- */
@@ -176,4 +176,55 @@
   top: 10%;
   left: 10%;
   animation: starTwinkle 2.5s ease-in-out 0.5s infinite alternate;
+}
+
+/* --- PACOVA theme support: scoped to Background and its descendants --- */
+.pacova-light {
+  --color-pacova-bg: #f7f3fb;
+  --color-pacova-surface: rgba(255, 255, 255, 0.68);
+  --color-pacova-gray: #b9a9c4;
+  color: #30213f;
+}
+
+.pacova-light .pacova-card-surface {
+  background-color: rgba(255, 255, 255, 0.68);
+  border-color: rgba(117, 75, 137, 0.28);
+  box-shadow: 0 8px 24px rgba(91, 48, 112, 0.10);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.pacova-light .pacova-card-surface .pixel-scanlines {
+  opacity: 0.12;
+}
+
+.pacova-theme-toggle {
+  position: fixed;
+  top: 0.6rem;
+  right: 0.04rem;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+}
+
+.pacova-theme-toggle:focus-visible {
+  outline: 2px solid #F32077;
+  outline-offset: 3px;
+}
+
+.pacova-light .pacova-theme-toggle {
+  color: #44264f;
+}
+
+@media (max-width: 640px) {
+  .pacova-theme-toggle {
+    top: 0.6rem;
+    right: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.8rem;
+  }
 }

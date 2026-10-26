@@ -69,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <img
           src={logo}
           alt="PACOVA logo"
-          className="h-8 w-8 [image-rendering:pixelated]"
+          className="h-10 w-10 [image-rendering:pixelated]"
         />
         {/* <span className="font-press-start text-pacova-green text-xl drop-shadow-glow-green">
           PACOVA
