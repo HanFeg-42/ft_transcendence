@@ -52,10 +52,10 @@ export async function getOrCreateProfile(userId: number) {
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
-        avatarUrl = authUser.avatar || '/default-avatar2.png';
+        avatarUrl = authUser.avatar || '/default-avatar.png';
       }
       else {
-        avatarUrl = '/default-avatar2.png';
+        avatarUrl = '/default-avatar.png';
       } 
     }
     catch (err) {

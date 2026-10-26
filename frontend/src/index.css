@@ -78,39 +78,12 @@
   animation: gridMove 1.2s linear infinite;
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
 
 
-/* BUTTONS -------------------- */
-
-/* outline-magenta: Dark surface with a glowing pink neon border.
-
-filled-magenta: Dark pink/purple gradient background with pink glow.
-
-solid-pink: Solid bright pink fill (#F32077).
-
-filled-green: Dark green background with bright green neon glow.
-
-olive-yellow: Muted olive green base.
-
-danger-red: Dark red background with a red warning glow.
-
-warning-yellow: Dark amber background with a golden glow. 
-
-USE EXAMPLE
-
-<PixelButton variant="danger-red" size="sm" disabled>
-  LOCKED
-</PixelButton>
-
-<PixelButton variant="solid-pink" size="md" onClick={() => console.log('Clicked!')}>
-      PLAY NOW
-</PixelButton> */
-
-
-
-/* --- RETRO PIXEL STARFIELD (SKY ONLY) --- */
-
-/* 1. Small 1px Star Field */
 .pixel-stars-small {
   width: 1px;
   height: 1px;
