@@ -1,7 +1,7 @@
 import Input from "../components/ui/Input";
 import PixelButton from "../components/ui/PixelButton";
 import { useState } from "react";
-import ArenaBackground from "../components/ui/ArenaBackground";
+import Background from "../components/ui/Background";
 import Badge from "../components/ui/Badge";
 import { DEFAULT_MAZE_ID, MAZES } from "../engine/maze";
 import GameRoom from "../components/game/GameRoom";
@@ -27,7 +27,7 @@ const OnlineGame = () => {
 
   if (!gameRoom && searching) {
     return (
-      <ArenaBackground>
+      <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
           <Matchmaking
             onMatch={(gameId: string) => {
@@ -38,12 +38,12 @@ const OnlineGame = () => {
             onError={handleError}
           />
         </div>
-      </ArenaBackground>
+      </Background>
     );
   }
   if (!gameRoom)
     return (
-      <ArenaBackground>
+      <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
           {error && <Badge variant="red">{error}</Badge>}
           <Input
@@ -80,10 +80,10 @@ const OnlineGame = () => {
             ))}
           </select>
         </div>
-      </ArenaBackground>
+      </Background>
     );
   return (
-    <ArenaBackground>
+    <Background>
       <GameRoom
         gameId={gameRoom}
         onError={handleError}
@@ -94,7 +94,7 @@ const OnlineGame = () => {
         }}
         mazeId={mazeId}
       />
-    </ArenaBackground>
+    </Background>
   );
 };
 export default OnlineGame;
