@@ -1,9 +1,12 @@
 import { useEffect } from "react";
 import Countdown from "../../components/game/Countdown";
-import Badge from "../../components/ui/Badge";
+import HudTop from "./HudTop";
+import HudPlayer from "./HudPlayer";
+import { RotDev } from "./RotateDevice";
+import MobileControls from "./MobileControls";
+import styles from "../../pages/Game/GamePage.module.css";
 import { useAuth } from "../../context/AuthContext";
 import { useGameSocket } from "../../hooks/useGameSocket";
-import "./MazeUI";
 import type { Direction } from "../../../../shared/types/game-types";
 import PixelButton from "../ui/PixelButton";
 import {
@@ -11,6 +14,7 @@ import {
   FORFEIT_DELAY_MS,
 } from "../../../../shared/data/game-data";
 import MazeUI from "./MazeUI";
+import Result from "./ResultCard";
 
 const KEY_MAP: Record<string, Direction> = {
   w: "UP",
@@ -106,55 +110,120 @@ const GameRoom = ({
   const myId = String(user?.id);
   const opponent = state.players.find((p) => p.id !== myId);
   const isOpponentAway = state.status === "playing" && !opponent?.connected;
+  const won = state.winnerId === myId;
+  const titleColor = won
+    ? "text-pacova-green drop-shadow-glow-green"
+    : "text-pacova-pink drop-shadow-glow-pink";
 
   return (
-    <div className="flex-1 flex-col flex items-center justify-center gap-4">
-      <div className="flex gap-4 w-152 justify-between">
-        <Badge variant="yellow">timeRemaining: {state.timeRemaining} </Badge>
-        {state.players.map((p, index) => (
-          <Badge variant="green">
-            Player{index + 1} score: {p.score} lives: {p.lives}
-          </Badge>
-        ))}
-      </div>
-      <div className="relative">
-        <MazeUI state={state} mazeId={state.mazeId} />
+    <>
+      <RotDev />
+      {state.status === "playing" && (
+        <MobileControls onInput={sendPlayerInput} />
+      )}
+      <div className={styles.page}>
+        <div className={styles.topBar}>
+          <HudTop state={state} />
+        </div>
+        <div className={styles.leftBar}>
+          <HudPlayer player={state.players[0]} />
+        </div>
+        <div className={styles.rightBar}>
+          <HudPlayer player={state.players[1]} />
+        </div>
+        <div className={styles.mazeWrapper}>
+          <MazeUI state={state} mazeId={state.mazeId} />
+        </div>
         {state.status === "finished" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
-            <Badge variant={"yellow"}>
-              {state.winnerId === undefined
-                ? "Draw"
-                : state.winnerId === String(user?.id)
-                  ? "You won"
-                  : "You lost!"}
-            </Badge>
-            <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
-            <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
+          <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
+            <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
+              <h1 className={`font-press-start text-3xl ${titleColor}`}>
+                {state.winnerId === undefined
+                  ? "Draw"
+                  : won
+                    ? "You won"
+                    : "You lost"}
+              </h1>
+              <div className="flex gap-4 w-full">
+                <Result
+                  name={`player 1`} // a place holder that needs to be replaced by username later
+                  score={state.players[0].score}
+                  lives={state.players[0].lives}
+                  win={state.players[0].id === state.winnerId}
+                />
+                <Result
+                  name={`player 2`} // a place holder that needs to be replaced by username later
+                  score={state.players[1].score}
+                  lives={state.players[1].lives}
+                  win={state.players[1].id === state.winnerId}
+                />
+              </div>
+
+              <div className="flex gap-6">
+                <PixelButton
+                  variant="outline-green"
+                  size="md"
+                  onClick={onPlayAgain}
+                >
+                  Play Again
+                </PixelButton>
+                <PixelButton
+                  variant="danger-red"
+                  size="md"
+                  onClick={onBackToMenu}
+                >
+                  Back To Menu
+                </PixelButton>
+              </div>
+            </div>
           </div>
         )}
         {isOpponentAway && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
-            <Badge variant="yellow">
-              {"Opponent disconnected, Forfeit in "}
-              <Countdown seconds={FORFEIT_DELAY_MS / 1000} />s
-            </Badge>
+          <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
+            <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
+              <h1 className="font-press-start text-xl text-pacova-pink">
+                Opponent disconnected
+              </h1>
+              <p className="font-vt323 text-2xl text-white/70">Forfeit in</p>
+              <p className="font-press-start text-5xl text-pacova-green drop-shadow-glow-green">
+                <Countdown seconds={FORFEIT_DELAY_MS / 1000} />s
+              </p>
+            </div>
           </div>
         )}
         {!isConnected && state.status === "playing" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70">
-            <Badge variant="yellow">
-              {gaveUp ? "Connection lost" : "Connection lost, reconnecting..."}
-            </Badge>
-            {gaveUp && (
-              <>
-                <PixelButton onClick={onPlayAgain}>Play again</PixelButton>
-                <PixelButton onClick={onBackToMenu}>Back to menu</PixelButton>
-              </>
-            )}
+          <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
+            <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
+              <h1 className="font-press-start text-xl text-pacova-pink">
+                Connection lost
+              </h1>
+              {gaveUp ? (
+                <div className="flex gap-6">
+                  <PixelButton
+                    variant="outline-green"
+                    size="md"
+                    onClick={onPlayAgain}
+                  >
+                    Play Again
+                  </PixelButton>
+                  <PixelButton
+                    variant="danger-red"
+                    size="md"
+                    onClick={onBackToMenu}
+                  >
+                    Back To Menu
+                  </PixelButton>
+                </div>
+              ) : (
+                <p className="font-vt323 text-2xl text-white/70">
+                  reconnecting...
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 

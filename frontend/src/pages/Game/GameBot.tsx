@@ -8,6 +8,7 @@ import { chooseDirection } from "../../ai/bot";
 import type { BotDifficulty } from "../../ai/bot";
 import type { GameState, Direction } from "../../../../shared/types/game-types";
 // Same UI pieces as the local game page (GamePage.tsx)
+import Result from "../../components/game/ResultCard";
 import MazeUI from "../../components/game/MazeUI";
 import HudTop from "../../components/game/HudTop";
 import HudPlayer from "../../components/game/HudPlayer";
@@ -116,43 +117,6 @@ const Picker: React.FC<{
 
 const fmt = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-
-// One side of the result: name, score, hearts left. The winner shines green.
-const Result: React.FC<{
-  name: string;
-  score: number;
-  lives: number;
-  win: boolean;
-}> = ({ name, score, lives, win }) => (
-  <div
-    className={`flex-1 p-3 rounded-xl border-2 text-center bg-pacova-purple/40 ${
-      win
-        ? "border-pacova-green shadow-neon-green"
-        : "border-white/20 opacity-70"
-    }`}
-  >
-    <p
-      className={`font-press-start text-sm ${win ? "text-pacova-green drop-shadow-glow-green" : "text-white/60"}`}
-    >
-      {name}
-    </p>
-    <p className="font-pixelify text-4xl text-white my-2">{score}</p>
-    <p className="text-2xl">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className={
-            i < lives
-              ? "text-pacova-pink drop-shadow-glow-pink"
-              : "text-white/20"
-          }
-        >
-          ♥
-        </span>
-      ))}
-    </p>
-  </div>
-);
 
 const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
   mazeId,
