@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../prisma';
-import { onlineUsers } from '../ws/presence';
+import { onlineUsers, sendPresence } from '../ws/presence';
 import { notifyUser } from '../notifications/notifyUser';
 import { NotificationTypes } from '../../../shared/types/notification-types';
 import { WebSocket } from 'ws';
@@ -41,8 +41,18 @@ function parseBigIntId(raw: string): bigint | null {
 
 
 
-async function getPublicUsers(): Promise<PublicUser[]> {
-  const response = await fetch(`${AUTH_SERVICE_URL}/users`);
+async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function getPublicUsers(userIds?: number[]): Promise<PublicUser[]> {
+  const response = await fetchWithTimeout(`${AUTH_SERVICE_URL}/users`);
 
   if (!response.ok) {
     throw new Error(`Auth service returned ${response.status}`);
@@ -80,12 +90,17 @@ async function getPublicUsers(): Promise<PublicUser[]> {
     }];
   });
 
-  if (users.length === 0) {
-    return users;
+  // Fetch profile data only for users this route actually needs, when IDs are supplied.
+  const selectedUsers = userIds
+    ? users.filter(user => userIds.includes(user.id))
+    : users;
+
+  if (selectedUsers.length === 0) {
+    return selectedUsers;
   }
 
-  const ids = users.map(user => user.id).join(',');
-  const profileResponse = await fetch(
+  const ids = selectedUsers.map(user => user.id).join(',');
+  const profileResponse = await fetchWithTimeout(
     `${USER_SERVICE_URL}/profile/profiles?ids=${ids}`
   );
 
@@ -122,7 +137,7 @@ async function getPublicUsers(): Promise<PublicUser[]> {
     }
   }
 
-  return users.map(user => ({
+  return selectedUsers.map(user => ({
     ...user,
     avatar: avatars.has(user.id)
       ? avatars.get(user.id)!
@@ -147,6 +162,21 @@ function sendToUser(userId: number, event: string, data: Record<string, unknown>
     }
   }
 }
+
+// Friendship can be created while both users already have an open WebSocket.
+// Their original partner lists were calculated before they became friends, so
+// send each side the other's current status immediately after acceptance.
+function syncPresenceForPair(userA: number, userB: number) {
+  const aOnline = (onlineUsers.get(String(userA))?.size ?? 0) > 0;
+  const bOnline = (onlineUsers.get(String(userB))?.size ?? 0) > 0;
+
+  for (const socket of onlineUsers.get(String(userA)) ?? []) {
+    sendPresence(socket, userB, bOnline ? 'online' : 'offline');
+  }
+  for (const socket of onlineUsers.get(String(userB)) ?? []) {
+    sendPresence(socket, userA, aOnline ? 'online' : 'offline');
+  }
+}
 // 
 async function getRelation(userId: number, otherId: number): Promise<Relation> {
   if (userId === otherId) return 'self';
@@ -164,9 +194,7 @@ async function getRelation(userId: number, otherId: number): Promise<Relation> {
   if (outgoing) return 'outgoing_request';
   return 'none';
 }
-<<<<<<< HEAD
 
-=======
 // 
 // 
 // async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
@@ -186,7 +214,6 @@ async function getRelation(userId: number, otherId: number): Promise<Relation> {
 
 // 40001: PostgreSQL serialization failure.
 // 
->>>>>>> origin/dev
 // TransactionWriteConflict: conflict f transaction.
 
 async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
@@ -260,7 +287,7 @@ router.get('/friends', async (req: Request, res: Response) => {
 
     if (friendIds.length === 0) return res.json([]);
 
-    const users = await getPublicUsers();
+    const users = await getPublicUsers(friendIds);
     const byId = new Map(users.map(user => [user.id, user]));
 
     const friends = friendIds.flatMap(id => {
@@ -361,10 +388,15 @@ router.post('/friends/requests', async (req: Request, res: Response) => {
     if (result.kind === 'accepted') {
       sendToUser(requesterId, 'friend_accepted', { userId: addresseeId });
       sendToUser(addresseeId, 'friend_accepted', { userId: requesterId });
-      await Promise.all([
-        notifyUser(requesterId, NotificationTypes.FRIEND_ACCEPTED, { userId: addresseeId }),
-        notifyUser(addresseeId, NotificationTypes.FRIEND_ACCEPTED, { userId: requesterId }),
-      ]);
+      syncPresenceForPair(requesterId, addresseeId);
+      try {
+        await Promise.all([
+          notifyUser(requesterId, NotificationTypes.FRIEND_ACCEPTED, { userId: addresseeId }),
+          notifyUser(addresseeId, NotificationTypes.FRIEND_ACCEPTED, { userId: requesterId }),
+        ]);
+      } catch (error) {
+        console.error('[CHAT] Friendship accepted, but notification delivery failed:', error);
+      }
       return res.status(200).json({ status: 'accepted', friend: target });
     }
 // 
@@ -407,7 +439,12 @@ router.post('/friends/requests/:id/accept', async (req: Request, res: Response) 
 // 
     sendToUser(request.requesterId, 'friend_accepted', { userId });
     sendToUser(userId, 'friend_accepted', { userId: request.requesterId });
-    await notifyUser(request.requesterId, NotificationTypes.FRIEND_ACCEPTED, { userId });
+    syncPresenceForPair(userId, request.requesterId);
+    try {
+      await notifyUser(request.requesterId, NotificationTypes.FRIEND_ACCEPTED, { userId });
+    } catch (error) {
+      console.error('[CHAT] Friendship accepted, but notification delivery failed:', error);
+    }
     return res.json({ accepted: true, friendId: request.requesterId });
   } catch (error) {
     return handleError(res, error);
@@ -421,15 +458,27 @@ router.post('/friends/requests/:id/decline', async (req: Request, res: Response)
   if (!userId) return res.status(401).json({ error: 'Missing identity' });
   if (requestId === null) return res.status(400).json({ error: 'Invalid request id' });
   try {
+    // Read the sender first so they can be notified after the request is declined.
+    const request = await prisma.friendRequest.findFirst({
+      where: { id: requestId, addresseeId: userId, status: 'pending' },
+      select: { requesterId: true },
+    });
+    if (!request) return res.status(404).json({ error: 'Pending friend request not found' });
+
     const result = await prisma.friendRequest.updateMany({
       where: { id: requestId, addresseeId: userId, status: 'pending' },
       data: { status: 'declined', respondedAt: new Date() },
     });
     if (result.count === 0) return res.status(404).json({ error: 'Pending friend request not found' });
+
+    sendToUser(request.requesterId, 'friend_request_declined', {
+      requestId: requestId.toString(),
+      userId,
+    });
     return res.json({ declined: true });
   } catch (error) { return handleError(res, error); }
 });
-// 
+//
 // DELETE /friends/requests/:id — cancel our outgoing request.
 router.delete('/friends/requests/:id', async (req: Request, res: Response) => {
   const userId = currentUserId(req);
@@ -437,8 +486,22 @@ router.delete('/friends/requests/:id', async (req: Request, res: Response) => {
   if (!userId) return res.status(401).json({ error: 'Missing identity' });
   if (requestId === null) return res.status(400).json({ error: 'Invalid request id' });
   try {
-    const result = await prisma.friendRequest.deleteMany({ where: { id: requestId, requesterId: userId, status: 'pending' } });
+    // Read the recipient first so their pending list can be refreshed immediately.
+    const request = await prisma.friendRequest.findFirst({
+      where: { id: requestId, requesterId: userId, status: 'pending' },
+      select: { addresseeId: true },
+    });
+    if (!request) return res.status(404).json({ error: 'Outgoing pending request not found' });
+
+    const result = await prisma.friendRequest.deleteMany({
+      where: { id: requestId, requesterId: userId, status: 'pending' },
+    });
     if (result.count === 0) return res.status(404).json({ error: 'Outgoing pending request not found' });
+
+    sendToUser(request.addresseeId, 'friend_request_cancelled', {
+      requestId: requestId.toString(),
+      userId,
+    });
     return res.json({ cancelled: true });
   } catch (error) { return handleError(res, error); }
 });

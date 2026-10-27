@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +35,11 @@ type BlockedUser = {
   id: number;
   username: string;
   avatar?: string | null;
+};
+
+type BlockStatus = {
+  iBlockedThem: boolean;
+  theyBlockedMe: boolean;
 };
 
 type RequestLists = {
@@ -85,7 +91,9 @@ async function apiRequest<T>(
     });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("Request timed out. Check the API gateway and chat service.");
+      throw new Error(
+        "Request timed out. Check the API gateway and chat service.",
+      );
     }
     throw error;
   } finally {
@@ -130,7 +138,6 @@ function UserAvatar({
       ) : (
         user.username.slice(0, 1).toUpperCase() || "?"
       )}
-
     </div>
   );
 }
@@ -141,11 +148,15 @@ export default function FriendsTest() {
 
   const [query, setQuery] = useState("");
   const queryRef = useRef(query);
+  const livePresenceRef = useRef<Record<number, boolean>>({});
   queryRef.current = query;
 
   const [results, setResults] = useState<PublicUser[]>([]);
   const [friends, setFriends] = useState<PublicUser[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [blockStatuses, setBlockStatuses] = useState<
+    Record<number, BlockStatus>
+  >({});
 
   const [requests, setRequests] = useState<RequestLists>({
     incoming: [],
@@ -158,6 +169,18 @@ export default function FriendsTest() {
   const [busyKey, setBusyKey] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
+  // Automatically hide messages after 3 seconds.
+  useEffect(() => {
+    if (!error && !notice) return;
+
+    const timer = setTimeout(() => {
+      setError("");
+      setNotice("");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [error, notice]);
 
   const handleSelectTab = (selectedTab: string) => {
     const routes: Record<string, string> = {
@@ -189,7 +212,18 @@ export default function FriendsTest() {
           apiRequest<RequestLists>("/friends/requests", token),
         ]);
 
-        setFriends(Array.isArray(friendData) ? friendData : []);
+        setFriends(
+          Array.isArray(friendData)
+            ? friendData.map((friend) =>
+                livePresenceRef.current[friend.id] !== undefined
+                  ? {
+                      ...friend,
+                      online: livePresenceRef.current[friend.id],
+                    }
+                  : friend,
+              )
+            : [],
+        );
 
         setRequests({
           incoming: Array.isArray(requestData?.incoming)
@@ -212,7 +246,7 @@ export default function FriendsTest() {
     [token],
   );
 
-  // Load the users blocked by the current user.
+  // Load users blocked by the current user.
   const refreshBlockedUsers = useCallback(async () => {
     if (!token) return;
 
@@ -228,6 +262,42 @@ export default function FriendsTest() {
     }
   }, [token]);
 
+  // Get block direction for every search result.
+  const refreshBlockStatuses = useCallback(
+    async (users: PublicUser[]) => {
+      if (!token) return;
+
+      const entries = await Promise.all(
+        users
+          .filter((user) => user.relation !== "self")
+          .map(async (user) => {
+            try {
+              const status = await apiRequest<BlockStatus>(
+                `/blocks/status/${user.id}`,
+                token,
+              );
+
+              return [user.id, status] as const;
+            } catch {
+              return null;
+            }
+          }),
+      );
+
+      const statuses: Record<number, BlockStatus> = {};
+
+      for (const entry of entries) {
+        if (entry) {
+          statuses[entry[0]] = entry[1];
+        }
+      }
+
+      // Replace old statuses so results from a previous search do not linger.
+      setBlockStatuses(statuses);
+    },
+    [token],
+  );
+
   // Refresh the current search without requiring a browser refresh.
   const refreshSearch = useCallback(async () => {
     if (!token) return;
@@ -236,6 +306,7 @@ export default function FriendsTest() {
 
     if (!currentQuery) {
       setResults([]);
+      setBlockStatuses({});
       return;
     }
 
@@ -245,18 +316,20 @@ export default function FriendsTest() {
         token,
       );
 
-      setResults(Array.isArray(data) ? data : []);
+      const users = Array.isArray(data) ? data : [];
+      setResults(users);
+      void refreshBlockStatuses(users);
     } catch {
-      // Keep the current results if the request temporarily fails.
+      // Keep current results if the request temporarily fails.
     }
-  }, [token]);
+  }, [token, refreshBlockStatuses]);
 
   useEffect(() => {
     void refreshLists();
     void refreshBlockedUsers();
   }, [refreshLists, refreshBlockedUsers]);
 
-  // Keep the Friends page updated when actions happen in real time.
+  // Keep the page updated when actions happen in real time.
   useEffect(() => {
     if (!token) return;
 
@@ -279,6 +352,8 @@ export default function FriendsTest() {
 
       ws.onopen = () => {
         reconnectDelay = 1000;
+        livePresenceRef.current = {};
+        void refreshLists(false);
       };
 
       ws.onmessage = (message: MessageEvent) => {
@@ -290,14 +365,33 @@ export default function FriendsTest() {
           return;
         }
 
-        // Friendship or block changes.
         const eventName = packet.event ?? packet.type;
+
+        if (eventName === "friend_request") {
+          void refreshLists(false);
+          void refreshSearch();
+          return;
+        }
+
         if (
-          eventName === "friend_request" ||
-          eventName === "friend_accepted" ||
-          eventName === "friend_removed" ||
-          eventName === "block_updated"
+          eventName === "friend_request_cancelled" ||
+          eventName === "friend_request_declined"
         ) {
+          void refreshLists(false);
+          void refreshSearch();
+          return;
+        }
+
+        if (
+          eventName === "friend_accepted" ||
+          eventName === "friend_removed"
+        ) {
+          void refreshLists(false);
+          void refreshSearch();
+          return;
+        }
+
+        if (eventName === "block_updated") {
           void refreshLists(false);
           void refreshBlockedUsers();
           void refreshSearch();
@@ -317,12 +411,14 @@ export default function FriendsTest() {
 
           if (
             typeof presence.user_id !== "number" ||
-            !presence.status
+            (presence.status !== "online" &&
+              presence.status !== "offline")
           ) {
             return;
           }
 
           const online = presence.status === "online";
+          livePresenceRef.current[presence.user_id] = online;
 
           setFriends((current) =>
             current.map((friend) =>
@@ -377,6 +473,7 @@ export default function FriendsTest() {
 
     if (!query.trim()) {
       setResults([]);
+      setBlockStatuses({});
       setError("Enter a username to search.");
       return;
     }
@@ -390,17 +487,17 @@ export default function FriendsTest() {
         token,
       );
 
-      setResults(Array.isArray(data) ? data : []);
+      const users = Array.isArray(data) ? data : [];
+      setResults(users);
+      void refreshBlockStatuses(users);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Search failed",
-      );
+      setError(err instanceof Error ? err.message : "Search failed");
     } finally {
       setSearching(false);
     }
   };
 
-  // Run an API action, then update the lists and search results.
+  // Run an API action, then update lists and search results.
   const runAction = async (
     key: string,
     path: string,
@@ -417,9 +514,7 @@ export default function FriendsTest() {
     try {
       await apiRequest(path, token, {
         method,
-        ...(body === undefined
-          ? {}
-          : { body: JSON.stringify(body) }),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
 
       setNotice(successMessage);
@@ -430,9 +525,21 @@ export default function FriendsTest() {
         refreshSearch(),
       ]);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Action failed",
-      );
+      const message =
+        err instanceof Error ? err.message : "Action failed";
+
+      if (
+        path.startsWith("/friends/requests/") &&
+        /404|not found/i.test(message)
+      ) {
+        await Promise.all([refreshLists(false), refreshSearch()]);
+        setError("");
+        setNotice(
+          "This request is no longer pending. The lists have been refreshed.",
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setBusyKey("");
     }
@@ -454,11 +561,41 @@ export default function FriendsTest() {
         method: shouldBlock ? "POST" : "DELETE",
       });
 
-      setNotice(
-        shouldBlock
-          ? `Blocked ${user.username}.`
-          : `Unblocked ${user.username}.`,
-      );
+      let successMessage = shouldBlock
+        ? `Blocked ${user.username}.`
+        : `Unblocked ${user.username}.`;
+
+      // If we removed our block, check whether the other user still blocks us.
+      if (!shouldBlock) {
+        try {
+          const status = await apiRequest<BlockStatus>(
+            `/blocks/status/${user.id}`,
+            token,
+          );
+
+          setBlockStatuses((current) => ({
+            ...current,
+            [user.id]: status,
+          }));
+
+          if (status.theyBlockedMe) {
+            successMessage =
+              `You unblocked ${user.username}, but they still have you blocked.`;
+          }
+        } catch {
+          // The unblock succeeded; refresh will retry fetching the status.
+        }
+      } else {
+        setBlockStatuses((current) => ({
+          ...current,
+          [user.id]: {
+            iBlockedThem: true,
+            theyBlockedMe: current[user.id]?.theyBlockedMe ?? false,
+          },
+        }));
+      }
+
+      setNotice(successMessage);
 
       await Promise.all([
         refreshLists(false),
@@ -481,6 +618,20 @@ export default function FriendsTest() {
   // Render the appropriate action for a search result.
   const renderSearchAction = (user: PublicUser) => {
     const busy = busyKey === `user-${user.id}`;
+    const blockStatus = blockStatuses[user.id];
+
+    // A block in either direction hides all normal friendship actions.
+    if (
+      blockStatus?.iBlockedThem ||
+      blockStatus?.theyBlockedMe ||
+      user.relation === "blocked"
+    ) {
+      return <span className="text-sm text-gray-500">Blocked</span>;
+    }
+
+    if (user.relation === "self") {
+      return null;
+    }
 
     if (user.relation === "friend") {
       return (
@@ -543,17 +694,13 @@ export default function FriendsTest() {
               `/friends/requests/${request.id}`,
               "DELETE",
               undefined,
-              "Request cancelled.",
+              "Friend invitation cancelled.",
             )
           }
         >
           {busy ? "Working..." : "Cancel"}
         </button>
       );
-    }
-
-    if (user.relation === "blocked") {
-      return <span className="text-sm text-gray-500">Blocked</span>;
     }
 
     return (
@@ -566,7 +713,7 @@ export default function FriendsTest() {
             "/friends/requests",
             "POST",
             { userId: user.id },
-            `Request sent to ${user.username}.`,
+            `Friend invitation sent to ${user.username}.`,
           )
         }
       >
@@ -699,102 +846,100 @@ export default function FriendsTest() {
     <Background>
       <Navbar activeTab="CHAT" onSelectTab={handleSelectTab} />
 
-
       <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-4 py-6 sm:px-6">
         <Card variant="gray" className="flex-1">
           {/* Header */}
           <div className="p-4 sm:p-6">
             <div>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                {/* <span className="text-2xl text-pacova-pink"></span> */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <h1 className="font-pixelify text-2xl text-white">
+                      👤 Friends
+                    </h1>
 
-                <div>
-                  <h1 className="font-pixelify text-2xl text-white">
-                    👤 Friends
-                  </h1>
-
-                  <p className="mt-1 text-xs text-gray-400 sm:text-sm">
-                    Connect, play, and chat together.
-                  </p>
+                    <p className="mt-1 text-xs text-gray-400 sm:text-sm">
+                      Connect, play, and chat together.
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <form
-                onSubmit={searchUsers}
-                className="flex w-full gap-2 sm:w-auto"
-              >
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search friends..."
-                  aria-label="Search friends"
-                  className="min-w-0 flex-1 rounded-lg border
-                    border-white/10 bg-[#171120] px-3 py-2
-                    text-sm text-white outline-none
-                    placeholder:text-gray-500
-                    focus:border-pacova-green/30 sm:w-48"
-                />
-
-                <button
-                  type="submit"
-                  aria-label="Search users"
-                  className="rounded-lg bg-white/[0.06] px-3
-                    text-gray-300 hover:bg-white/10"
-                  disabled={searching}
+                <form
+                  onSubmit={searchUsers}
+                  className="flex w-full gap-2 sm:w-auto"
                 >
-                  {searching ? "..." : "🔍︎"}
-                </button>
-              </form>
+                  <input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search friends..."
+                    aria-label="Search friends"
+                    className="min-w-0 flex-1 rounded-lg border
+                      border-white/10 bg-[#171120] px-3 py-2
+                      text-sm text-white outline-none
+                      placeholder:text-gray-500
+                      focus:border-pacova-green/30 sm:w-48"
+                  />
+
+                  <button
+                    type="submit"
+                    aria-label="Search users"
+                    className="rounded-lg bg-white/[0.06] px-3
+                      text-gray-300 hover:bg-white/10"
+                    disabled={searching}
+                  >
+                    {searching ? "..." : "🔍︎"}
+                  </button>
+                </form>
               </div>
-              
+
               {/* Search results */}
-          
-          {results.length > 0 && (
-            <div className="my-4 rounded-lg border border-pacova-pink/20">
-              <div className="px-3 pt-2 text-xs font-semibold text-pacova-pink">
-                SEARCH RESULTS
-              </div>
+              {results.length > 0 && (
+                <div className="my-4 rounded-lg border border-pacova-pink/20">
+                  <div className="px-3 pt-2 text-xs font-semibold text-pacova-pink">
+                    SEARCH RESULTS
+                  </div>
 
-              {results.map((user) =>
-                renderUserRow(
-                  user,
-                  <div className="flex shrink-0 items-center gap-2">
-                    {renderSearchAction(user)}
+                  {results.map((user) =>
+                    renderUserRow(
+                      user,
+                      <div className="flex shrink-0 items-center gap-2">
+                        {renderSearchAction(user)}
 
-                    {user.relation !== "self" &&
-                      user.relation !== "blocked" && (
-                        <button
-                          className={dangerButton}
-                          disabled={!!busyKey}
-                          onClick={() => void toggleBlock(user, true)}
-                        >
-                          {busyKey === `block-${user.id}`
-                            ? "Blocking..."
-                            : "Block"}
-                        </button>
-                      )}
+                        {/* Show Block only when neither side has blocked. */}
+                        {user.relation !== "self" &&
+                          user.relation !== "blocked" &&
+                          blockStatuses[user.id] !== undefined &&
+                          !blockStatuses[user.id].iBlockedThem &&
+                          !blockStatuses[user.id].theyBlockedMe && (
+                            <button
+                              className={dangerButton}
+                              disabled={!!busyKey}
+                              onClick={() => void toggleBlock(user, true)}
+                            >
+                              {busyKey === `block-${user.id}`
+                                ? "Blocking..."
+                                : "Block"}
+                            </button>
+                          )}
 
-                    {user.relation === "blocked" && (
-                      <button
-                        className={greenButton}
-                        disabled={!!busyKey}
-                        onClick={() => void toggleBlock(user, false)}
-                      >
-                        {busyKey === `block-${user.id}`
-                          ? "Unblocking..."
-                          : "Unblock"}
-                      </button>
-                    )}
-                  </div>,
-                ),
+                        {/* Only the person who initiated the block can unblock. */}
+                        {blockStatuses[user.id]?.iBlockedThem === true && (
+                          <button
+                            className={greenButton}
+                            disabled={!!busyKey}
+                            onClick={() => void toggleBlock(user, false)}
+                          >
+                            {busyKey === `block-${user.id}`
+                              ? "Unblocking..."
+                              : "Unblock"}
+                          </button>
+                        )}
+                      </div>,
+                    ),
+                  )}
+                </div>
               )}
             </div>
-          )}
-            </div>
-
-  
-            
 
             {/* Tabs */}
             <div className="mt-5 flex flex-wrap gap-2">
@@ -812,14 +957,11 @@ export default function FriendsTest() {
                   {item.label}
 
                   {item.count !== undefined && (
-                    <span className="ml-2 opacity-70">
-                      {item.count}
-                    </span>
+                    <span className="ml-2 opacity-70">{item.count}</span>
                   )}
                 </button>
               ))}
             </div>
-                      
           </div>
 
           {/* Error message */}
@@ -843,8 +985,6 @@ export default function FriendsTest() {
               {notice}
             </div>
           )}
-
-
 
           {/* Main list */}
           <div
