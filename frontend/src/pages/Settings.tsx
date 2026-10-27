@@ -14,7 +14,7 @@ import PixelButton from "../components/ui/PixelButton";
 
 import accountIcon_green from "../assets/icons/user.png";
 import securityIcon from "../assets/icons/sc.png";
-import preferencesIcon from "../assets/icons/pref.png";
+// import preferencesIcon from "../assets/icons/pref.png";
 import appearanceIcon from "../assets/icons/app.png";
 import languageIcon from "../assets/icons/lang.png";
 
@@ -30,7 +30,7 @@ const routeMap: Record<string, string> = {
 const settingsSections = [
   { name: "ACCOUNT", image: accountIcon_green, color: "green" },
   { name: "SECURITY", image: securityIcon, color: "yellow" },
-  { name: "PREFERENCES", image: preferencesIcon, color: "blue" },
+  // { name: "PREFERENCES", image: preferencesIcon, color: "blue" },
   { name: "APPEARANCE", image: appearanceIcon, color: "purple" },
   { name: "LANGUAGE", image: languageIcon, color: "blue" },
 ];
@@ -47,8 +47,8 @@ export default function Settings() {
     i18n.resolvedLanguage?.split("-")[0] || "en"
   );
 
-  const [friendRequestsEnabled, setFriendRequestsEnabled] = useState(true);
-  const [gameInvitationsEnabled, setGameInvitationsEnabled] = useState(true);
+  // const [friendRequestsEnabled, setFriendRequestsEnabled] = useState(true);
+  // const [gameInvitationsEnabled, setGameInvitationsEnabled] = useState(true);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
 
   // Read the theme that is already used by Background.tsx.
@@ -141,13 +141,13 @@ export default function Settings() {
   const sectionBorders: Record<string, string> = {
     ACCOUNT: "border-pacova-green/90",
     SECURITY: "border-yellow-400/90",
-    PREFERENCES: "border-[#59B5F7]/90",
+    // PREFERENCES: "border-[#59B5F7]/90",
     APPEARANCE: "border-[#B069DB]/90",
     LANGUAGE: "border-[#59B5F7]/90",
   };
 
-  const toggleClass =
-    "relative h-6 w-11 shrink-0 border-2 transition-colors duration-200 rounded-lg";
+  // const toggleClass =
+  //   "relative h-6 w-11 shrink-0 border-2 transition-colors duration-200 rounded-lg";
 
   return (
     <Background>
@@ -168,7 +168,7 @@ export default function Settings() {
               </p>
 
               <p className="mt-2 font-vt323 text-lg text-gray-500">
-                PACOVA / SYSTEM
+                {t("pacovaSystem")}
               </p>
             </div>
 
@@ -369,7 +369,7 @@ export default function Settings() {
             )}
 
             {/* PREFERENCES */}
-            {activeSection === "PREFERENCES" && (
+            {/* {activeSection === "PREFERENCES" && (
               <section id="preferences" className="min-w-0">
                 <div
                   className={`flex min-w-0 items-center gap-3 border-b pb-6 sm:gap-4 ${
@@ -398,7 +398,7 @@ export default function Settings() {
 
                   <div className="space-y-0">
 
-                    {/* FRIEND REQUESTS */}
+                    {/* FRIEND REQUESTS 
                     <div className="flex min-w-0 items-center gap-3 py-5 sm:gap-4">
                       <div className="min-w-0 flex-1">
                         <h4 className="font-pixelify text-sm text-white sm:text-base">
@@ -434,7 +434,7 @@ export default function Settings() {
                       </button>
                     </div>
 
-                    {/* GAME INVITATIONS */}
+                    {/* GAME INVITATIONS }
                     <div className="flex min-w-0 items-center gap-3 border-t border-[#59B5F7]/20 py-5 sm:gap-4">
                       <div className="min-w-0 flex-1">
                         <h4 className="font-pixelify text-sm text-white sm:text-base">
@@ -471,9 +471,9 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
-              </section>
-            )}
-
+              </section>)} 
+            */}
+   
             {/* APPEARANCE */}
             {activeSection === "APPEARANCE" && (
               <section id="appearance" className="min-w-0">
@@ -504,7 +504,6 @@ export default function Settings() {
 
 
                   {/* DARK / LIGHT MODE */}
-                  {/* <div className="mt-5"> */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -521,12 +520,12 @@ export default function Settings() {
                       >
                         <div className="mb-4 flex items-center justify-between gap-2">
                           <span className="font-pixelify text-sm text-white">
-                            DARK MODE
+                            {t("darkMode")}
                           </span>
 
                           {themeMode === "dark" && (
                             <span className="font-vt323 text-sm text-[#B069DB]">
-                              ACTIVE
+                              {t("active")}
                             </span>
                           )}
                         </div>
@@ -556,12 +555,12 @@ export default function Settings() {
                       >
                         <div className="mb-4 flex items-center justify-between gap-2">
                           <span className="font-pixelify text-sm text-white">
-                            LIGHT MODE
+                            {t("lightMode")}
                           </span>
 
                           {themeMode === "light" && (
                             <span className="font-vt323 text-sm text-[#B069DB]">
-                              ACTIVE
+                              {t("active")}
                             </span>
                           )}
                         </div>
@@ -575,13 +574,8 @@ export default function Settings() {
 
                           <div className="m-2 flex-1 rounded-sm border border-[#B069DB]/40 bg-[#EADCF2]" />
                         </div>
-
-                        {/* <p className="font-vt323 text-base text-gray-400">
-                          Light background with Pacova accents.
-                        </p> */}
                       </button>
                     </div>
-                  {/* </div> */}
                 </div>
               </section>
             )}
