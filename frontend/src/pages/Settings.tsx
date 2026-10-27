@@ -20,6 +20,7 @@ import languageIcon from "../assets/icons/lang.png";
 
 const routeMap: Record<string, string> = {
   HOME: "/home",
+  LEADERBOARD: "/leaderboard",
   PROFILE: "/profile",
   CHAT: "/chat",
   NOTIFICATION: "/notifications",
@@ -49,6 +50,17 @@ export default function Settings() {
   const [friendRequestsEnabled, setFriendRequestsEnabled] = useState(true);
   const [gameInvitationsEnabled, setGameInvitationsEnabled] = useState(true);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
+
+  // Read the theme that is already used by Background.tsx.
+  const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
+    try {
+      return localStorage.getItem("pacova-theme") === "light"
+        ? "light"
+        : "dark";
+    } catch {
+      return "dark";
+    }
+  });
 
   useEffect(() => {
     if (!token) return;
@@ -80,10 +92,51 @@ export default function Settings() {
     void i18n.changeLanguage(selectedLanguage);
   };
 
+  // Change the theme using the toggle that already exists in Background.tsx.
+  const handleThemeChange = (selectedTheme: "dark" | "light") => {
+    if (selectedTheme === themeMode) return;
+
+    const existingThemeToggle =
+      document.querySelector<HTMLButtonElement>(".pacova-theme-toggle");
+
+    if (existingThemeToggle) {
+      existingThemeToggle.click();
+    }
+
+    try {
+      localStorage.setItem("pacova-theme", selectedTheme);
+    } catch {
+      // The theme can still change for the current session.
+    }
+
+    setThemeMode(selectedTheme);
+  };
+
+  // Keep the selected mode synchronized with the existing Background toggle.
+  useEffect(() => {
+    const app = document.querySelector(".pacova-app");
+
+    if (!app) return;
+
+    const observer = new MutationObserver(() => {
+      const currentTheme = app.getAttribute("data-theme");
+
+      if (currentTheme === "dark" || currentTheme === "light") {
+        setThemeMode(currentTheme);
+      }
+    });
+
+    observer.observe(app, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const activeSectionData = settingsSections.find(
     (section) => section.name === activeSection
   );
-
 
   const sectionBorders: Record<string, string> = {
     ACCOUNT: "border-pacova-green/90",
@@ -104,14 +157,12 @@ export default function Settings() {
         <div className="grid min-h-0 flex-1 grid-cols-1 items-start gap-5 md:grid-cols-[230px_minmax(0,1fr)]">
 
           {/* LEFT: SETTINGS SIDEBAR */}
-          <Card
-            variant="gray"
-            className="h-fit p-4 sm:p-5"
-          >
-            
-            <div className= {`mb-5 border-b pb-4 ${
-               sectionBorders[activeSection]
-            }`}>
+          <Card variant="gray" className="h-fit p-4 sm:p-5">
+            <div
+              className={`mb-5 border-b pb-4 ${
+                sectionBorders[activeSection]
+              }`}
+            >
               <p className="font-pixelify text-sm uppercase tracking-wider text-pacova-green">
                 {t("settings")}
               </p>
@@ -171,41 +222,39 @@ export default function Settings() {
           </Card>
 
           {/* RIGHT: ACTIVE SECTION */}
-          <Card
-            variant="gray"
-            className="min-w-0 p-4 sm:p-6"
-          > {/* ACCOUNT */}
-            {/* SECTION HEADER */}
+          <Card variant="gray" className="min-w-0 p-4 sm:p-6">
+
+            {/* ACCOUNT */}
             {activeSection === "ACCOUNT" && (
               <section id="account" className="min-w-0">
-            <div
-              className={`pb-6 flex min-w-0 items-center gap-3 border-b  sm:gap-4 ${
-                sectionBorders[activeSection]
-              }`}
-            >
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12"
-              >
-                <img
-                  src={activeSectionData?.image}
-                  alt=""
-                  className="h-9 w-9 object-contain sm:h-13 sm:w-13"
-                />
-              </div>
-              
-              <div className="min-w-0">
-                <h2 className="font-press-start text-sm text-pacova-green sm:text-base">
-                  {t("account")}
-                </h2>
-              </div>
-            </div>
-            
+                <div
+                  className={`flex min-w-0 items-center gap-3 border-b pb-6 sm:gap-4 ${
+                    sectionBorders[activeSection]
+                  }`}
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12">
+                    <img
+                      src={activeSectionData?.image}
+                      alt=""
+                      className="h-9 w-9 object-contain sm:h-13 sm:w-13"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="font-press-start text-sm text-pacova-green sm:text-base">
+                      {t("account")}
+                    </h2>
+                  </div>
+                </div>
+
                 {/* PROFILE INFORMATION */}
                 <div className="relative min-w-0 p-2 sm:p-4">
-                  <p className="font-vt323 text-xl text-gray-400 pb-6">
-                  {t("accountDescription")}
-                </p>
+                  <p className="pb-6 font-vt323 text-xl text-gray-400">
+                    {t("accountDescription")}
+                  </p>
+
                   <div className="flex min-w-0 flex-col items-center gap-6 sm:flex-row sm:items-start">
+
                     {/* AVATAR FRAME */}
                     <div
                       className="
@@ -237,35 +286,35 @@ export default function Settings() {
                         {t("yourProfile")}
                       </h3>
 
-                        <div>
-                          <p className="font-vt323 text-lg uppercase text-gray-500">
-                            {t("username")}
-                          </p>
+                      <div>
+                        <p className="font-vt323 text-lg uppercase text-gray-500">
+                          {t("username")}
+                        </p>
 
-                          <p className="break-words font-vt323 text-2xl text-white">
-                            {profile?.username ?? user?.username ?? "PLAYER"}
-                          </p>
-                        </div>
+                        <p className="break-words font-vt323 text-2xl text-white">
+                          {profile?.username ?? user?.username ?? "PLAYER"}
+                        </p>
+                      </div>
 
-                        <div>
-                          <p className="font-vt323 text-lg uppercase text-gray-500">
-                            {t("email")}
-                          </p>
+                      <div>
+                        <p className="font-vt323 text-lg uppercase text-gray-500">
+                          {t("email")}
+                        </p>
 
-                          <p className="break-all font-vt323 text-xl text-white">
-                            {user?.email ?? t("noEmail")}
-                          </p>
-                        </div>
+                        <p className="break-all font-vt323 text-xl text-white">
+                          {user?.email ?? t("noEmail")}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
                   {/* EDIT PROFILE */}
                   <div className="mt-6 flex justify-end border-t border-pacova-green/20 pt-5">
                     <PixelButton
-      variant="gray"
-      onClick={() => navigate("/profile")}
-      className="w-full sm:w-64"
-    >
+                      variant="gray"
+                      onClick={() => navigate("/profile")}
+                      className="w-full sm:w-64"
+                    >
                       {t("editProfile")}
                     </PixelButton>
                   </div>
@@ -277,155 +326,150 @@ export default function Settings() {
             {activeSection === "SECURITY" && (
               <section id="security" className="min-w-0">
                 <div
-              className={`pb-6 flex min-w-0 items-center gap-3 border-b  sm:gap-4 ${
-                sectionBorders[activeSection]
-              }`}>
-                 <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12"
-              >
-                {/* "font-press-start text-sm text-pacova-green sm:text-base" */}
-                {/* <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"> */}
+                  className={`flex min-w-0 items-center gap-3 border-b pb-6 sm:gap-4 ${
+                    sectionBorders[activeSection]
+                  }`}
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12">
                     <img
                       src={securityIcon}
                       alt=""
                       className="h-9 w-9 shrink-0 object-contain sm:h-13 sm:w-13"
                     />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="font-press-start text-sm text-yellow-400 sm:text-base">
-                        {t("security")}
-                      </h2>
-                      </div>
-            </div>
-                
-                      {/* </div> */}
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="font-press-start text-sm text-yellow-400 sm:text-base">
+                      {t("security")}
+                    </h2>
+                  </div>
+                </div>
+
                 <div className="relative min-w-0 p-2 sm:p-4">
-                  <p className="font-vt323 text-xl text-gray-400 pb-6">
-                        {t("manageSecurity")}
+                  <p className="pb-6 font-vt323 text-xl text-gray-400">
+                    {t("manageSecurity")}
                   </p>
 
                   <PixelButton
                     variant="warning-yellow"
-                    onClick={() => setShowTwoFactor((current) => !current)}
-                    
+                    onClick={() =>
+                      setShowTwoFactor((current) => !current)
+                    }
                   >
                     {showTwoFactor ? t("close2fa") : t("manage2fa")}
                   </PixelButton>
-                
 
-                {showTwoFactor && (
-                  <div className="mt-5 mb-5 ">
-                    <TwoFactorSetup />
-                  </div>
-                )}
+                  {showTwoFactor && (
+                    <div className="mb-5 mt-5">
+                      <TwoFactorSetup />
+                    </div>
+                  )}
                 </div>
-
               </section>
             )}
 
             {/* PREFERENCES */}
             {activeSection === "PREFERENCES" && (
               <section id="preferences" className="min-w-0">
-                 <div
-              className={`pb-6 flex min-w-0 items-center gap-3 border-b  sm:gap-4 ${
-                sectionBorders[activeSection]
-              }`}
-            >
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12"
-              >
-                  <img
-                    src={preferencesIcon}
-                    alt=""
-                        className="h-9 w-9 shrink-0 object-contain sm:h-13 sm:w-13"
-
-                  /></div>
+                <div
+                  className={`flex min-w-0 items-center gap-3 border-b pb-6 sm:gap-4 ${
+                    sectionBorders[activeSection]
+                  }`}
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12">
+                    <img
+                      src={preferencesIcon}
+                      alt=""
+                      className="h-9 w-9 shrink-0 object-contain sm:h-13 sm:w-13"
+                    />
+                  </div>
 
                   <div className="min-w-0">
                     <h2 className="font-press-start text-sm text-[#59B5F7] sm:text-base">
                       {t("preferences")}
                     </h2>
-</div></div>
-<div className="relative min-w-0 p-2 sm:p-4">
-                    <p className="font-vt323 text-xl text-gray-400">
-                      {t("preferencesDescription")}
-                    </p>
-                  
-                
-
-                <div className="space-y-0">
-                  {/* FRIEND REQUESTS */}
-                  <div className="flex min-w-0 items-center gap-3 py-5 sm:gap-4">
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-pixelify text-sm text-white sm:text-base">
-                        {t("friendRequests")}
-                      </h4>
-
-                      <p className="mt-1 font-vt323 text-lg text-gray-400">
-                        {t("friendRequestsDescription")}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={friendRequestsEnabled}
-                      aria-label={t("friendRequests")}
-                      onClick={() =>
-                        setFriendRequestsEnabled((previous) => !previous)
-                      }
-                      className={`${toggleClass} ${
-                        friendRequestsEnabled
-                          ? "border-pacova-green bg-pacova-green/20"
-                          : "border-gray-600 bg-gray-800"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-4 w-4 transition-all ${
-                          friendRequestsEnabled
-                            ? "left-5 rounded-md bg-pacova-green shadow-[0_0_6px_#8ED603]"
-                            : "left-0.5 rounded-md bg-gray-500"
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {/* GAME INVITATIONS */}
-                  <div className="flex min-w-0 items-center gap-3 border-t border-[#59B5F7]/20 py-5 sm:gap-4">
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-pixelify text-sm text-white sm:text-base">
-                        {t("gameInvitations")}
-                      </h4>
-
-                      <p className="mt-1 font-vt323 text-lg text-gray-400">
-                        {t("gameInvitationsDescription")}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={gameInvitationsEnabled}
-                      aria-label={t("gameInvitations")}
-                      onClick={() =>
-                        setGameInvitationsEnabled((previous) => !previous)
-                      }
-                      className={`${toggleClass} ${
-                        gameInvitationsEnabled
-                          ? "border-pacova-green bg-pacova-green/20"
-                          : "border-gray-600 bg-gray-800"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-4 w-4 transition-all ${
-                          gameInvitationsEnabled
-                            ? "left-5 rounded-md bg-pacova-green shadow-[0_0_6px_#8ED603]"
-                            : "left-0.5 rounded-md bg-gray-500"
-                        }`}
-                      />
-                    </button>
                   </div>
                 </div>
+
+                <div className="relative min-w-0 p-2 sm:p-4">
+                  <p className="font-vt323 text-xl text-gray-400">
+                    {t("preferencesDescription")}
+                  </p>
+
+                  <div className="space-y-0">
+
+                    {/* FRIEND REQUESTS */}
+                    <div className="flex min-w-0 items-center gap-3 py-5 sm:gap-4">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-pixelify text-sm text-white sm:text-base">
+                          {t("friendRequests")}
+                        </h4>
+
+                        <p className="mt-1 font-vt323 text-lg text-gray-400">
+                          {t("friendRequestsDescription")}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={friendRequestsEnabled}
+                        aria-label={t("friendRequests")}
+                        onClick={() =>
+                          setFriendRequestsEnabled((previous) => !previous)
+                        }
+                        className={`${toggleClass} ${
+                          friendRequestsEnabled
+                            ? "border-pacova-green bg-pacova-green/20"
+                            : "border-gray-600 bg-gray-800"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-4 w-4 transition-all ${
+                            friendRequestsEnabled
+                              ? "left-5 rounded-md bg-pacova-green shadow-[0_0_6px_#8ED603]"
+                              : "left-0.5 rounded-md bg-gray-500"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* GAME INVITATIONS */}
+                    <div className="flex min-w-0 items-center gap-3 border-t border-[#59B5F7]/20 py-5 sm:gap-4">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-pixelify text-sm text-white sm:text-base">
+                          {t("gameInvitations")}
+                        </h4>
+
+                        <p className="mt-1 font-vt323 text-lg text-gray-400">
+                          {t("gameInvitationsDescription")}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={gameInvitationsEnabled}
+                        aria-label={t("gameInvitations")}
+                        onClick={() =>
+                          setGameInvitationsEnabled((previous) => !previous)
+                        }
+                        className={`${toggleClass} ${
+                          gameInvitationsEnabled
+                            ? "border-pacova-green bg-pacova-green/20"
+                            : "border-gray-600 bg-gray-800"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-4 w-4 transition-all ${
+                            gameInvitationsEnabled
+                              ? "left-5 rounded-md bg-pacova-green shadow-[0_0_6px_#8ED603]"
+                              : "left-0.5 rounded-md bg-gray-500"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </section>
             )}
@@ -434,88 +478,110 @@ export default function Settings() {
             {activeSection === "APPEARANCE" && (
               <section id="appearance" className="min-w-0">
                 <div
-              className={`pb-6 flex min-w-0 items-center gap-3 border-b  sm:gap-4 ${
-                sectionBorders[activeSection]
-              }`}>
+                  className={`flex min-w-0 items-center gap-3 border-b pb-6 sm:gap-4 ${
+                    sectionBorders[activeSection]
+                  }`}
+                >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12">
-
                     <img
                       src={appearanceIcon}
                       alt=""
-                        className="h-9 w-9 shrink-0 object-contain sm:h-13 sm:w-13"
-
+                      className="h-9 w-9 shrink-0 object-contain sm:h-13 sm:w-13"
                     />
-</div>
-                    <div className="min-w-0">
-                      <h2 className="font-press-start text-sm text-[#B069DB] sm:text-base">
-                        {t("appearance")}
-                      </h2>
-</div> </div>
-<div className="relative min-w-0 p-2 sm:p-4">
-                      <p className="font-vt323 text-xl text-gray-400 pb-6">
-                        {t("customizeInterface")}
-                      </p>
-              
-      
-
-                  {/* THEME AND COLOR PALETTE */}
-                  <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="font-vt323 text-base text-gray-400">
-                        THEME
-                      </p>
-
-                      <h4 className="font-vt323 text-2xl text-white">
-                        {t("themeName")}
-                      </h4>
-
-                      <p className="font-vt323 text-lg text-gray-400">
-                        {t("themeDescription")}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-3 sm:gap-4">
-                      <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="h-8 w-8 rounded-full border border-purple-400 bg-[#0D0914] sm:h-10 sm:w-10"
-                          title="Background"
-                        />
-                        <span className="font-vt323 text-sm text-gray-400">
-                          BG
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="h-8 w-8 rounded-full border border-purple-300 bg-[#510950] sm:h-10 sm:w-10"
-                          title="Purple"
-                        />
-                        <span className="font-vt323 text-sm text-gray-400">
-                          PURPLE
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="h-8 w-8 rounded-full border border-pink-300 bg-[#F32077] sm:h-10 sm:w-10"
-                          title="Pink"
-                        />
-                        <span className="font-vt323 text-sm text-gray-400">
-                          PINK
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="h-8 w-8 rounded-full border border-lime-300 bg-[#8ED603] sm:h-10 sm:w-10"
-                          title="Green"
-                        />
-                        <span className="font-vt323 text-sm text-gray-400">
-                          GREEN
-                        </span>
-                      </div>
-                    </div>
                   </div>
+
+                  <div className="min-w-0">
+                    <h2 className="font-press-start text-sm text-[#B069DB] sm:text-base">
+                      {t("appearance")}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="relative min-w-0 p-2 sm:p-4">
+                  <p className="pb-6 font-vt323 text-xl text-gray-400">
+                    {t("customizeInterface")}
+                  </p>
+
+
+                  {/* DARK / LIGHT MODE */}
+                  {/* <div className="mt-5"> */}
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                      {/* DARK MODE */}
+                      <button
+                        type="button"
+                        aria-pressed={themeMode === "dark"}
+                        onClick={() => handleThemeChange("dark")}
+                        className={`rounded-lg border-2 p-4 text-left transition-all ${
+                          themeMode === "dark"
+                            ? "border-[#B069DB] bg-[#B069DB]/10 shadow-[0_0_12px_rgba(176,105,219,0.15)]"
+                            : "border-white/10 bg-black/20 hover:border-[#B069DB]/60"
+                        }`}
+                      >
+                        <div className="mb-4 flex items-center justify-between gap-2">
+                          <span className="font-pixelify text-sm text-white">
+                            DARK MODE
+                          </span>
+
+                          {themeMode === "dark" && (
+                            <span className="font-vt323 text-sm text-[#B069DB]">
+                              ACTIVE
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mb-3 flex h-20 overflow-hidden rounded-md border border-white/10 bg-[#0D0914]">
+                          <div className="w-2/3 p-3">
+                            <div className="mb-2 h-2 w-1/2 rounded-sm bg-[#B069DB]" />
+                            <div className="mb-2 h-2 w-4/5 rounded-sm bg-white/25" />
+                            <div className="h-2 w-3/5 rounded-sm bg-white/10" />
+                          </div>
+
+                          <div className="m-2 flex-1 rounded-sm border border-[#B069DB]/40 bg-[#510950]" />
+                        </div>
+
+                      </button>
+
+                      {/* LIGHT MODE */}
+                      <button
+                        type="button"
+                        aria-pressed={themeMode === "light"}
+                        onClick={() => handleThemeChange("light")}
+                        className={`rounded-lg border-2 p-4 text-left transition-all ${
+                          themeMode === "light"
+                            ? "border-[#B069DB] bg-[#B069DB]/10 shadow-[0_0_12px_rgba(176,105,219,0.15)]"
+                            : "border-white/10 bg-black/20 hover:border-[#B069DB]/60"
+                        }`}
+                      >
+                        <div className="mb-4 flex items-center justify-between gap-2">
+                          <span className="font-pixelify text-sm text-white">
+                            LIGHT MODE
+                          </span>
+
+                          {themeMode === "light" && (
+                            <span className="font-vt323 text-sm text-[#B069DB]">
+                              ACTIVE
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mb-3 flex h-20 overflow-hidden rounded-md border border-[#D7C7E5] bg-[#F7F3FB]">
+                          <div className="w-2/3 p-3">
+                            <div className="mb-2 h-2 w-1/2 rounded-sm bg-[#B069DB]" />
+                            <div className="mb-2 h-2 w-4/5 rounded-sm bg-[#6B6075]/40" />
+                            <div className="h-2 w-3/5 rounded-sm bg-[#6B6075]/20" />
+                          </div>
+
+                          <div className="m-2 flex-1 rounded-sm border border-[#B069DB]/40 bg-[#EADCF2]" />
+                        </div>
+
+                        {/* <p className="font-vt323 text-base text-gray-400">
+                          Light background with Pacova accents.
+                        </p> */}
+                      </button>
+                    </div>
+                  {/* </div> */}
                 </div>
               </section>
             )}
@@ -524,29 +590,29 @@ export default function Settings() {
             {activeSection === "LANGUAGE" && (
               <section id="language" className="min-w-0">
                 <div
-              className={`pb-6 flex min-w-0 items-center gap-3 border-b  sm:gap-4 ${
-                sectionBorders[activeSection]
-              }`}>
-                <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12"
-              >
+                  className={`flex min-w-0 items-center gap-3 border-b pb-6 sm:gap-4 ${
+                    sectionBorders[activeSection]
+                  }`}
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12">
                     <img
                       src={languageIcon}
                       alt=""
                       className="h-9 w-9 shrink-0 object-contain sm:h-13 sm:w-13"
                     />
-</div>
-                    <div className="min-w-0">
-                      <h2 className="font-press-start text-sm text-[#59B5F7] sm:text-base">
-                        {t("language")}
-                      </h2>
-</div></div>
-<div className="relative min-w-0 p-2 sm:p-4">
-                      <p className="font-vt323 text-xl text-gray-400">
-                        {t("chooseLanguage")}
-                      </p>
-                    
-                  
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="font-press-start text-sm text-[#59B5F7] sm:text-base">
+                      {t("language")}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="relative min-w-0 p-2 sm:p-4">
+                  <p className="font-vt323 text-xl text-gray-400">
+                    {t("chooseLanguage")}
+                  </p>
 
                   <div className="mt-6 w-full min-w-0 sm:w-48 sm:shrink-0">
                     <select
@@ -562,10 +628,10 @@ export default function Settings() {
                       <option value="ar">العربية</option>
                     </select>
                   </div>
-                
                 </div>
               </section>
             )}
+
           </Card>
         </div>
       </main>
