@@ -844,7 +844,7 @@ export default function FriendsTest() {
 
   return (
     <Background>
-      <Navbar activeTab="CHAT" onSelectTab={handleSelectTab} />
+      <Navbar activeTab="PROFILE" onSelectTab={handleSelectTab} />
 
       <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-4 py-6 sm:px-6">
         <Card variant="gray" className="flex-1">
