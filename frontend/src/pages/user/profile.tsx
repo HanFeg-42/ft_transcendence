@@ -1,5 +1,8 @@
+
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
 import ProfileCard from '../../components/profile/ProfileCard';
@@ -16,7 +19,10 @@ import {
   type ProfileData,
 } from '../../services/userService';
 import { getStats, type StatsData } from '../../services/matchService';
-import { getLeaderboardRows, type LeaderboardRow } from '../../services/leaderboardService';
+import {
+  getLeaderboardRows,
+  type LeaderboardRow,
+} from '../../services/leaderboardService';
 import { routeMap } from '../Chat/helpers';
 
 function calculateLevel(wins: number, matchesPlayed: number) {
@@ -24,15 +30,20 @@ function calculateLevel(wins: number, matchesPlayed: number) {
   const level = Math.floor(xp / 500) + 1;
   const currentXp = xp % 500;
   const maxXp = 500;
+
   return { level, currentXp, maxXp };
 }
 
-export function handleSelectTab(tab: string, navigate: (path: string) => void) {
+export function handleSelectTab(
+  tab: string,
+  navigate: (path: string) => void
+) {
   const path = routeMap[tab];
   if (path) navigate(path);
 }
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { userId } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -50,8 +61,9 @@ export default function ProfilePage() {
     if (!token) return;
 
     const profileId = userId ? parseInt(userId, 10) : undefined;
+
     if (userId && isNaN(profileId!)) {
-      setError('Invalid user id');
+      setError(t('userProfile_invalidUserId'));
       setLoading(false);
       return;
     }
@@ -71,59 +83,88 @@ export default function ProfilePage() {
         setLeaderboard(leaderboardData);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error('[PROFILE] Failed to load:', err);
-        setError(err.message);
+        setError(t('userProfile_loadError'));
         setLoading(false);
       });
-  }, [token, userId]);
+  }, [token, userId, t]);
 
-  const handleSave = async (data: { username?: string; bio?: string; avatar?: string }) => {
+  const handleSave = async (
+    data: { username?: string; bio?: string; avatar?: string }
+  ) => {
     if (!token) throw new Error('No token');
+
     const updated = await updateMyProfile(token, data);
     setProfile(updated);
   };
 
-  const myRankRow = leaderboard.find((row) => row.userId === profile?.id);
+  const myRankRow = leaderboard.find(
+    (row) => row.userId === profile?.id
+  );
   const myRank = myRankRow?.rank ?? 0;
   const myWins = myRankRow?.wins ?? 0;
   const totalPlayers = leaderboard.length;
-  const { level, currentXp, maxXp } = calculateLevel(myWins, stats?.matchesPlayed ?? 0);
+
+  const { level, currentXp, maxXp } = calculateLevel(
+    myWins,
+    stats?.matchesPlayed ?? 0
+  );
+
+  const statusText =
+    !profile?.statusText || profile.statusText === 'Ready to play'
+      ? t('userProfile_readyToPlay')
+      : profile.statusText;
 
   return (
     <Background>
-      <Navbar activeTab="PROFILE" onSelectTab={(tab) => handleSelectTab(tab, navigate)} />
+      <Navbar
+        activeTab="PROFILE"
+        onSelectTab={(tab) => handleSelectTab(tab, navigate)}
+      />
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col">
           {loading ? (
-            <Card variant="gray" className="w-full h-full flex items-center justify-center p-8">
+            <Card
+              variant="gray"
+              className="w-full h-full flex items-center justify-center p-8"
+            >
               <span className="font-pixelify text-pacova-green text-lg animate-pulse">
-                LOADING DATA...
+                {t('userProfile_loading')}
               </span>
             </Card>
           ) : error ? (
-            <Card variant="gray" className="w-full h-full flex items-center justify-center p-8 text-center">
+            <Card
+              variant="gray"
+              className="w-full h-full flex items-center justify-center p-8 text-center"
+            >
               <span className="font-pixelify text-red-500 text-sm">
-                FAILED TO LOAD PROFILE
+                {error}
               </span>
             </Card>
           ) : (
             <ProfileCard
               username={profile?.username}
               avatarUrl={profile?.avatarUrl}
-              statusText={profile?.statusText || 'Ready to play'}
+              statusText={statusText}
               bio={profile?.bio}
               level={level}
               currentXp={currentXp}
               maxXp={maxXp}
-              stats={stats ? {
-                matchesPlayed: stats.matchesPlayed,
-                wins: stats.wins,
-                losses: stats.losses,
-                winRate: stats.winRate,
-              } : undefined}
-              onEditClick={isOwnProfile ? () => setIsEditOpen(true) : undefined}
+              stats={
+                stats
+                  ? {
+                      matchesPlayed: stats.matchesPlayed,
+                      wins: stats.wins,
+                      losses: stats.losses,
+                      winRate: stats.winRate,
+                    }
+                  : undefined
+              }
+              onEditClick={
+                isOwnProfile ? () => setIsEditOpen(true) : undefined
+              }
             />
           )}
         </div>
@@ -133,8 +174,13 @@ export default function ProfilePage() {
             <div className="md:col-span-2 flex flex-col h-full">
               <MatchHistory userId={userId} />
             </div>
+
             <div className="md:col-span-1 flex h-full">
-              <CurrentRank rank={myRank} totalPlayers={totalPlayers} wins={myWins} />
+              <CurrentRank
+                rank={myRank}
+                totalPlayers={totalPlayers}
+                wins={myWins}
+              />
             </div>
           </div>
 
