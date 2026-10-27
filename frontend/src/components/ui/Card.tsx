@@ -36,7 +36,8 @@ export const Card: React.FC<CardProps> = ({
       flex
       flex-col
       justify-between
-      bg-pacova-surface
+      bg-pacova-surface pacova-card-surface
+      backdrop-blur-md
       border-1
       ${borderStyle}
       ${glowStyle}

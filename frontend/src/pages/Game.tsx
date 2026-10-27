@@ -6,7 +6,7 @@ import type {
   GameStatus,
 } from "../../../shared/types/game-types";
 // import { ahead, TICKS_PER_TILE } from "../engine/movement";
-import ArenaBackground from "../components/ui/ArenaBackground";
+import Background from "../components/ui/Background";
 import Badge from "../components/ui/Badge";
 import PixelButton from "../components/ui/PixelButton";
 import { draw } from "../utils/render";
@@ -114,7 +114,7 @@ export default function Game() {
 
   if (!started)
     return (
-      <ArenaBackground>
+      <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
           <select
             value={mazeId}
@@ -129,11 +129,11 @@ export default function Game() {
           </select>
           <PixelButton onClick={() => setStarted(true)}>Start</PixelButton>
         </div>
-      </ArenaBackground>
+      </Background>
     );
 
   return (
-    <ArenaBackground>
+    <Background>
       <div className="flex-1 flex-col flex items-center justify-center gap-4">
         <div className="flex gap-4 w-152 justify-between">
           <Badge variant="yellow">timeRemaining: {hud.timeRemaining} </Badge>
@@ -159,6 +159,6 @@ export default function Game() {
           )}
         </div>
       </div>
-    </ArenaBackground>
+    </Background>
   );
 }

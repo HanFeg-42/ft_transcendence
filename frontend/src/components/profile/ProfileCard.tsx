@@ -63,7 +63,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           </p>
         )}
 
-        <div className="border border-pacova-green/40 px-6 py-1 rounded-full bg-pacova-green/10 font-pixelify text-xs text-pacova-green shadow-[0_0_10px_rgba(243,32,119,0.4)] mb-6 inline-block">
+        <div className="border border-pacova-green/40 px-6 py-1 rounded-full bg-pacova-green/10 font-pixelify text-xs text-pacova-green shadow-[0_0_25px_rgba(142,214,3,0.7)] mb-6 inline-block">
           LEVEL {level}
         </div>
       </div>
@@ -87,15 +87,15 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             <span className="text-white font-bold text-2xl">{stats.matchesPlayed}</span>
           </div>
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <span className="text-gray-400 tracking-wider">🏆 WINS</span>
+            <span className="text-gray-400 tracking-wider">🏅 WINS</span>
             <span className="text-white font-bold text-2xl">{stats.wins}</span>
           </div>
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <span className="text-gray-400 tracking-wider">👾 LOSSES</span>
+            <span className="text-gray-400 tracking-wider">☠️ LOSSES</span>
             <span className="text-white font-bold text-2xl">{stats.losses}</span>
           </div>
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <span className="text-gray-400 tracking-wider">📈 WIN RATE</span>
+            <span className="text-gray-400 tracking-wider">🎖 WIN RATE</span>
             <span className="text-pacova-green font-bold text-2xl drop-shadow-[0_0_8px_rgba(142,214,3,0.6)]">
               {stats.winRate}%
             </span>
