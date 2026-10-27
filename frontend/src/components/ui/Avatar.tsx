@@ -37,11 +37,9 @@ export const Avatar: React.FC<AvatarProps> = ({
       {/* Container */}
       <div className={`
         ${sizeClasses[size]} 
-        bg-pacova-surface 
         border-2 
         border-pacova-pink 
         shadow-neon-pink 
-        pixel-corners-3step 
         flex items-center justify-center 
         overflow-hidden
       `}>

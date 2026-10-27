@@ -12,7 +12,7 @@ export interface Friend {
 //   { id: 3, username: 'user3', status: 'online' },
 // ];
 
-export const GAME_ROUTE = '/game-ws'; // tmp
+export const GAME_ROUTE = '/game/online'; 
 
 export const routeMap: Record<string, string> = {
   HOME: '/home',

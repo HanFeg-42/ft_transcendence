@@ -9,12 +9,14 @@ import useChat from './useChat';
 import MessageList from './MessageList';
 import { Sidebar, Header, NewChatModal, GameInviteModal } from './Parts';
 import { type Friend, NO_GLOW, routeMap } from './helpers';
+import { useTranslation } from "react-i18next";
 // import Avatar from '../../components/ui/Avatar';
 // import Avatar from '../../components/ui/Avatar';
 
 export default function Chat() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const myId = user ? Number(user.id) : 0;
 
   const [selectedId, setSelectedId] = useState(0);
@@ -103,7 +105,7 @@ export default function Chat() {
       <Background>
         <Navbar activeTab="CHAT" onSelectTab={goToTab} />
         <main className="flex-1 flex items-center justify-center">
-          <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">Loading...</h1>
+          <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">{t('chat_loading')}</h1>
         </main>
       </Background>
     );
@@ -114,7 +116,7 @@ export default function Chat() {
       <Background>
         <Navbar activeTab="CHAT" onSelectTab={goToTab} />
         <main className="flex-1 flex items-center justify-center">
-          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase animate-pulse">Reconnecting…</h1>
+          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase animate-pulse">{t('chat_reconnecting')}</h1>
         </main>
       </Background>
     );
@@ -126,7 +128,7 @@ export default function Chat() {
         <Navbar activeTab="CHAT" onSelectTab={goToTab} />
         <main className="flex-1 flex items-center justify-center">
           <h1 className="font-pixelify text-pacova-pink text-2xl uppercase text-center px-4">
-            {'No friends yet'}
+            {t('chat_noFriends')}
           </h1>
         </main>
       </Background>
@@ -189,7 +191,7 @@ export default function Chat() {
               maxLength={1000}
               disabled={blocked}
               onChange={(e) => handleDraftChange(e.target.value)}
-              placeholder={blocked ? 'You cannot message this user' : 'Type a message...'}
+              placeholder={blocked ? t('chat_cannotMessage') : t('chat_typePlaceholder')}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSend();
               }}
@@ -199,7 +201,7 @@ export default function Chat() {
                 <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor" aria-hidden="true">
                   <path d="M21.7 3.3a1 1 0 0 0-1.03-.24l-18 6a1 1 0 0 0 .08 1.92l7.26 1.82 1.82 7.26a1 1 0 0 0 .91.76h.06a1 1 0 0 0 .9-.57l6-18a1 1 0 0 0 0-1.95ZM4.6 10.1l12.1-4.03-6.04 6.04L4.6 10.1Zm7.96 7.96-1.04-4.16 6.04-6.04-5 10.2Z" />
                 </svg>
-                <span className="hidden sm:inline">Send</span>
+                <span className="hidden sm:inline">{t('chat_send')}</span>
               </span>
             </PixelButton>
           </div>

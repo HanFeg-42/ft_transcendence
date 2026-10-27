@@ -20,7 +20,7 @@ export default function SelectMode() {
     } else if (selectedMode === 'REMOTE') {
         navigate('/game/online');
     } else if (selectedMode === 'BOT') {
-        alert('Bot mode coming soon!');
+        navigate('/game/bot');
     }
 };
   return (
@@ -30,7 +30,7 @@ export default function SelectMode() {
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
         {/* Titre de sélection */}
         <div className="text-center">
-          <h1 className="font-press-start text-3xl text-pacova-pink drop-shadow-glow-pink mb-2">
+          <h1 className="font-press-start text-3xl text-pacova-pink drop-shadow-glow-pink mb-2 animate-[float_3s_ease-in-out_infinite]">
             SELECT MODE
           </h1>
           <p className="font-vt323 text-xl text-pacova-green">
@@ -43,7 +43,7 @@ export default function SelectMode() {
           <GameModeCard
             title="LOCAL"
             description="Play with friends on the same screen"
-            icon="🟡"
+            icon="👻"
             selected={selectedMode === 'LOCAL'}
             onClick={() => setSelectedMode('LOCAL')}
           />
@@ -57,16 +57,22 @@ export default function SelectMode() {
           <GameModeCard
             title="BOT"
             description="Practice against artificial intelligence"
-            icon="👻"
+            icon="🤖"
             selected={selectedMode === 'BOT'}
             onClick={() => setSelectedMode('BOT')}
           />
         </div>
 
+
         {/* Bouton de confirmation */}
-        <PixelButton variant="outline-green" size="lg" className="mt-4" onClick={handleContinue}>
-          CONTINUE
-        </PixelButton>
+        <div className="flex flex-wrap justify-center gap-4 mt-4">
+          <PixelButton variant="outline-magenta" size="lg" onClick={() => navigate('/how-to-play')}>
+            HOW TO PLAY
+          </PixelButton>
+          <PixelButton variant="outline-green" size="lg" onClick={handleContinue}>
+            CONTINUE
+          </PixelButton>
+        </div>
       </main>
     </Background>
   );
