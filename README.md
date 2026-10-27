@@ -166,7 +166,7 @@ One PostgreSQL server, **one database per service**; services reference users by
 | Gaming | Game customization | Minor | 1 | 3 mazes, difficulty settings, defaults available | `ynadime`, `machaouk` |
 | DevOps | Backend as microservices | Major | 2 | `auth`, `user`, `chat`, `game` + gateway, REST and WebSocket, one DB each | `machaouk` |
 
-<!-- TODO (machaouk): add the "Modules of choice" row with its justification, or remove it. Required: why, challenges, value, why Major/Minor. -->
+
 
 **Total: 25 points** (Web 9 + i18n 1 + User Management 5 + AI 2 + Gaming 6 + DevOps 2), above the required 14 so the project still passes if a module is not validated.
 
