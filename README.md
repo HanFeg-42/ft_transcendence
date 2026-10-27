@@ -2,13 +2,26 @@
 
 <div align="center">
 
-<img src="frontend/src/assets/pacova-map.png" alt="PACOVA maze" width="30%" style="min-width:140px;max-width:260px;height:auto" />
+<img src="frontend/public/pacova-map.png" alt="PACOVA maze" width="20%" style="min-width:110px;max-width:250px;height:auto" />
 
 # PACOVA
 
 **ft_transcendence — a multiplayer Pac-Man web game**
 
 </div>
+
+## Table of Contents
+
+- [Description](#description)
+- [Instructions](#instructions)
+- [Team Information](#team-information)
+- [Project Management](#project-management)
+- [Technical Stack](#technical-stack)
+- [Database Schema](#database-schema)
+- [Features List](#features-list)
+- [Modules](#modules)
+- [Individual Contributions](#individual-contributions)
+- [Resources](#resources)
 
 ## Description
 
@@ -54,32 +67,16 @@ Databases are created by `postgres-db/init.sql` and Prisma migrations run automa
 
 **Make targets:** `make` (build + start), `make down`, `make logs`, `make status`, `make migrate`, `make clean` (also wipes volumes), `make re`.
 
-## Resources
-
-**References**
-
-- Docs: [Prisma](https://www.prisma.io/docs), [Express](https://expressjs.com), [React](https://react.dev), [Vite](https://vite.dev), [Tailwind CSS](https://tailwindcss.com), [i18next](https://www.i18next.com), [ws](https://github.com/websockets/ws), [WebSocket API (MDN)](https://developer.mozilla.org/docs/Web/API/WebSockets_API), [Docker](https://docs.docker.com), [NGINX](https://nginx.org/en/docs/)
-- Standards: OAuth 2.0 (RFC 6749), [42 API](https://api.intra.42.fr/apidoc), TOTP (RFC 6238), OWASP cheat sheets (authentication, password storage, input validation)
-
-**Use of AI** — AI was a helper, never a replacement for understanding; every member can explain what they submitted.
-
-| Task | How AI was used |
-|---|---|
-| Concepts / architecture | Explaining microservices, WebSocket proxying, JWT and 2FA flows, comparing options before the team decided |
-| Debugging | Reading Docker, Prisma and WebSocket error messages |
-| Code review | Second opinion on code, then tested and reviewed by a teammate before merge |
-| Documentation | Structuring and proof-reading this README and `docs/`; help with FR/AR translations |
-| Game and bot | Discussing Pac-Man rules and look-ahead strategies; the bot algorithm and integration were written by the team |
-
 ## Team Information
 
 | Login | Role(s) | Responsibilities |
 |---|---|---|
-| `hfegrach` | Product Owner, Project Manager, Developer |
-| `machaouk` | Project Manager, Tech Lead / Architect, Developer|
-| `nel-khad` | Project Manager, Developer, UI/UX and design system|
-| `ynadime` | Developer, Game backend and remote multiplayer |
-| `oelmanso` | Developer, Settings and friends |
+| `hfegrach` | Product Owner, Project Manager, Developer | Owns the backlog, plans sprints, leads meetings |
+| `machaouk` | Project Manager, Tech Lead / Architect, Developer | Microservices and gateway architecture, task planning |
+| `nel-khad` | Project Manager, Developer | UI/UX and design system, task planning |
+| `ynadime` | Developer | Game backend and remote multiplayer |
+| `oelmanso` | Developer | Settings and friends |
+
 
 Code review of critical changes was done by the whole team through Pull Requests.
 
@@ -143,7 +140,7 @@ One PostgreSQL server, **one database per service**; services reference users by
 | i18n | EN / FR / AR with language switcher | team |
 | Responsive UI | Each member made their own pages responsive | all |
 | Microservices + gateway | Service split, gateway routing, WebSocket proxying | `machaouk` |
-| Legal pages | Privacy Policy `/privacy`, Terms of Service `/terms` (footer links) | team |
+| Legal pages | Privacy Policy `/privacy`, Terms of Service `/terms` (footer links) | `hfegrach` |
 
 ## Modules
 
@@ -152,13 +149,13 @@ One PostgreSQL server, **one database per service**; services reference users by
 | Category | Module | Type | Pts | Why / how | Who |
 |---|---|---|---|---|---|
 | Web | Frontend + backend framework | Major | 2 | React + Express: structured architecture, shared types | all |
-| Web | Real-time (WebSockets) | Major | 2 | `ws` in chat and game services, JWT-checked upgrades through the gateway, rooms, presence, graceful disconnects | `machaouk`, `ynadime` |
+| Web | Real-time (WebSockets) | Major | 2 | `ws` in chat and game services, JWT-checked upgrades through the gateway, rooms, presence, graceful disconnects | `machaouk`, `ynadime`, `hfegrach` |
 | Web | User interaction | Major | 2 | Chat, profiles, friends | `machaouk`, `nel-khad`, `oelmanso` |
 | Web | ORM | Minor | 1 | Prisma models and versioned migrations in every service | all |
 | Web | Notification system | Minor | 1 | Persistent notifications pushed in real time | `hfegrach` |
 | Web | Custom design system | Minor | 1 | Palette, pixel typography, icons, 10+ reusable components | `nel-khad` |
 | Accessibility / i18n | Multiple languages | Minor | 1 | i18next, EN/FR/AR, language switcher | team |
-| User Management | Standard user management | Major | 2 | Profile edit, avatar upload, friends + status, profile page | `nel-khad`, `oelmanso`, `hfegrach` |
+| User Management | Standard user management | Major | 2 | Profile edit, avatar upload, friends + status, profile page | `nel-khad`, `oelmanso` |
 | User Management | Game statistics and match history | Minor | 1 | Stats, history, achievements, leaderboard | `ynadime`, `hfegrach`, `nel-khad` |
 | User Management | OAuth 2.0 | Minor | 1 | 42 intra login | `hfegrach`, `nel-khad` |
 | User Management | 2FA | Minor | 1 | TOTP + recovery codes | `hfegrach` |
@@ -184,3 +181,22 @@ One PostgreSQL server, **one database per service**; services reference users by
 | `oelmanso` | Settings page, friends system (backend + frontend) | Duplicate friendships on simultaneous actions: unique constraints on request/friendship pairs |
 
 Each member also made their own pages responsive.
+
+## Resources
+
+**References**
+
+- [Microservices — GeeksforGeeks](https://www.geeksforgeeks.org/system-design/microservices/): microservices architecture
+- [What is WebSocket? — Ably](https://ably.com/topic/websockets): how WebSockets work
+- [Breadth First Search (BFS) for a Graph — GeeksforGeeks](https://www.geeksforgeeks.org/dsa/breadth-first-search-or-bfs-for-a-graph/): graph search used for the bot pathfinding
+- [Depth Limited Search for AI — GeeksforGeeks](https://www.geeksforgeeks.org/artificial-intelligence/depth-limited-search-for-ai/): look-ahead search used by the bot
+
+**Use of AI** — AI was a helper, never a replacement for understanding; every member can explain what they submitted.
+
+| Task | How AI was used |
+|---|---|
+| Concepts / architecture | Explaining microservices, WebSocket proxying, JWT and 2FA flows, comparing options before the team decided |
+| Debugging | Reading Docker, Prisma and WebSocket error messages |
+| Code review | Second opinion on code, then tested and reviewed by a teammate before merge |
+| Documentation | Structuring and proof-reading this README and `docs/`; help with FR/AR translations |
+| Game and bot | Discussing Pac-Man rules and look-ahead strategies; the bot algorithm and integration were written by the team |

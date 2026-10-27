@@ -4,11 +4,11 @@
 
 | Login | Role(s) | Responsibilities |
 |---|---|---|
-| `hfegrach` | Product Owner, Project Manager, Developer |
-| `machaouk` | Project Manager, Tech Lead / Architect, Developer|
-| `nel-khad` | Project Manager, Developer, UI/UX and design system|
-| `ynadime` | Developer, Game backend and remote multiplayer |
-| `oelmanso` | Developer, Settings and friends |
+| `hfegrach` | Product Owner, Project Manager, Developer | Owns the backlog, plans sprints, leads meetings |
+| `machaouk` | Project Manager, Tech Lead / Architect, Developer | Microservices and gateway architecture, task planning |
+| `nel-khad` | Project Manager, Developer | UI/UX and design system, task planning |
+| `ynadime` | Developer | Game backend and remote multiplayer |
+| `oelmanso` | Developer | Settings and friends |
 
 ## Task planning
 
