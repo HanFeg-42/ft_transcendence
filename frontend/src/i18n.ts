@@ -22,7 +22,7 @@ const resources = {
       topPlayers: "TOP 12% OF PLAYERS",
       achievements: "▼ ACHIEVEMENTS",
 
-      // ===== USER PROFILE PAGE - YOUR CHANGES =====
+      // ===== USER PROFILE PAGE =====
       userProfile_loading: "LOADING DATA...",
       userProfile_loadError: "FAILED TO LOAD PROFILE",
       userProfile_invalidUserId: "Invalid user ID",
@@ -64,6 +64,7 @@ const resources = {
       userProfile_noMatches: "No matches yet",
       userProfile_vs: "VS {{opponent}}",
       userProfile_achievements: "▼ ACHIEVEMENTS",
+      userProfile_matchWin: "Wins",
 //       userProfile_achievement_champion_title: "Champion",
 // userProfile_achievement_champion_description: "Become a champion",
 
@@ -251,7 +252,7 @@ const resources = {
       topPlayers: "TOP 12 % DES JOUEURS",
       achievements: "▼ SUCCÈS",
       
-      // ===== USER PROFILE PAGE - YOUR CHANGES =====
+      // ===== USER PROFILE PAGE =====
       userProfile_loading: "CHARGEMENT DES DONNÉES...",
       userProfile_loadError: "ÉCHEC DU CHARGEMENT DU PROFIL",
       userProfile_invalidUserId: "Identifiant utilisateur invalide",
@@ -293,6 +294,8 @@ const resources = {
       userProfile_noMatches: "Aucun match pour le moment",
       userProfile_vs: "CONTRE {{opponent}}",
       userProfile_achievements: "▼ SUCCÈS",
+      userProfile_matchWin: "Gagnes",
+
       // userProfile_achievement_champion_title: "Champion",
       // userProfile_achievement_champion_description: "Devenez un champion",
 
@@ -542,6 +545,7 @@ const resources = {
       userProfile_noMatches: "لا توجد مباريات حتى الآن",
       userProfile_vs: "ضد {{opponent}}",
       userProfile_achievements: "▼ الإنجازات",
+      userProfile_matchWin: "فاز",
       // userProfile_achievement_champion_title: "البطل",
       // userProfile_achievement_champion_description: "أصبح بطلًا",
             // ===== CHAT (chat_*) =====

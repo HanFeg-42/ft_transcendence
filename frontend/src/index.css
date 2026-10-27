@@ -181,7 +181,9 @@
 /* --- PACOVA theme support: scoped to Background and its descendants --- */
 .pacova-light {
   --color-pacova-bg: #f7f3fb;
-  --color-pacova-surface: rgba(255, 255, 255, 0.68);
+  /* --color-pacova-pink-dark: rgba(255, 255, 255, 0.68); */
+  /* --color-pacova-green-dark: rgba(255, 255, 255, 0.68); */
+  --color-pacova-surface: rgba(124, 15, 75, 0.671);
   --color-pacova-gray: #b9a9c4;
   color: #30213f;
 }
