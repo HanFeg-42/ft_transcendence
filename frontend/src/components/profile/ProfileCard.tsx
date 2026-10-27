@@ -129,7 +129,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
 
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <Link to="/friends-test">
+            <Link to="/friends">
               <span className="text-gray-400 tracking-wider">
                 👤 {t('userProfile_friends')}
               </span>
