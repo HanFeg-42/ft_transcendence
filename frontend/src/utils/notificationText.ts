@@ -10,23 +10,40 @@ export interface NotificationView {
 }
 
 // ---- name resolving (cached, one request per user id) ----
+// ---- user lookup (cached, one request per user id) ----
 
-const nameCache = new Map<number, Promise<string>>();
+export interface UserInfo {
+  name: string;
+  avatarUrl?: string;
+}
 
-export function getUserName(token: string, userId: number): Promise<string> {
-  let cached = nameCache.get(userId);
+const infoCache = new Map<number, Promise<UserInfo>>();
+
+export function getUserInfo(token: string, userId: number): Promise<UserInfo> {
+  let cached = infoCache.get(userId);
 
   if (!cached) {
     cached = getProfileById(token, userId)
-      .then((profile) => profile.username || `#${userId}`)
+      .then((profile) => ({
+        name: profile.username || `#${userId}`,
+        avatarUrl: profile.avatarUrl || undefined,
+      }))
       .catch(() => {
-        nameCache.delete(userId); // allow a retry next time
-        return `#${userId}`;
+        infoCache.delete(userId); // allow a retry next time
+        return { name: `#${userId}` };
       });
-    nameCache.set(userId, cached);
+    infoCache.set(userId, cached);
   }
 
   return cached;
+}
+
+// Used by the toast, which only needs the name.
+export async function getUserName(
+  token: string,
+  userId: number,
+): Promise<string> {
+  return (await getUserInfo(token, userId)).name;
 }
 
 // Which user (if any) a notification is "about".
