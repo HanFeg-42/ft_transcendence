@@ -210,7 +210,7 @@ const resources = {
         "Enter the 6-digit code from your authenticator app.",
       login_errLoginFailed: "Login failed",
       login_errInvalidCode: "Invalid authentication code",
-            // SignUp
+      // SignUp
       signup_title: "CREATE ACCOUNT",
       signup_username: "USERNAME",
       signup_usernamePlaceholder: "Enter your username...",
@@ -235,6 +235,219 @@ const resources = {
       signup_errPasswordLength: "Password must be between 8 and 72 characters",
       signup_errPasswordFormat: "Password must contain at least one letter and one digit",
       signup_errPasswordMatch: "Passwords do not match",
+      legalBack: "← Back",
+      legalLastUpdated: "Last updated: {{date}}",
+
+      // legal pages
+      privacy: {
+        title: "Privacy Policy",
+        intro: "Your privacy matters to us. This page explains in plain language what Pacova does with your personal data.",
+        sections: [
+          {
+            title: "Who we are",
+            paragraphs: [
+              "Pacova is a multiplayer web game built by a team of students at 42 / 1337 School as part of the ft_transcendence project. It is a non-commercial, educational project.",
+              "This policy explains what personal data Pacova collects, why we collect it, and what your rights are. If you have any question, write to us at {{email}}."
+            ]
+          },
+          {
+            title: "The data we collect",
+            items: [
+              "Account data: your username, your email address and a hashed password (we never store your password in plain text). If you sign in with your 42 account, we receive your 42 username, your email address and your 42 profile picture from 42.",
+              "Profile data: your display name, bio, status message and the avatar you upload.",
+              "Game data: the matches you play, their results and scores, your statistics, level, achievements and leaderboard position.",
+              "Social data: your chat messages, friends and friend requests, the users you block, your notifications and your online / offline status.",
+              "Security data: if you enable two-factor authentication, the secret used to generate your codes and hashed recovery codes.",
+              "Technical data: a session cookie (see section 4) and server logs of requests made to the service, used for security and debugging."
+            ]
+          },
+          {
+            title: "Why we use your data",
+            items: [
+              "To create your account and let you sign in securely.",
+              "To run the game, record matches and compute statistics, achievements and the leaderboard.",
+              "To let you chat, add friends and receive notifications.",
+              "To display your profile to other players.",
+              "To keep the service secure, prevent abuse and fix bugs."
+            ],
+            paragraphs: [
+              "We do not sell your data, we do not show advertising and we do not use analytics or tracking tools."
+            ]
+          },
+          {
+            title: "Cookies and local storage",
+            items: [
+              "One essential cookie keeps you signed in for up to 7 days. It is sent only to our authentication service, cannot be read by scripts, is only sent over HTTPS and is not sent from other websites.",
+              "The chat page stores markers on your device (local storage) so it can show which messages you have not read yet."
+            ],
+            paragraphs: [
+              "We do not use advertising or tracking cookies. Because these are strictly necessary to provide the service, there is no cookie banner."
+            ]
+          },
+          {
+            title: "Who can see your data",
+            items: [
+              "Other signed-in players can see your username, avatar, bio, status message, statistics, achievements, match history and online status.",
+              "Your chat messages are visible only to the people in the conversation.",
+              "Your email address and your password are never shown to other players.",
+              "Pacova runs on servers operated by the project team. We do not share your data with third parties. The only exception is 42: if you choose to sign in with 42, their own privacy policy applies to that sign-in."
+            ]
+          },
+          {
+            title: "How long we keep your data",
+            paragraphs: [
+              "We keep your data for as long as your account exists, because chat history, match history and statistics are part of the service.",
+              "Account deletion is not yet available inside the app. You can ask us to delete your account at {{email}}. When we do, we delete your profile, messages and game data."
+            ]
+          },
+          {
+            title: "How we protect your data",
+            paragraphs: [
+              "All connections to Pacova use HTTPS. Passwords are hashed before storage. You can add two-factor authentication to your account in the app. Only members of the project team can access the servers.",
+              "No online service can be perfectly secure. If you find a security problem, please tell us at the address below so we can fix it."
+            ]
+          },
+          {
+            title: "Your rights",
+            items: [
+              "Access: ask for a copy of the personal data we hold about you.",
+              "Correction: update your profile information at any time from your profile page, or ask us to correct anything else.",
+              "Deletion: ask us to delete your account and data.",
+              "Objection and limitation: ask us to stop or limit certain uses of your data."
+            ],
+            paragraphs: [
+              "To use any of these rights, write to {{email}}. We aim to answer within 30 days. You can also contact your local data protection authority (for example the CNDP in Morocco, or your national authority if you live in the European Union)."
+            ]
+          },
+          {
+            title: "Children",
+            paragraphs: [
+              "Pacova is not intended for children under 13. If you believe a child has created an account, contact us and we will delete it."
+            ]
+          },
+          {
+            title: "Changes to this policy",
+            paragraphs: [
+              "We may update this policy as the project evolves. The date at the top of the page shows the latest version. If a change is important, we will tell you in the app."
+            ]
+          },
+          {
+            title: "Contact",
+            paragraphs: ["Questions about your privacy: {{email}}"]
+          }
+        ]
+      },
+      terms: {
+        title: "Terms of Service",
+        intro: "Please read these rules before playing. They keep Pacova fun and safe for everyone.",
+        sections: [
+          {
+            title: "Acceptance of these terms",
+            paragraphs: [
+              "By creating an account or using Pacova, you agree to these Terms of Service and to our Privacy Policy. If you do not agree, please do not use the service.",
+            ],
+          },
+          {
+            title: "What Pacova is",
+            paragraphs: [
+              "Pacova is a multiplayer web game with chat, friends, profiles and leaderboards. It is a non-commercial student project made by a team at 42 / 1337 School for educational purposes.",
+              "The service is provided as is. It may change, be interrupted or be shut down at any time, and data may be lost, for example during development or maintenance.",
+            ],
+          },
+          {
+            title: "Your account",
+            items: [
+              "You must provide accurate information when you sign up.",
+              "You must be at least 13 years old to use Pacova.",
+              "You are responsible for keeping your password safe, and we recommend enabling two-factor authentication.",
+              "You are responsible for what happens under your account. Tell us at once if you think someone else is using it.",
+              "One person, one account: do not share accounts or create several accounts to gain an advantage.",
+            ],
+          },
+          {
+            title: "Fair play and acceptable use",
+            paragraphs: ["When you use Pacova, you agree not to:"],
+            items: [
+              "cheat, exploit bugs or use bots, scripts or other automated tools to gain an unfair advantage in matches (the built-in AI opponent is the only automated player allowed);",
+              "harass, threaten, insult or discriminate against other players, in chat or in your profile;",
+              "post illegal, hateful, sexual or violent content, including in your username, bio or avatar;",
+              "pretend to be another person or a member of the team;",
+              "try to break, overload or gain unauthorised access to the service, its servers or other users' accounts;",
+              "collect other users' data or send them spam.",
+            ],
+          },
+          {
+            title: "Your content",
+            paragraphs: [
+              "You keep the rights to what you create on Pacova, such as your bio, avatar and chat messages. You allow us to store and display that content as needed to run the service, for example to show your profile to other players and to deliver your messages.",
+              "You are responsible for your content. We may remove content that breaks these terms.",
+            ],
+          },
+          {
+            title: "Suspension and ending your account",
+            paragraphs: [
+              "We may warn, suspend or delete accounts that break these terms or put the service or other players at risk.",
+              "You can stop using Pacova at any time. To have your account and data deleted, write to {{email}}.",
+            ],
+          },
+          {
+            title: "Ownership and trademarks",
+            paragraphs: [
+              "The code, design and original content of Pacova belong to the project team.",
+              "Pacova is an independent student project inspired by classic arcade games. It is not affiliated with, sponsored or endorsed by Bandai Namco Entertainment. PAC-MAN is a trademark of its respective owner.",
+            ],
+          },
+          {
+            title: "No warranty and limit of liability",
+            paragraphs: [
+              "Because Pacova is a free student project, we do not promise that it will be available, error-free or secure at all times. To the extent allowed by law, the project team is not liable for any loss or damage resulting from your use of the service, including lost data, lost progress or temporary unavailability.",
+            ],
+          },
+          {
+            title: "Changes to these terms",
+            paragraphs: [
+              "We may update these terms as the project evolves. The date at the top of the page shows the latest version. If you keep using Pacova after a change, you accept the new terms.",
+            ],
+          },
+          {
+            title: "Governing law",
+            paragraphs: [
+              "These terms are governed by the laws of Morocco, without affecting any mandatory rights you have under the law of the country where you live.",
+            ],
+          },
+          {
+            title: "Contact",
+            paragraphs: ["Questions about these terms: {{email}}"],
+          },
+        ],
+      },
+      // not found
+      notFound: {
+        title: "Page not found",
+        description:
+          "Looks like this maze has no exit here. The page you are looking for does not exist or has been moved.",
+        backHome: "Back to home",
+        backStart: "Back to start",
+      },
+      errorBoundary: {
+        title: "Something went wrong",
+        description:
+          "An unexpected error happened. Going back to the start page usually fixes it.",
+        backStart: "Back to the start page",
+      },
+      leaderboardPage: {
+        loading: "Loading leaderboard...",
+        loadError: "Failed to load the leaderboard. Please try again.",
+        retry: "Retry",
+        empty: "No champions yet. Win a match to appear here!",
+        yourRank: "Your rank: #{{rank}} with {{wins}} wins",
+        noWins: "You have no wins yet. Win a match to enter the leaderboard!",
+        caption: "Top players ranked by number of wins",
+        rank: "Rank",
+        player: "Player",
+        wins: "Wins",
+        you: "you",
+      },
       
       //notification
       notif_pageTitle: "Notifications",
@@ -447,7 +660,7 @@ const resources = {
       login: "CONNEXION",
       signup: "S'INSCRIRE",
       welcomeWith: "AVEC",
-            // Login
+      // Login
       login_title: "CONNEXION",
       login_email: "E-MAIL",
       login_emailPlaceholder: "Entrez votre e-mail...",
@@ -472,7 +685,7 @@ const resources = {
       login_errCodeLength: "Entrez le code à 6 chiffres de votre application d'authentification.",
       login_errLoginFailed: "Échec de la connexion",
       login_errInvalidCode: "Code d'authentification invalide",
-            // SignUp
+      // SignUp
       signup_title: "CRÉER UN COMPTE",
       signup_username: "NOM D'UTILISATEUR",
       signup_usernamePlaceholder: "Entrez votre nom d'utilisateur...",
@@ -497,6 +710,219 @@ const resources = {
       signup_errPasswordLength: "Le mot de passe doit contenir entre 8 et 72 caractères",
       signup_errPasswordFormat: "Le mot de passe doit contenir au moins une lettre et un chiffre",
       signup_errPasswordMatch: "Les mots de passe ne correspondent pas",
+      
+      // legal pages
+      legalBack: "← Retour",
+      legalLastUpdated: "Dernière mise à jour : {{date}}",
+      privacy: {
+        title: "Politique de confidentialité",
+        intro: "Votre vie privée compte pour nous. Cette page explique clairement comment Pacova utilise vos données personnelles.",
+        sections: [
+          {
+            title: "Qui sommes-nous ?",
+            paragraphs: [
+              "Pacova est un jeu multijoueur en ligne créé par une équipe d'étudiants de 42 / 1337 School dans le cadre du projet ft_transcendence. Il s'agit d'un projet éducatif à but non commercial.",
+              "Cette politique explique quelles données personnelles Pacova collecte, pourquoi nous les collectons et quels sont vos droits. Pour toute question, contactez-nous à l'adresse {{email}}."
+            ]
+          },
+          {
+            title: "Les données que nous collectons",
+            items: [
+              "Données du compte : votre nom d'utilisateur, votre adresse e-mail et un mot de passe haché (nous ne stockons jamais votre mot de passe en clair). Si vous vous connectez avec votre compte 42, nous recevons de 42 votre nom d'utilisateur, votre adresse e-mail et votre photo de profil 42.",
+              "Données du profil : votre nom affiché, votre biographie, votre message de statut et l'avatar que vous téléversez.",
+              "Données de jeu : vos parties, leurs résultats et scores, vos statistiques, votre niveau, vos succès et votre position au classement.",
+              "Données sociales : vos messages, vos amis et demandes d'amis, les utilisateurs bloqués, vos notifications et votre statut en ligne ou hors ligne.",
+              "Données de sécurité : si vous activez l'authentification à deux facteurs, le secret utilisé pour générer vos codes et les codes de récupération hachés.",
+              "Données techniques : un cookie de session (voir la section 4) et les journaux serveur des requêtes effectuées sur le service, utilisés pour la sécurité et le débogage."
+            ]
+          },
+          {
+            title: "Pourquoi nous utilisons vos données",
+            items: [
+              "Créer votre compte et vous permettre de vous connecter en toute sécurité.",
+              "Faire fonctionner le jeu, enregistrer les parties et calculer les statistiques, les succès et le classement.",
+              "Vous permettre de discuter, d'ajouter des amis et de recevoir des notifications.",
+              "Afficher votre profil aux autres joueurs.",
+              "Sécuriser le service, prévenir les abus et corriger les bugs."
+            ],
+            paragraphs: [
+              "Nous ne vendons pas vos données, n'affichons aucune publicité et n'utilisons aucun outil d'analyse ou de suivi."
+            ]
+          },
+          {
+            title: "Cookies et stockage local",
+            items: [
+              "Un cookie essentiel vous permet de rester connecté pendant une durée maximale de 7 jours. Il est envoyé uniquement à notre service d'authentification, ne peut pas être lu par les scripts, est envoyé uniquement via HTTPS et n'est pas envoyé depuis d'autres sites web.",
+              "La page de discussion stocke des marqueurs sur votre appareil (stockage local) afin d'indiquer les messages que vous n'avez pas encore lus."
+            ],
+            paragraphs: [
+              "Nous n'utilisons aucun cookie publicitaire ou de suivi. Ces éléments étant strictement nécessaires au service, aucune bannière de cookies n'est affichée."
+            ]
+          },
+          {
+            title: "Qui peut voir vos données ?",
+            items: [
+              "Les autres joueurs connectés peuvent voir votre nom d'utilisateur, votre avatar, votre biographie, votre statut, vos statistiques, vos succès, votre historique de parties et votre présence en ligne.",
+              "Vos messages sont visibles uniquement par les personnes participant à la conversation.",
+              "Votre adresse e-mail et votre mot de passe ne sont jamais montrés aux autres joueurs.",
+              "Pacova fonctionne sur des serveurs gérés par l'équipe du projet. Nous ne partageons pas vos données avec des tiers. Seule exception : si vous choisissez de vous connecter avec 42, la politique de confidentialité de 42 s'applique à cette connexion."
+            ]
+          },
+          {
+            title: "Durée de conservation des données",
+            paragraphs: [
+              "Nous conservons vos données tant que votre compte existe, car l'historique des discussions, des parties et les statistiques font partie du service.",
+              "La suppression du compte n'est pas encore disponible dans l'application. Vous pouvez demander la suppression de votre compte à l'adresse {{email}}. Nous supprimerons alors votre profil, vos messages et vos données de jeu."
+            ]
+          },
+          {
+            title: "Comment nous protégeons vos données",
+            paragraphs: [
+              "Toutes les connexions à Pacova utilisent HTTPS. Les mots de passe sont hachés avant leur stockage. Vous pouvez activer l'authentification à deux facteurs dans l'application. Seuls les membres de l'équipe du projet peuvent accéder aux serveurs.",
+              "Aucun service en ligne ne peut garantir une sécurité parfaite. Si vous découvrez un problème de sécurité, signalez-le-nous à l'adresse ci-dessous afin que nous puissions le corriger."
+            ]
+          },
+          {
+            title: "Vos droits",
+            items: [
+              "Accès : demander une copie des données personnelles que nous détenons à votre sujet.",
+              "Rectification : modifier à tout moment les informations de votre profil ou nous demander de corriger d'autres données.",
+              "Suppression : nous demander de supprimer votre compte et vos données.",
+              "Opposition et limitation : nous demander d'arrêter ou de limiter certains usages de vos données."
+            ],
+            paragraphs: [
+              "Pour exercer ces droits, écrivez à {{email}}. Nous nous efforçons de répondre sous 30 jours. Vous pouvez également contacter votre autorité locale de protection des données, par exemple la CNDP au Maroc ou l'autorité nationale compétente dans l'Union européenne."
+            ]
+          },
+          {
+            title: "Enfants",
+            paragraphs: [
+              "Pacova n'est pas destiné aux enfants de moins de 13 ans. Si vous pensez qu'un enfant a créé un compte, contactez-nous et nous le supprimerons."
+            ]
+          },
+          {
+            title: "Modifications de cette politique",
+            paragraphs: [
+              "Nous pouvons mettre à jour cette politique à mesure que le projet évolue. La date en haut de la page indique la dernière version. En cas de changement important, nous vous en informerons dans l'application."
+            ]
+          },
+          {
+            title: "Contact",
+            paragraphs: ["Questions concernant votre vie privée : {{email}}"]
+          }
+        ]
+      },
+      terms: {
+        title: "Conditions d’utilisation",
+        intro: "Veuillez lire ces règles avant de jouer. Elles permettent à Pacova de rester amusant et sûr pour tout le monde.",
+        sections: [
+          {
+            title: "Acceptation des conditions",
+            paragraphs: [
+              "En créant un compte ou en utilisant Pacova, vous acceptez les présentes conditions d’utilisation ainsi que notre politique de confidentialité. Si vous n’êtes pas d’accord, veuillez ne pas utiliser le service.",
+            ],
+          },
+          {
+            title: "Présentation de Pacova",
+            paragraphs: [
+              "Pacova est un jeu web multijoueur proposant un chat, des amis, des profils et un classement. Il s’agit d’un projet étudiant à but non commercial réalisé par une équipe de 42 / 1337 School à des fins pédagogiques.",
+              "Le service est fourni en l’état. Il peut être modifié, interrompu ou arrêté à tout moment, et des données peuvent être perdues, notamment pendant le développement ou la maintenance.",
+            ],
+          },
+          {
+            title: "Votre compte",
+            items: [
+              "Vous devez fournir des informations exactes lors de votre inscription.",
+              "Vous devez avoir au moins 13 ans pour utiliser Pacova.",
+              "Vous êtes responsable de la sécurité de votre mot de passe. Nous vous recommandons d’activer l’authentification à deux facteurs.",
+              "Vous êtes responsable des activités effectuées depuis votre compte. Prévenez-nous immédiatement si vous pensez qu’une autre personne l’utilise.",
+              "Une personne, un compte : ne partagez pas votre compte et n’en créez pas plusieurs pour obtenir un avantage.",
+            ],
+          },
+          {
+            title: "Fair-play et utilisation acceptable",
+            paragraphs: ["Lorsque vous utilisez Pacova, vous vous engagez à ne pas :"],
+            items: [
+              "tricher, exploiter des bugs ou utiliser des bots, des scripts ou d’autres outils automatisés pour obtenir un avantage déloyal pendant les matchs (seul l’adversaire IA intégré est autorisé) ;",
+              "harceler, menacer, insulter ou discriminer d’autres joueurs dans le chat ou sur votre profil ;",
+              "publier du contenu illégal, haineux, sexuel ou violent, notamment dans votre nom d’utilisateur, votre bio ou votre avatar ;",
+              "vous faire passer pour une autre personne ou pour un membre de l’équipe ;",
+              "tenter de perturber le service, de surcharger ses serveurs ou d’accéder sans autorisation au service, à ses serveurs ou aux comptes d’autres utilisateurs ;",
+              "collecter les données d’autres utilisateurs ou leur envoyer du spam.",
+            ],
+          },
+          {
+            title: "Votre contenu",
+            paragraphs: [
+              "Vous conservez les droits sur le contenu que vous créez sur Pacova, comme votre bio, votre avatar et vos messages de chat. Vous nous autorisez à stocker et à afficher ce contenu dans la mesure nécessaire au fonctionnement du service, par exemple pour montrer votre profil aux autres joueurs et transmettre vos messages.",
+              "Vous êtes responsable de votre contenu. Nous pouvons supprimer tout contenu qui enfreint ces conditions.",
+            ],
+          },
+          {
+            title: "Suspension et suppression de votre compte",
+            paragraphs: [
+              "Nous pouvons avertir les utilisateurs, suspendre ou supprimer les comptes qui enfreignent ces conditions ou mettent en danger le service ou les autres joueurs.",
+              "Vous pouvez cesser d’utiliser Pacova à tout moment. Pour demander la suppression de votre compte et de vos données, écrivez à {{email}}.",
+            ],
+          },
+          {
+            title: "Propriété et marques déposées",
+            paragraphs: [
+              "Le code, le design et le contenu original de Pacova appartiennent à l’équipe du projet.",
+              "Pacova est un projet étudiant indépendant inspiré des jeux d’arcade classiques. Il n’est ni affilié à Bandai Namco Entertainment, ni sponsorisé ou approuvé par cette société. PAC-MAN est une marque déposée appartenant à son propriétaire respectif.",
+            ],
+          },
+          {
+            title: "Absence de garantie et limitation de responsabilité",
+            paragraphs: [
+              "Pacova étant un projet étudiant gratuit, nous ne garantissons pas que le service sera toujours disponible, sans erreur ou sécurisé. Dans les limites autorisées par la loi, l’équipe du projet ne peut être tenue responsable des pertes ou dommages résultant de votre utilisation du service, notamment la perte de données, de progression ou une indisponibilité temporaire.",
+            ],
+          },
+          {
+            title: "Modifications des conditions",
+            paragraphs: [
+              "Nous pouvons mettre à jour ces conditions au fil de l’évolution du projet. La date en haut de la page indique la dernière version. Si vous continuez à utiliser Pacova après une modification, vous acceptez les nouvelles conditions.",
+            ],
+          },
+          {
+            title: "Droit applicable",
+            paragraphs: [
+              "Les présentes conditions sont régies par le droit marocain, sans préjudice des droits impératifs dont vous bénéficiez en vertu de la législation du pays dans lequel vous résidez.",
+            ],
+          },
+          {
+            title: "Contact",
+            paragraphs: ["Pour toute question concernant ces conditions : {{email}}"],
+          },
+        ],
+      },
+      // not found
+      notFound: {
+        title: "Page introuvable",
+        description:
+          "On dirait que ce labyrinthe n’a pas de sortie ici. La page que vous recherchez n’existe pas ou a été déplacée.",
+        backHome: "Retour à l’accueil",
+        backStart: "Retour au départ",
+      },
+      errorBoundary: {
+        title: "Une erreur s’est produite",
+        description:
+          "Une erreur inattendue s’est produite. Retourner à la page de départ résout généralement le problème.",
+        backStart: "Retour à la page de départ",
+      },
+      leaderboardPage: {
+        loading: "Chargement du classement...",
+        loadError: "Impossible de charger le classement. Veuillez réessayer.",
+        retry: "Réessayer",
+        empty: "Pas encore de champions. Gagnez un match pour apparaître ici !",
+        yourRank: "Votre classement : n° {{rank}} avec {{wins}} victoires",
+        noWins: "Vous n’avez pas encore gagné. Remportez un match pour entrer dans le classement !",
+        caption: "Meilleurs joueurs classés selon le nombre de victoires",
+        rank: "Rang",
+        player: "Joueur",
+        wins: "Victoires",
+        you: "vous",
+      },
       //notif
       notif_pageTitle: "Notifications",
       notif_pageSubtitle: "Restez informé de votre activité sur Pacova",
@@ -525,6 +951,7 @@ const resources = {
       notif_default: "Nouvelle notification",
     },
   },
+
   ar: {
     translation: {
       settings: "الإعدادات",
@@ -746,6 +1173,219 @@ const resources = {
       signup_errPasswordLength: "يجب أن تتراوح كلمة المرور بين 8 و72 حرفًا",
       signup_errPasswordFormat: "يجب أن تحتوي كلمة المرور على حرف واحد ورقم واحد على الأقل",
       signup_errPasswordMatch: "كلمتا المرور غير متطابقتين",
+      legalBack: "رجوع ←",
+      legalLastUpdated: "آخر تحديث: {{date}}",
+      
+      // legal pages
+      privacy: {
+        title: "سياسة الخصوصية",
+        intro: "خصوصيتك مهمة بالنسبة إلينا. توضح هذه الصفحة بلغة واضحة كيفية تعامل باكوفا مع بياناتك الشخصية.",
+        sections: [
+          {
+            title: "من نحن",
+            paragraphs: [
+              "باكوفا لعبة ويب متعددة اللاعبين طوّرها فريق من طلاب 42 / 1337 School ضمن مشروع ft_transcendence. وهو مشروع تعليمي غير تجاري.",
+              "توضح هذه السياسة البيانات الشخصية التي تجمعها باكوفا، وأسباب جمعها، والحقوق التي تتمتع بها. إذا كانت لديك أي أسئلة، راسلنا على {{email}}."
+            ]
+          },
+          {
+            title: "البيانات التي نجمعها",
+            items: [
+              "بيانات الحساب: اسم المستخدم وعنوان البريد الإلكتروني وكلمة مرور مشفّرة بالتجزئة (لا نخزّن كلمة المرور بنص واضح أبداً). إذا سجلت الدخول باستخدام حساب 42، نتلقى من 42 اسم المستخدم وعنوان البريد الإلكتروني وصورة الملف الشخصي الخاصة بك.",
+              "بيانات الملف الشخصي: الاسم المعروض والنبذة ورسالة الحالة والصورة الرمزية التي ترفعها.",
+              "بيانات اللعبة: المباريات التي تلعبها ونتائجها ونقاطها وإحصاءاتك ومستواك وإنجازاتك ومركزك في لوحة المتصدرين.",
+              "البيانات الاجتماعية: رسائل الدردشة والأصدقاء وطلبات الصداقة والمستخدمون الذين تحظرهم والإشعارات وحالة الاتصال أو عدم الاتصال.",
+              "بيانات الأمان: إذا فعّلت المصادقة الثنائية، فإننا نخزّن السر المستخدم لإنشاء رموز التحقق ورموز الاسترداد المشفّرة بالتجزئة.",
+              "البيانات التقنية: ملف تعريف ارتباط للجلسة (انظر القسم 4) وسجلات الخادم للطلبات المقدمة إلى الخدمة، وتُستخدم لأغراض الأمان وتصحيح الأخطاء."
+            ]
+          },
+          {
+            title: "لماذا نستخدم بياناتك",
+            items: [
+              "إنشاء حسابك وتمكينك من تسجيل الدخول بأمان.",
+              "تشغيل اللعبة وتسجيل المباريات وحساب الإحصاءات والإنجازات وترتيب المتصدرين.",
+              "تمكينك من الدردشة وإضافة الأصدقاء وتلقي الإشعارات.",
+              "عرض ملفك الشخصي للاعبين الآخرين.",
+              "الحفاظ على أمان الخدمة ومنع إساءة الاستخدام وإصلاح الأخطاء."
+            ],
+            paragraphs: [
+              "لا نبيع بياناتك ولا نعرض إعلانات ولا نستخدم أدوات التحليل أو التتبع."
+            ]
+          },
+          {
+            title: "ملفات تعريف الارتباط والتخزين المحلي",
+            items: [
+              "يساعدك ملف تعريف ارتباط أساسي على البقاء مسجّل الدخول لمدة تصل إلى 7 أيام. يُرسل فقط إلى خدمة المصادقة لدينا، ولا يمكن للنصوص البرمجية قراءته، ولا يُرسل إلا عبر HTTPS، ولا يُرسل من مواقع أخرى.",
+              "تخزّن صفحة الدردشة علامات على جهازك (في التخزين المحلي) لتحديد الرسائل التي لم تقرأها بعد."
+            ],
+            paragraphs: [
+              "لا نستخدم ملفات تعريف ارتباط للإعلانات أو التتبع. ولأن هذه العناصر ضرورية تماماً لتقديم الخدمة، لا نعرض إشعاراً بملفات تعريف الارتباط."
+            ]
+          },
+          {
+            title: "من يمكنه الاطلاع على بياناتك",
+            items: [
+              "يمكن للاعبين الآخرين المسجّلين رؤية اسم المستخدم والصورة الرمزية والنبذة ورسالة الحالة والإحصاءات والإنجازات وسجل المباريات وحالة اتصالك.",
+              "لا تظهر رسائل الدردشة إلا للأشخاص المشاركين في المحادثة.",
+              "لا نعرض عنوان بريدك الإلكتروني أو كلمة مرورك للاعبين الآخرين أبداً.",
+              "تعمل باكوفا على خوادم يديرها فريق المشروع. لا نشارك بياناتك مع أطراف ثالثة. والاستثناء الوحيد هو 42: إذا اخترت تسجيل الدخول عبر 42، فتسري سياسة الخصوصية الخاصة بها على عملية تسجيل الدخول هذه."
+            ]
+          },
+          {
+            title: "مدة الاحتفاظ ببياناتك",
+            paragraphs: [
+              "نحتفظ ببياناتك ما دام حسابك موجوداً، لأن سجل الدردشة والمباريات والإحصاءات جزء من الخدمة.",
+              "لا تتوفر إمكانية حذف الحساب من داخل التطبيق حتى الآن. يمكنك طلب حذف حسابك عبر {{email}}. عند تنفيذ الطلب، نحذف ملفك الشخصي ورسائلك وبيانات اللعبة."
+            ]
+          },
+          {
+            title: "كيف نحمي بياناتك",
+            paragraphs: [
+              "تستخدم جميع الاتصالات بباكوفا بروتوكول HTTPS. تُشفّر كلمات المرور بالتجزئة قبل تخزينها. ويمكنك تفعيل المصادقة الثنائية في التطبيق. ولا يمكن الوصول إلى الخوادم إلا لأعضاء فريق المشروع.",
+              "لا توجد خدمة عبر الإنترنت آمنة تماماً. إذا اكتشفت مشكلة أمنية، فأبلغنا عبر العنوان أدناه حتى نتمكن من إصلاحها."
+            ]
+          },
+          {
+            title: "حقوقك",
+            items: [
+              "الوصول: طلب نسخة من البيانات الشخصية التي نحتفظ بها عنك.",
+              "التصحيح: تحديث معلومات ملفك الشخصي في أي وقت أو طلب تصحيح أي بيانات أخرى.",
+              "الحذف: طلب حذف حسابك وبياناتك.",
+              "الاعتراض والتقييد: طلب إيقاف بعض استخدامات بياناتك أو الحد منها."
+            ],
+            paragraphs: [
+              "لممارسة أي من هذه الحقوق، راسلنا على {{email}}. نسعى إلى الرد خلال 30 يوماً. ويمكنك أيضاً التواصل مع هيئة حماية البيانات المحلية، مثل اللجنة الوطنية لمراقبة حماية المعطيات ذات الطابع الشخصي (CNDP) في المغرب أو الهيئة الوطنية المختصة إذا كنت تقيم في الاتحاد الأوروبي."
+            ]
+          },
+          {
+            title: "الأطفال",
+            paragraphs: [
+              "باكوفا غير مخصصة للأطفال دون سن 13 عاماً. إذا كنت تعتقد أن طفلاً أنشأ حساباً، فتواصل معنا وسنحذفه."
+            ]
+          },
+          {
+            title: "التغييرات على هذه السياسة",
+            paragraphs: [
+              "قد نحدّث هذه السياسة مع تطور المشروع. يشير التاريخ أعلى الصفحة إلى أحدث نسخة. وإذا كان التغيير مهماً، فسنبلغك داخل التطبيق."
+            ]
+          },
+          {
+            title: "التواصل",
+            paragraphs: ["للاستفسارات المتعلقة بخصوصيتك: {{email}}"]
+          }
+        ]
+      },
+      terms: {
+        title: "شروط الاستخدام",
+        intro: "يرجى قراءة هذه القواعد قبل اللعب. فهي تساعد على إبقاء Pacova ممتعة وآمنة للجميع.",
+        sections: [
+          {
+            title: "الموافقة على هذه الشروط",
+            paragraphs: [
+              "بإنشاء حساب أو استخدام Pacova، فإنك توافق على شروط الاستخدام هذه وعلى سياسة الخصوصية الخاصة بنا. إذا لم توافق عليها، فيرجى عدم استخدام الخدمة.",
+            ],
+          },
+          {
+            title: "ما هي Pacova؟",
+            paragraphs: [
+              "Pacova هي لعبة ويب متعددة اللاعبين تتضمن الدردشة والأصدقاء والملفات الشخصية ولوحة المتصدرين. وهي مشروع طلابي غير تجاري أنجزه فريق من 42 / 1337 School لأغراض تعليمية.",
+              "تُقدَّم الخدمة كما هي. وقد تتغير أو تتوقف مؤقتًا أو نهائيًا في أي وقت، كما قد تُفقد بعض البيانات، مثلًا أثناء التطوير أو الصيانة.",
+            ],
+          },
+          {
+            title: "حسابك",
+            items: [
+              "يجب تقديم معلومات صحيحة عند إنشاء الحساب.",
+              "يجب ألا يقل عمرك عن 13 عامًا لاستخدام Pacova.",
+              "أنت مسؤول عن الحفاظ على أمان كلمة المرور، ونوصي بتفعيل المصادقة الثنائية.",
+              "أنت مسؤول عن الأنشطة التي تتم عبر حسابك. أخبرنا فورًا إذا اعتقدت أن شخصًا آخر يستخدمه.",
+              "حساب واحد لكل شخص: لا تشارك حسابك ولا تنشئ عدة حسابات للحصول على أفضلية.",
+            ],
+          },
+          {
+            title: "اللعب النزيه والاستخدام المقبول",
+            paragraphs: ["عند استخدام Pacova، توافق على عدم القيام بما يلي:"],
+            items: [
+              "الغش أو استغلال الأخطاء البرمجية أو استخدام الروبوتات أو البرامج النصية أو الأدوات الآلية الأخرى للحصول على أفضلية غير عادلة في المباريات (الخصم المدمج المعتمد على الذكاء الاصطناعي هو اللاعب الآلي الوحيد المسموح به)؛",
+              "مضايقة اللاعبين الآخرين أو تهديدهم أو إهانتهم أو التمييز ضدهم في الدردشة أو في ملفك الشخصي؛",
+              "نشر محتوى غير قانوني أو يحض على الكراهية أو جنسي أو عنيف، بما في ذلك اسم المستخدم أو النبذة أو الصورة الرمزية؛",
+              "انتحال شخصية شخص آخر أو الادعاء بأنك عضو في فريق المشروع؛",
+              "محاولة تعطيل الخدمة أو تحميل خوادمها فوق طاقتها أو الوصول دون تصريح إلى الخدمة أو خوادمها أو حسابات المستخدمين الآخرين؛",
+              "جمع بيانات المستخدمين الآخرين أو إرسال رسائل مزعجة إليهم.",
+            ],
+          },
+          {
+            title: "المحتوى الخاص بك",
+            paragraphs: [
+              "تحتفظ بحقوقك في المحتوى الذي تنشئه على Pacova، مثل النبذة والصورة الرمزية ورسائل الدردشة. وتسمح لنا بتخزين هذا المحتوى وعرضه بالقدر اللازم لتشغيل الخدمة، مثل إظهار ملفك الشخصي للاعبين الآخرين وإيصال رسائلك.",
+              "أنت مسؤول عن المحتوى الذي تنشره. ويجوز لنا إزالة أي محتوى يخالف هذه الشروط.",
+            ],
+          },
+          {
+            title: "تعليق الحساب وإنهاؤه",
+            paragraphs: [
+              "يجوز لنا توجيه تحذير أو تعليق الحسابات أو حذفها إذا خالفت هذه الشروط أو عرّضت الخدمة أو اللاعبين الآخرين للخطر.",
+              "يمكنك التوقف عن استخدام Pacova في أي وقت. ولطلب حذف حسابك وبياناتك، راسلنا على {{email}}.",
+            ],
+          },
+          {
+            title: "الملكية والعلامات التجارية",
+            paragraphs: [
+              "تعود ملكية الشيفرة والتصميم والمحتوى الأصلي لـ Pacova إلى فريق المشروع.",
+              "Pacova مشروع طلابي مستقل مستوحى من ألعاب الأركيد الكلاسيكية. وهو غير تابع لشركة Bandai Namco Entertainment ولا ترعاه الشركة أو تصادق عليه. PAC-MAN علامة تجارية مملوكة لصاحبها المعني.",
+            ],
+          },
+          {
+            title: "إخلاء الضمان وحدود المسؤولية",
+            paragraphs: [
+              "نظرًا إلى أن Pacova مشروع طلابي مجاني، فإننا لا نضمن توفر الخدمة دائمًا أو خلوها من الأخطاء أو أمانها في جميع الأوقات. وإلى الحد الذي يسمح به القانون، لا يتحمل فريق المشروع المسؤولية عن أي خسارة أو ضرر ناتج عن استخدامك للخدمة، بما في ذلك فقدان البيانات أو التقدم في اللعبة أو عدم توفر الخدمة مؤقتًا.",
+            ],
+          },
+          {
+            title: "التغييرات على هذه الشروط",
+            paragraphs: [
+              "قد نحدّث هذه الشروط مع تطور المشروع. ويشير التاريخ أعلى الصفحة إلى أحدث نسخة. إذا واصلت استخدام Pacova بعد إجراء أي تعديل، فهذا يعني موافقتك على الشروط الجديدة.",
+            ],
+          },
+          {
+            title: "القانون المعمول به",
+            paragraphs: [
+              "تخضع هذه الشروط لقوانين المغرب، دون المساس بأي حقوق إلزامية تتمتع بها بموجب قوانين البلد الذي تقيم فيه.",
+            ],
+          },
+          {
+            title: "التواصل",
+            paragraphs: ["للاستفسار عن هذه الشروط: {{email}}"],
+          },
+        ],
+      },
+      // not found 
+      notFound: {
+        title: "الصفحة غير موجودة",
+        description:
+          "يبدو أن هذا المتاهة لا يوجد لها مخرج هنا. الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+        backHome: "العودة إلى الصفحة الرئيسية",
+        backStart: "العودة إلى البداية",
+      },
+      errorBoundary: {
+        title: "حدث خطأ ما",
+        description:
+          "حدث خطأ غير متوقع. عادةً ما تؤدي العودة إلى صفحة البداية إلى حل المشكلة.",
+        backStart: "العودة إلى صفحة البداية",
+      },
+      leaderboardPage: {
+        loading: "جارٍ تحميل لوحة المتصدرين...",
+        loadError: "تعذّر تحميل لوحة المتصدرين. يُرجى المحاولة مرة أخرى.",
+        retry: "إعادة المحاولة",
+        empty: "لا يوجد أبطال بعد. اربح مباراة لتظهر هنا!",
+        yourRank: "ترتيبك: #{{rank}} مع {{wins}} انتصارات",
+        noWins: "لم تحقق أي انتصارات بعد. اربح مباراة للظهور في لوحة المتصدرين!",
+        caption: "أفضل اللاعبين مرتّبون حسب عدد الانتصارات",
+        rank: "الترتيب",
+        player: "اللاعب",
+        wins: "الانتصارات",
+        you: "أنت",
+      },
       //notif      
       notif_pageTitle: "الإشعارات",
       notif_pageSubtitle: "ابقَ على اطلاع بنشاطك في Pacova",
