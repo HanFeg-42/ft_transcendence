@@ -98,6 +98,12 @@ router.get('/me', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
+    const ACTIVE_ACHIEVEMENT_IDS = [
+    'champion',
+    'ghost-hunter',
+    'cherry-collector',
+    'pac-maniac',
+  ];
     const achievements = await prisma.achievement.findMany({
       include: {
         users: {
@@ -107,7 +113,12 @@ router.get('/me', async (req: Request, res: Response) => {
       },
     });
 
-    const formattedAchievements = achievements.map((a) => {
+    /////filtrer les acheiveemnt que j'ai suprime
+    const activeAchievements = achievements.filter((achievement) =>
+      ACTIVE_ACHIEVEMENT_IDS.includes(achievement.id)
+    );
+
+    const formattedAchievements = activeAchievements.map((a) => {
       const userProgress = a.users[0];
       return {
         id: a.id,
@@ -138,7 +149,7 @@ router.get('/me', async (req: Request, res: Response) => {
     return res.status(500).json({ error: err.message });
   }
 });
-///////////////////////
+
 
 
 /** GET /profiles?ids=1,2,3 */

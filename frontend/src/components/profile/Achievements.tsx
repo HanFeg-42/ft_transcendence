@@ -86,7 +86,7 @@ export default function Achievements({
                   {description}
                 </p>
 
-                {Math.max(0, Math.min(1, item.progress)) > 0 &&
+                {Math.max(0, Math.min(100, item.progress)) > 0 &&
                   !item.unlocked && (
                   <div className="w-full bg-black/60 rounded-full h-1.5 mt-2">
                     <div
