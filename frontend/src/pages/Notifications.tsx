@@ -21,6 +21,10 @@ const routeMap: Record<string, string> = {
   NOTIFICATION: "/notifications",
   SETTINGS: "/settings",
 };
+// white in dark mode, deep purple in light mode (same #30213f the theme uses)
+const TEXT = "text-white in-[.pacova-light]:text-[#30213f]";
+// secondary text: timestamps, × button, toolbar actions
+const MUTED = "text-gray-400 in-[.pacova-light]:text-[#6b5a78]";
 
 function formatTime(dateString: string, locale: string): string {
   const date = new Date(dateString);
@@ -63,7 +67,7 @@ function RowAvatar({
   return (
     <span
       aria-hidden="true"
-      className={`${base} bg-pacova-surface border border-pacova-pink font-pixelify`}
+      className={`${base} bg-pacova-surface border border-pacova-pink font-pixelify ${TEXT}`}
     >
       {isActor && info ? info.name.charAt(0).toUpperCase() : icon}
     </span>
@@ -113,11 +117,11 @@ function NotificationRow({ notification, token, onOpen, onDelete }: RowProps) {
       >
         <RowAvatar info={info} icon={view.icon} isActor={actorId !== undefined} />
 
-        <div className={`flex-1 min-w-0 ${isUnread ? "" : "opacity-60"}`}>
+        <div className={`flex-1 min-w-0 ${TEXT} ${isUnread ? "" : "opacity-60"}`}>
           <p className="font-vt323 text-xl sm:text-2xl leading-tight">
             {view.text}
           </p>
-          <p className="font-vt323 text-base text-gray-400">
+          <p className={`font-vt323 text-base ${MUTED}`}>
             {formatTime(notification.createdAt, locale)}
           </p>
         </div>
@@ -135,8 +139,7 @@ function NotificationRow({ notification, token, onOpen, onDelete }: RowProps) {
         aria-label={t("notif_delete")}
         title={t("notif_delete")}
         onClick={() => onDelete(notification.id)}
-        className="shrink-0 px-4 py-3 font-vt323 text-2xl text-gray-400 hover:text-pacova-pink transition-colors cursor-pointer"
-      >
+        className={`shrink-0 px-4 py-3 font-vt323 text-2xl ${MUTED} hover:text-pacova-pink transition-colors cursor-pointer`}      >
         ×
       </button>
     </li>
@@ -185,16 +188,15 @@ export default function Notifications() {
     );
   };
 
-  const actionClass =
-    "font-vt323 text-lg text-gray-400 hover:text-pacova-pink transition-colors cursor-pointer";
-
-  return (
+  const actionClass = `font-vt323 text-lg ${MUTED} hover:text-pacova-pink transition-colors cursor-pointer`;
+  
+    return (
     <Background>
       <Navbar activeTab="NOTIFICATION" onSelectTab={handleSelectTab} />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
         {loading && notifications.length === 0 ? (
-          <p role="status" className="font-vt323 text-xl">
+          <p role="status" className={`font-vt323 text-xl ${TEXT}`}>
             {t("notif_loading")}
           </p>
         ) : error ? (
@@ -202,7 +204,7 @@ export default function Notifications() {
             {t(error)}
           </p>
         ) : notifications.length === 0 ? (
-          <p className="font-vt323 text-xl">{t("notif_emptyText")}</p>
+          <p className={`font-vt323 text-xl ${TEXT}`}>{t("notif_emptyText")}</p>
         ) : (
           <>
             <div className="flex justify-end gap-6 mb-2">
