@@ -3,6 +3,7 @@ import PixelButton from "./ui/PixelButton";
 import Input from "./ui/Input";
 import Card from "./ui/Card";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function TwoFactorSetup() {
   const { token, user, verifyUser } = useAuth();
@@ -11,6 +12,7 @@ export default function TwoFactorSetup() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handleSetup = async () => {
     setError("");
@@ -27,14 +29,14 @@ export default function TwoFactorSetup() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to start 2FA setup");
+        setError(data.error || t("setupFailed"));
         return;
       }
 
       setQrCode(data.qrCode);
     } catch (error) {
       console.error("2FA setup failed:", error);
-      setError("Unable to connect to the server");
+      setError(t("connectionError"));
     } finally {
       setLoading(false);
     }
@@ -46,7 +48,7 @@ export default function TwoFactorSetup() {
     setError("");
 
     if (!/^\d{6}$/.test(code)) {
-      setError("Enter a valid 6-digit code");
+      setError(t("invalidCode"));
       return;
     }
 
@@ -65,17 +67,20 @@ export default function TwoFactorSetup() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Invalid authentication code");
+        setError(
+          data.error === "Invalid 2FA code"
+            ? t("invalidAuthentication")
+            : data.error || t("invalidAuthenticationCode")
+        );
         return;
       }
-
       await verifyUser();
 
       setQrCode("");
       setCode("");
     } catch (error) {
       console.error("2FA confirmation failed:", error);
-      setError("Unable to connect to the server");
+      setError(t("connectionError"));
     } finally {
       setLoading(false);
     }
@@ -96,19 +101,19 @@ export default function TwoFactorSetup() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to disable 2FA");
+        setError(data.error || t("disableFailed"));
         return;
       }
 
       const verified = await verifyUser();
 
       if (!verified) {
-        setError("2FA was disabled, but we couldn't refresh your session.");
+        setError(t("disableRefreshError"));
         return;
       }
     } catch (error) {
-      console.error("Failed to disable 2FA:", error);
-      setError("Unable to connect to the server");
+      console.error(t("disableFailed"), error);
+      setError(t("connectionError"));
     } finally {
       setLoading(false);
     }
@@ -119,11 +124,11 @@ export default function TwoFactorSetup() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="font-pixelify text-pacova-green text-lg uppercase tracking-widest">
-            Account Security
+            {t("accountSecurity")}
           </h2>
 
           <p className="font-vt323 text-gray-400 text-lg mt-1">
-            Protect your Pacova account with an authenticator app.
+            {t("description")}
           </p>
         </div>
 
@@ -132,18 +137,18 @@ export default function TwoFactorSetup() {
             user?.twoFactorEnabled ? "text-pacova-green" : "text-yellow-400"
           }`}
         >
-          {user?.twoFactorEnabled ? "● PROTECTED" : "● NOT PROTECTED"}
+          {user?.twoFactorEnabled ? t("protected") : t("notProtected")}
         </span>
       </div>
 
       {user?.twoFactorEnabled ? (
         <div className="border border-pacova-green/30 p-4 rounded">
           <p className="text-pacova-green text-center font-pixelify text-sm uppercase">
-            ✓ Two-Factor Authentication Enabled
+            {t("enabled")}
           </p>
 
           <p className="font-vt323 text-gray-400 text-center text-lg mt-2">
-            Your account requires an authenticator code when you sign in.
+            {t("enabledDescription")}
           </p>
 
           <PixelButton
@@ -154,15 +159,15 @@ export default function TwoFactorSetup() {
             onClick={handleDisable}
             className="w-full mt-4"
           >
-            {loading ? "DISABLING..." : "DISABLE 2FA"}
+            {loading ? t("disabling") : t("disable")}
           </PixelButton>
         </div>
       ) : !qrCode ? (
         <>
           <div className="font-vt323 text-gray-300 text-lg leading-6 mb-4">
-            <p>1. Click Enable 2FA.</p>
-            <p>2. Scan the QR code with your authenticator app.</p>
-            <p>3. Enter the generated 6-digit code.</p>
+            <p>{t("step1")}</p>
+            <p>{t("step2")}</p>
+            <p>{t("step3")}</p>
           </div>
 
           <PixelButton
@@ -173,19 +178,18 @@ export default function TwoFactorSetup() {
             onClick={handleSetup}
             className="w-full"
           >
-            {loading ? "GENERATING..." : "ENABLE 2FA"}
+            {loading ? t("generating") : t("enable")}
           </PixelButton>
         </>
       ) : (
         <form onSubmit={handleConfirm} className="flex flex-col gap-5">
           <div className="text-center font-vt323">
             <p className="text-pacova-pink text-lg uppercase">
-              Step 1 — Scan QR Code
+              {t("scanQrCode")}
             </p>
 
             <p className="text-gray-400 text-lg mt-2">
-              Open Google Authenticator, Microsoft Authenticator, or another
-              TOTP application.
+              {t("authenticatorApps")}
             </p>
           </div>
 
@@ -201,16 +205,16 @@ export default function TwoFactorSetup() {
 
           <div className="text-center font-vt323">
             <p className="text-pacova-pink text-lg uppercase">
-              Step 2 — Verify
+              {t("verify")}
             </p>
 
             <p className="text-gray-400 text-lg mt-2">
-              Enter the 6-digit code generated by your authenticator.
+              {t("enterCode")}
             </p>
           </div>
 
           <Input
-            label="AUTHENTICATION CODE"
+            label={t("authenticationCode")}
             type="text"
             name="twoFactorCode"
             placeholder="000000"
@@ -234,7 +238,7 @@ export default function TwoFactorSetup() {
             disabled={loading || code.length !== 6}
             className="w-full"
           >
-            {loading ? "VERIFYING..." : "CONFIRM & ENABLE"}
+            {loading ? t("verifying") : t("confirmEnable")}
           </PixelButton>
 
           <button
@@ -246,7 +250,7 @@ export default function TwoFactorSetup() {
             }}
             className="font-vt323 text-gray-400 text-lg underline text-center"
           >
-            Cancel setup
+            {t("cancelSetup")}
           </button>
         </form>
       )}
