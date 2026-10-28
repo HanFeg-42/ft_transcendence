@@ -19,6 +19,7 @@ import FriendsTest from "./pages/FriendsTest";
 import NotFound from "./pages/NotFound";
 import BotPage from "./pages/Game/GameBot";
 import OnlineGame from "./pages/OnlineGame";
+ import HowToPlay from "./pages/Game/HowToPlay";
 
 /** Renders the application's route configuration. */
 function App() {
@@ -32,16 +33,16 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/friends-test" element={<FriendsTest />} />
+        <Route path="/friends" element={<FriendsTest />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
         <Route path="/game/online" element={<OnlineGame />} /> {/* TEMP */}
         <Route path="/game/bot" element={<BotPage />} />
-        {/* <Route path="/game-ws" element={<GameWs />} />  */}
+        <Route path="/how-to-play" element={<HowToPlay />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/choose" element={<Choose/>} />
       </Route>
-      <Route path="/choose" element={<Choose/>} />
       {/* <Route path="/NavbarTest" element={<Nav />} /> */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />

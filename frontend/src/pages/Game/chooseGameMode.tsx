@@ -63,10 +63,16 @@ export default function SelectMode() {
           />
         </div>
 
+
         {/* Bouton de confirmation */}
-        <PixelButton variant="outline-green" size="lg" className="mt-4" onClick={handleContinue}>
-          CONTINUE
-        </PixelButton>
+        <div className="flex flex-wrap justify-center gap-4 mt-4">
+          <PixelButton variant="outline-magenta" size="lg" onClick={() => navigate('/how-to-play')}>
+            HOW TO PLAY
+          </PixelButton>
+          <PixelButton variant="outline-green" size="lg" onClick={handleContinue}>
+            CONTINUE
+          </PixelButton>
+        </div>
       </main>
     </Background>
   );
