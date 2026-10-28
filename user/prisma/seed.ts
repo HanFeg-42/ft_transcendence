@@ -15,9 +15,7 @@ const ACHIEVEMENTS = [
   { id: 'champion',          title: 'CHAMPION',          description: '--',     image: 'champion.png',      borderColor: 'border-yellow-400', textColor: 'text-amber-400' },
   { id: 'ghost-hunter',      title: 'GHOST HUNTER',      description: '--',     image: 'ghost-hanter.png',  borderColor: 'border-pink-500',   textColor: 'text-pink-500' },
   { id: 'cherry-collector',  title: 'CHERRY COLLECTOR',  description: '--',     image: 'cherrys.png',       borderColor: 'border-red-500',    textColor: 'text-red-500' },
-  { id: 'speedster',         title: 'SPEEDSTER',         description: '--',     image: 'speeder.png',       borderColor: 'border-yellow-400', textColor: 'text-yellow-400' },
   { id: 'pac-maniac',        title: 'PAC-MANIAC',        description: '--',     image: 'pac-maniac.png',    borderColor: 'border-blue-400',   textColor: 'text-cyan-400' },
-  { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: '--',     image: 'tournament.png',    borderColor: 'border-purple-500', textColor: 'text-purple-500' },
 ];
 
 
@@ -29,9 +27,8 @@ async function main() {
       create: a,
     });
   }
-  console.log('✅ Achievements seeded');
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+// main()
+//   .catch(console.error)
+//   .finally(() => prisma.$disconnect());

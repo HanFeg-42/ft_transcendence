@@ -1,30 +1,44 @@
-import type {
-  GameState,
-  Player,
-  Chaser,
-  Tile,
-  Direction,
-} from "../../../shared/types/game-types";
 import {
-  findChaserSpawns,
-  findSpawn,
-  parsePellets,
-  isWall,
   DEFAULT_MAZE_ID,
+  DEFAULT_TIME_LIMIT,
+  DIFFICULTIES,
+  TICKS_PER_SECOND,
+  TIME_LIMITS,
   MAZES,
-} from "./maze";
-import { stepPlayer, stepChaser, ahead } from "./movement";
+  DEFAULT_DIFFICULTY,
+} from "../../../shared/data/game-data";
+import {
+  type GameState,
+  type Player,
+  type Chaser,
+  type Tile,
+  type Direction,
+} from "../../../shared/types/game-types";
+import { findChaserSpawns, findSpawn, parseCollectibles, isWall } from "./maze";
 
-const TICKS_PER_SECOND = 30;
+import { stepPlayer, stepChaser, ahead } from "./movement";
 
 export const createGame = (
   playerId: string,
-  timeLimit: number = 360,
+  timeLimit: number = DEFAULT_TIME_LIMIT,
   mazeId: string = DEFAULT_MAZE_ID,
+  difficulty: string = DEFAULT_DIFFICULTY,
 ): GameState => {
   if (!Object.keys(MAZES).includes(mazeId)) {
     console.warn(`[GAME] Unknown map "${mazeId}", using "${DEFAULT_MAZE_ID}"`);
     mazeId = DEFAULT_MAZE_ID;
+  }
+  if (!TIME_LIMITS.includes(timeLimit)) {
+    console.warn(
+      `[GAME] Invalid time limit "${timeLimit}", using ${DEFAULT_TIME_LIMIT}`,
+    );
+    timeLimit = DEFAULT_TIME_LIMIT;
+  }
+  if (!Object.keys(DIFFICULTIES).includes(difficulty)) {
+    console.warn(
+      `[GAME] Invalid difficulty "${difficulty}", using ${DEFAULT_DIFFICULTY}`,
+    );
+    difficulty = DEFAULT_DIFFICULTY;
   }
 
   const maze = MAZES[mazeId];
@@ -40,6 +54,7 @@ export const createGame = (
       lives: 3,
       score: 0,
       pelletsEaten: 0,
+      fruitsEaten: 0,
       ghostsEaten: 0,
       connected: true,
     },
@@ -60,10 +75,12 @@ export const createGame = (
     status: "playing",
     players,
     chasers,
-    pellets: parsePellets(maze),
+    pellets: parseCollectibles(maze, [".", "o"]),
+    fruits: parseCollectibles(maze, ["F"]),
     timeRemaining: timeLimit,
     vulnerableTimer: 0,
     mazeId,
+    difficulty,
   };
 };
 
@@ -155,6 +172,10 @@ export const tick = (state: GameState) => {
         state.vulnerableTimer = 300;
         state.chasers.forEach((c) => (c.isEaten = false));
       }
+    } else if (state.fruits[player.tile.y][player.tile.x]) {
+      player.score += 100;
+      player.fruitsEaten++;
+      state.fruits[player.tile.y][player.tile.x] = false;
     }
     const touchedChaser = state.chasers.find(
       (chaser) =>
@@ -176,7 +197,7 @@ export const tick = (state: GameState) => {
   });
   state.chasers.forEach((chaser) => {
     if (chaser.step == 0) pickChaserDirection(chaser, state);
-    stepChaser(chaser);
+    stepChaser(chaser, DIFFICULTIES[state.difficulty]);
   });
   if (!state.pellets.flat().some((hasPellet) => hasPellet))
     state.status = "won";

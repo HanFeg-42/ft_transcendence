@@ -3,7 +3,12 @@ import PixelButton from "../components/ui/PixelButton";
 import { useState } from "react";
 import Background from "../components/ui/Background";
 import Badge from "../components/ui/Badge";
-import { DEFAULT_MAZE_ID, MAZES } from "../engine/maze";
+import GameSettings from "../components/game/GameSettings";
+import {
+  DEFAULT_DIFFICULTY,
+  DEFAULT_MAZE_ID,
+  DEFAULT_TIME_LIMIT,
+} from "../../../shared/data/game-data";
 import GameRoom from "../components/game/GameRoom";
 import Matchmaking from "../components/game/Matchmaking";
 import { useSearchParams } from "react-router-dom";
@@ -15,8 +20,11 @@ const OnlineGame = () => {
   );
   const [roomInput, setRoomInput] = useState<string>("");
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
+  const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
+  const [difficulty, setDifficulty] = useState<string>(DEFAULT_DIFFICULTY);
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState<boolean>(false);
+  const [screen, setScreen] = useState<"menu" | "create" | "join">("menu");
 
   const handleError = (message: string) => {
     setGameRoom(null);
@@ -41,7 +49,8 @@ const OnlineGame = () => {
       </Background>
     );
   }
-  if (!gameRoom)
+
+  if (!gameRoom && screen === "create") {
     return (
       <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
@@ -52,47 +61,94 @@ const OnlineGame = () => {
             onChange={(e) => setRoomInput(e.target.value)}
             className="text-center"
           />
+          <GameSettings
+            difficulty={difficulty}
+            timeLimit={timeLimit}
+            mazeId={mazeId}
+            onDifficultyChange={setDifficulty}
+            onTimeLimitChange={setTimeLimit}
+            onMazeIdChange={setMazeId}
+          />
           <PixelButton
             onClick={() => {
               setError(null);
               setGameRoom(roomInput);
             }}
           >
-            Join gameroom
+            Create
           </PixelButton>
+          <PixelButton onClick={() => setScreen("menu")}>
+            Back to menu
+          </PixelButton>
+        </div>
+      </Background>
+    );
+  }
+  if (!gameRoom && screen === "join") {
+    return (
+      <Background>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <Input
+            label="Room name"
+            error={error ?? undefined}
+            value={roomInput}
+            onChange={(e) => setRoomInput(e.target.value)}
+          />
+          <PixelButton
+            onClick={() => {
+              setError(null);
+              setGameRoom(roomInput);
+            }}
+          >
+            Join
+          </PixelButton>
+          <PixelButton onClick={() => setScreen("menu")}>
+            Back to menu
+          </PixelButton>
+        </div>
+      </Background>
+    );
+  }
+  if (!gameRoom) {
+    return (
+      <Background>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          {error && <Badge variant="red">{error}</Badge>}
           <PixelButton
             onClick={() => {
               setError(null);
               setSearching(true);
             }}
           >
-            Find a match
+            Find an opponent
           </PixelButton>
-          <select
-            value={mazeId}
-            onChange={(e) => setMazeId(e.target.value)}
-            className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
-          >
-            {Object.keys(MAZES).map((id) => (
-              <option key={id} value={id}>
-                {id}
-              </option>
-            ))}
-          </select>
+          <PixelButton onClick={() => setScreen("create")}>
+            Create a room
+          </PixelButton>
+          <PixelButton onClick={() => setScreen("join")}>
+            Join a room
+          </PixelButton>
         </div>
       </Background>
     );
+  }
   return (
     <Background>
       <GameRoom
         gameId={gameRoom}
         onError={handleError}
-        onBackToMenu={() => setGameRoom(null)}
+        onBackToMenu={() => {
+          setGameRoom(null);
+          setScreen("menu");
+        }}
         onPlayAgain={() => {
           setGameRoom(null);
           setSearching(true);
+          setScreen("menu");
         }}
-        mazeId={mazeId}
+        mazeId={screen === "create" ? mazeId : DEFAULT_MAZE_ID}
+        timeLimit={screen === "create" ? timeLimit : DEFAULT_TIME_LIMIT}
+        difficulty={screen === "create" ? difficulty : DEFAULT_DIFFICULTY}
       />
     </Background>
   );

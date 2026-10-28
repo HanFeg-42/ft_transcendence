@@ -6,16 +6,14 @@ import championImg from '../../assets/achievement/champion.png';
 import cherrysImg from '../../assets/achievement/cherrys.png';
 import ghostHanterImg from '../../assets/achievement/ghost-hanter.png';
 import pacManiacImg from '../../assets/achievement/pac-maniac.png';
-import speederImg from '../../assets/achievement/speeder.png';
-import tournamentImg from '../../assets/achievement/tournament.png';
+// import speederImg from '../../assets/achievement/speeder.png';
+// import tournamentImg from '../../assets/achievement/tournament.png';
 
 const ACHIEVEMENT_IMAGES: Record<string, string> = {
   champion: championImg,
   'ghost-hunter': ghostHanterImg,
   'cherry-collector': cherrysImg,
-  speedster: speederImg,
   'pac-maniac': pacManiacImg,
-  'tournament-player': tournamentImg,
 };
 
 export interface Achievement {
@@ -88,11 +86,14 @@ export default function Achievements({
                   {description}
                 </p>
 
-                {item.progress > 0 && !item.unlocked && (
+                {Math.max(0, Math.min(1, item.progress)) > 0 &&
+                  !item.unlocked && (
                   <div className="w-full bg-black/60 rounded-full h-1.5 mt-2">
                     <div
                       className="h-full bg-pacova-green rounded-full transition-all duration-500"
-                      style={{ width: `${item.progress}%` }}
+                      style={{
+                      width: `${Math.max(0, Math.min(100, item.progress))}%`,
+                    }}
                     />
                   </div>
                 )}

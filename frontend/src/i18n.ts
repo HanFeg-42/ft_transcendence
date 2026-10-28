@@ -14,6 +14,7 @@ const resources = {
       logoutError: "Could not log out. Please try again.",
 
 
+      // ===== USER PROFILE PAGE =====
       profile: "PROFILE",
       loadingData: "LOADING DATA...",
       profileLoadError: "FAILED TO LOAD PROFILE",
@@ -22,7 +23,6 @@ const resources = {
       topPlayers: "TOP 12% OF PLAYERS",
       achievements: "▼ ACHIEVEMENTS",
 
-      // ===== USER PROFILE PAGE =====
       userProfile_loading: "LOADING DATA...",
       userProfile_loadError: "FAILED TO LOAD PROFILE",
       userProfile_invalidUserId: "Invalid user ID",
@@ -65,9 +65,14 @@ const resources = {
       userProfile_vs: "VS {{opponent}}",
       userProfile_achievements: "▼ ACHIEVEMENTS",
       userProfile_matchWin: "Wins",
-//       userProfile_achievement_champion_title: "Champion",
-// userProfile_achievement_champion_description: "Become a champion",
-
+      "userProfile_achievement_champion_title": 'Champion',
+      "userProfile_achievement_champion_description": 'Win 100 matches',      "userProfile_achievement_ghost-hunter_title": "Ghost Hunter",
+      "userProfile_achievement_ghost-hunter_description": "Defeat 50 ghosts",
+      "userProfile_achievement_cherry-collector_title": "Cherry Collector",
+      "userProfile_achievement_cherry-collector_description": "Collect 200 fruits",
+      "userProfile_achievement_pac-maniac_title": "Pac-Maniac",
+      "userProfile_achievement_pac-maniac_description": "Play 500 matches",
+ 
       chat: "CHAT",
       notification: "NOTIFICATION",
       settings: "Settings",
@@ -243,7 +248,7 @@ const resources = {
       // logout: "Déconnexion",
       logoutError: "Impossible de se déconnecter. Réessayez.",
 
-      /////////////////////
+      // ===== USER PROFILE PAGE =====
       profile: "PROFIL",
       loadingData: "CHARGEMENT DES DONNÉES...",
       profileLoadError: "ÉCHEC DU CHARGEMENT DU PROFIL",
@@ -252,7 +257,6 @@ const resources = {
       topPlayers: "TOP 12 % DES JOUEURS",
       achievements: "▼ SUCCÈS",
       
-      // ===== USER PROFILE PAGE =====
       userProfile_loading: "CHARGEMENT DES DONNÉES...",
       userProfile_loadError: "ÉCHEC DU CHARGEMENT DU PROFIL",
       userProfile_invalidUserId: "Identifiant utilisateur invalide",
@@ -295,11 +299,18 @@ const resources = {
       userProfile_vs: "CONTRE {{opponent}}",
       userProfile_achievements: "▼ SUCCÈS",
       userProfile_matchWin: "Gagnes",
+      //achv
+      userProfile_achievement_champion_title: "Champion",
+      userProfile_achievement_champion_description: "Gagner 100 parties",
+      "userProfile_achievement_ghost-hunter_title": "Chasseur de fantômes",
+      "userProfile_achievement_ghost-hunter_description": "Éliminer 50 fantômes",
+      "userProfile_achievement_cherry-collector_title": "Collectionneur de cerises",
+      "userProfile_achievement_cherry-collector_description": "Récolter 200 fruits",
+      "userProfile_achievement_pac-maniac_title": "Pac-Maniaque",
+      "userProfile_achievement_pac-maniac_description": "Jouer 500 parties",
 
-      // userProfile_achievement_champion_title: "Champion",
-      // userProfile_achievement_champion_description: "Devenez un champion",
 
-      ///////////////////////
+     ///////////////////////
       chat: "DISCUSSION",
       notification: "NOTIFICATIONS",
       account: "Compte",
@@ -503,7 +514,7 @@ const resources = {
       themeDescription: "خلفية داكنة مع ألوان نيون",
       chooseLanguage: "اختر لغة الواجهة.",
 
-      // ===== USER PROFILE PAGE - YOUR CHANGES =====
+      // ===== USER PROFILE PAGE =====
       userProfile_loading: "جارٍ تحميل البيانات...",
       userProfile_loadError: "فشل تحميل الملف الشخصي",
       userProfile_invalidUserId: "معرّف المستخدم غير صالح",
@@ -546,9 +557,16 @@ const resources = {
       userProfile_vs: "ضد {{opponent}}",
       userProfile_achievements: "▼ الإنجازات",
       userProfile_matchWin: "فاز",
-      // userProfile_achievement_champion_title: "البطل",
-      // userProfile_achievement_champion_description: "أصبح بطلًا",
-            // ===== CHAT (chat_*) =====
+      "userProfile_achievement_champion_title": 'البطل',
+      "userProfile_achievement_champion_description": 'اربح 100 مباراة',
+      "userProfile_achievement_ghost-hunter_title": 'صائد الأشباح',
+      "userProfile_achievement_ghost-hunter_description": 'اقضِ على 50 شبحًا',
+      "userProfile_achievement_cherry-collector_title": 'جامع الكرز',
+      "userProfile_achievement_cherry-collector_description": 'اجمع 200 فاكهة',
+      "userProfile_achievement_pac-maniac_title": 'عاشق باك مان',
+      "userProfile_achievement_pac-maniac_description": 'العب 500 مباراة',
+
+      // ===== CHAT (chat_*) =====
       chat_loading: "جارٍ التحميل...",
       chat_reconnecting: "جارٍ إعادة الاتصال…",
       chat_noFriends: "لا يوجد أصدقاء بعد",
@@ -615,8 +633,7 @@ const resources = {
       homeTagline: "مغامرتك القادمة في عالم الألعاب بانتظارك.",
       welcomeTitle: "ارتقِ إلى المستوى التالي",
       welcomeJoin: "انضم إلى ساحة المنافسة...",
-      welcomeDescription:
-        "تحدَّ أصدقاءك، وأتقن المتاهة، وكن بطل باكوفا بلا منازع.",
+      welcomeDescription:"تحدَّ أصدقاءك، وأتقن المتاهة، وكن بطل باكوفا بلا منازع.",
       login: "تسجيل الدخول",
       signup: "إنشاء حساب",
       welcomeWith: "مع",
