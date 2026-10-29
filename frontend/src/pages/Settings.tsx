@@ -489,11 +489,10 @@ const sectiontext: Record<string, string> = {
                           <div className="mb-2 h-2 w-4/5 rounded-sm bg-[#6B6075]/40" />
                           <div className="h-2 w-3/5 rounded-sm bg-[#6B6075]/20" />
                         </div>
-
                         <div className="m-2 flex-1 rounded-sm border border-[#B069DB]/40 bg-[#EADCF2]" />
                       </div>
                     </button>
-                  </div>
+                    </div>
                 </div>
               </section>
             )}
