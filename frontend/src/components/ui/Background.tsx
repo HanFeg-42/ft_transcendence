@@ -13,7 +13,23 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
       return 'dark';
     }
   });
+  useEffect(() => {
+    const syncTheme = () => {
+      try {
+        setTheme(
+          localStorage.getItem('pacova-theme') === 'light' ? 'light' : 'dark'
+        );
+      } catch {
+        // Keep the current theme.
+      }
+    };
 
+    window.addEventListener('pacova-theme-change', syncTheme);
+
+    return () => {
+      window.removeEventListener('pacova-theme-change', syncTheme);
+    };
+  }, []);
   useEffect(() => {
     try {
       localStorage.setItem('pacova-theme', theme);
@@ -31,15 +47,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
       style={{ background: isLight
         ? 'linear-gradient(180deg, #9c4268ff 0%, #f7e6f0 48%, #f7f3fb 100%)'
         : '#0D0914' }}
-    >
-      <button
-        type="button"
-        onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
-        className="pacova-theme-toggle"
-      >
-        <span aria-hidden="true">{isLight ? '☾' : '☀'}</span>
-      </button>
-      
+    > 
       <div className="absolute top-0 left-0 right-0 h-[50vh] pointer-events-none overflow-hidden z-0">
         <div 
           className="absolute inset-0 pointer-events-none opacity-60" 
