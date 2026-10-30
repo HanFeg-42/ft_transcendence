@@ -1,7 +1,7 @@
-import type { GameState, Direction, Tile, Player } from "../../../../shared/types/game-types";
-import { applyInput, tick } from "../../engine/engine";
-import { MAZES, isWall } from "../../engine/maze";
-import { ahead, TICKS_PER_TILE } from "../../engine/movement";
+import type { GameState, Direction, Tile, Player } from "../../../shared/types/game-types";
+import { applyInput, tick } from "./engine";
+import { MAZES, isWall } from "./maze";
+import { ahead, TICKS_PER_TILE } from "./movement";
 
 
 
