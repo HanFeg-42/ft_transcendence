@@ -1,7 +1,6 @@
 import type { Chaser, Direction, Player, Tile } from "../../../shared/types/game-types";
 import { isWall } from "./maze";
-
-export const TICKS_PER_TILE = 8;
+import { TICKS_PER_TILE } from "../../../shared/data/game-data";
 
 export const ahead = (tile: Tile, dir: Direction) => {
   switch (dir) {
@@ -38,11 +37,11 @@ export const stepPlayer = (maze: string[], player: Player) => {
     }
   }
 };
-export const stepChaser = (chaser: Chaser) => {
+export const stepChaser = (chaser: Chaser, ticksPerSecond: number) => {
 
   if (chaser.dir != null) {
     chaser.step++;
-    if (chaser.step >= TICKS_PER_TILE) {
+    if (chaser.step >= ticksPerSecond) {
       chaser.tile = ahead(chaser.tile, chaser.dir);
       chaser.step = 0;
     }

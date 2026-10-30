@@ -8,7 +8,7 @@ import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Game from "./pages/Game/GamePage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import Choose from './pages/Game/chooseGameMode';
+import Choose from "./pages/Game/chooseGameMode";
 // import Nav from './pages/NavbarTest'
 import Profile from "./pages/user/profile";
 import UserProfile from "./pages/user/UserProfile";
@@ -19,7 +19,7 @@ import FriendsTest from "./pages/FriendsTest";
 import NotFound from "./pages/NotFound";
 import BotPage from "./pages/Game/GameBot";
 import OnlineGame from "./pages/OnlineGame";
- import HowToPlay from "./pages/Game/HowToPlay";
+import HowToPlay from "./pages/Game/HowToPlay";
 
 /** Renders the application's route configuration. */
 function App() {
@@ -37,18 +37,17 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
-        <Route path="/game/online" element={<OnlineGame />} /> {/* TEMP */}
         <Route path="/game/bot" element={<BotPage />} />
+        <Route path="/game/online" element={<OnlineGame />} />
+        <Route path="/choose" element={<Choose />} />
         <Route path="/how-to-play" element={<HowToPlay />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/choose" element={<Choose/>} />
       </Route>
       {/* <Route path="/NavbarTest" element={<Nav />} /> */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="*" element={<NotFound />} />
-      
-     </Routes>
+    </Routes>
   );
 }
 

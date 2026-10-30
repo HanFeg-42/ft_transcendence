@@ -3,6 +3,7 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY shared/types ../shared/types
+COPY shared/data ../shared/data
 COPY frontend/ .
 RUN npm run build
 

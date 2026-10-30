@@ -6,17 +6,20 @@ import type {
   Direction,
 } from "../../../shared/types/game-types";
 import {
-  findChaserSpawns,
-  findSpawn,
-  parsePellets,
-  isWall,
+  TICKS_PER_SECOND,
   DEFAULT_MAZE_ID,
   MAZES,
-} from "./maze";
+  DIFFICULTIES,
+} from "../../../shared/data/game-data";
+import { findChaserSpawns, findSpawn, parsePellets, isWall } from "./maze";
 import { stepPlayer, stepChaser, ahead } from "./movement";
+import {
+  TIME_LIMITS,
+  DEFAULT_TIME_LIMIT,
+  DEFAULT_DIFFICULTY,
+} from "../../../shared/data/game-data";
 
 const CENTER_OFFSET = 4;
-const TICKS_PER_SECOND = 30;
 
 export const addPlayer = (playerId: string, state: GameState) => {
   const maze = MAZES[state.mazeId];
@@ -48,12 +51,25 @@ export const removePlayer = (playerId: string, state: GameState) =>
 
 export const createGame = (
   playerId: string,
-  timeLimit: number = 360,
+  timeLimit: number = DEFAULT_TIME_LIMIT,
   mazeId: string = DEFAULT_MAZE_ID,
+  difficulty: string = DEFAULT_DIFFICULTY,
 ): GameState => {
   if (!Object.keys(MAZES).includes(mazeId)) {
     console.warn(`[GAME] Unknown map "${mazeId}", using "${DEFAULT_MAZE_ID}"`);
     mazeId = DEFAULT_MAZE_ID;
+  }
+  if (!TIME_LIMITS.includes(timeLimit)) {
+    console.warn(
+      `[GAME] Invalid time limit "${timeLimit}", using ${DEFAULT_TIME_LIMIT}`,
+    );
+    timeLimit = DEFAULT_TIME_LIMIT;
+  }
+  if (!Object.keys(DIFFICULTIES).includes(difficulty)) {
+    console.warn(
+      `[GAME] Invalid difficulty "${difficulty}", using ${DEFAULT_DIFFICULTY}`,
+    );
+    difficulty = DEFAULT_DIFFICULTY;
   }
 
   const maze = MAZES[mazeId];
@@ -95,6 +111,7 @@ export const createGame = (
     timeLimit,
     vulnerableTimer: 0,
     mazeId,
+    difficulty,
   };
 };
 
@@ -221,7 +238,7 @@ export const tick = (state: GameState) => {
   });
   state.chasers.forEach((chaser) => {
     if (chaser.step == 0) pickChaserDirection(chaser, state);
-    stepChaser(chaser);
+    stepChaser(chaser, DIFFICULTIES[state.difficulty!]);
   });
   if (!state.pellets.flat().some((hasPellet) => hasPellet)) {
     finishMatch(state, getWinnerId(state));

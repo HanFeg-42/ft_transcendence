@@ -44,7 +44,7 @@ export const COLORS = {
  * Utilisé uniquement si tu veux faire des animations côté frontend.
  * ⚠️ Ne PAS redéfinir TICKS_PER_TILE ici → il est déjà dans movement.ts
  */
-export const TICKS_PER_SECOND = 30;
+// export const TICKS_PER_SECOND = 30;
 
 /**
  * Taille de police pour le HUD (score, vies, timer).
