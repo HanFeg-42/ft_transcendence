@@ -13,14 +13,12 @@ export function PacManIcon({ className = '', flip = false }: { className?: strin
   );
 }
 
-// Neon pink scrollbar (webkit + Firefox).
-const SCROLLBAR =
-  '[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-pacova-pink/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-pacova-pink [scrollbar-width:thin] [scrollbar-color:theme(colors.pacova-pink)_transparent]';
-
 // "Oct 9, 03:15 PM"
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+const bubble = (own: boolean) =>
+  `px-4 py-2 pixel-corners-3step font-vt323 text-lg break-words [overflow-wrap:anywhere] max-w-full text-white ${own ? 'bg-pacova-pink-dark/40' : 'bg-pacova-green-dark/40'}`;
 const row = (own: boolean) => `flex flex-col max-w-[80%] min-w-0 ${own ? 'self-end items-end' : 'self-start items-start'}`;
 const label = (own: boolean) => `font-vt323 text-sm uppercase tracking-wide mb-1 ${own ? 'text-pacova-pink' : 'text-pacova-green'}`;
 
@@ -41,13 +39,11 @@ export default function MessageList({ conversation, friend, myId, status, isTypi
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation.length, friend.id, status, isTyping]);
 
-  // Only the most recent invite gets a "Start Game" button.
-  const lastInviteId = conversation.findLast((m) => m.kind === 'game_invite')?.id;
   const inviteLabels = { accepted: t('chat_inviteAccepted'), declined: t('chat_inviteDeclined'), expired: t('chat_inviteExpired') };
   const info = 'font-vt323 text-lg text-center mt-8';
 
   return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-4 p-5 overflow-y-auto overflow-x-hidden overscroll-contain ${SCROLLBAR}`}>
+    <div className="flex-1 min-h-0 flex flex-col gap-4 p-5 overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-color:var(--color-pacova-gray)_transparent]">
       {status === 'loading' && <p className={`${info} text-gray-600`}>{t('chat_loadingMessages')}</p>}
       {status === 'error' && <p className={`${info} text-red-500`}>{t('chat_loadError')}</p>}
       {status === 'ok' && conversation.length === 0 && <p className={`${info} text-gray-600`}>{t('chat_noMessages')}</p>}
@@ -58,22 +54,17 @@ export default function MessageList({ conversation, friend, myId, status, isTypi
         if (m.kind === 'game_invite') {
           const state = m.meta?.status;
           const gameId = m.meta?.gameId;
-          // "Start Game" only on the latest accepted invite, and only until pressed once (remembered in this browser).
-          const canStart = state === 'accepted' && m.id === lastInviteId && gameId && !localStorage.getItem(`started:${gameId}`);
           return (
             <div key={m.id} className="flex flex-col items-center gap-2 my-4 w-full">
               <p className="font-vt323 text-gray-400 text-base uppercase tracking-wide text-center">
                 {own ? t('chat_invitationSent') : t('chat_friendInvitedYou', { name: friend.username })}
                 {state && state !== 'pending' && <><br />{inviteLabels[state]}</>}
               </p>
-              {canStart && (
+              {state === 'accepted' && gameId && (
                 <PixelButton
                   variant="warning-yellow"
                   size="sm"
-                  onClick={() => {
-                    localStorage.setItem(`started:${gameId}`, '1');
-                    navigate(`/game/online?gameId=${gameId}`);
-                  }}
+                  onClick={() => navigate(`/game/online?gameId=${gameId}`)}
                 >
                   <PacManIcon className="w-5 h-5" />
                   {t('chat_startGame')}
@@ -87,9 +78,7 @@ export default function MessageList({ conversation, friend, myId, status, isTypi
         return (
           <div key={m.id} className={row(own)}>
             <span className={label(own)}>{own ? t('chat_you') : friend.username}</span>
-            <div className={`px-4 py-2 pixel-corners-3step font-vt323 text-lg break-words [overflow-wrap:anywhere] max-w-full text-white ${own ? 'bg-pacova-pink-dark/40' : 'bg-pacova-green-dark/40'}`}>
-              {m.content}
-            </div>
+            <div className={bubble(own)}>{m.content}</div>
             <span className="font-vt323 text-gray-500 text-sm mt-1 flex items-center gap-1.5">
               {own && <span className="tracking-[-2px]">{read ? '✓✓' : '✓'}</span>}
               {formatTime(m.created_at)}
@@ -101,11 +90,7 @@ export default function MessageList({ conversation, friend, myId, status, isTypi
       {isTyping && (
         <div className={row(false)}>
           <span className={label(false)}>{friend.username}</span>
-          <div className="px-4 py-3 pixel-corners-3step bg-pacova-green-dark/40 flex items-center gap-1.5">
-            {[0, 150, 300].map((delay) => (
-              <span key={delay} className="w-2 h-2 bg-pacova-green pixel-corners-3step animate-pulse" style={{ animationDelay: `${delay}ms` }} />
-            ))}
-          </div>
+          <div className={`${bubble(false)} animate-pulse`}>...</div>
         </div>
       )}
 

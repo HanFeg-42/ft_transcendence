@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -12,8 +12,6 @@ import { routeMap } from './helpers';
 import useChat, { type Friend } from './useChat';
 import MessageList, { PacManIcon } from './MessageList';
 
-// Kills every glow/shine source on buttons and inputs.
-const NO_GLOW = 'shadow-none [box-shadow:none!important] [filter:none!important]';
 const PANEL = 'bg-pacova-surface border-2 border-pacova-green-dark rounded-lg';
 
 function FriendAvatar({ friend }: { friend: Friend }) {
@@ -29,8 +27,6 @@ function FriendAvatar({ friend }: { friend: Friend }) {
   );
 }
 
-// receiver=true  -> "X invited you" (Accept / Decline)
-// receiver=false -> "Invite X to play" (Invite / Cancel)
 function GameInviteModal({ name, receiver, onAnswer }: { name: string; receiver: boolean; onAnswer: (yes: boolean) => void }) {
   const { t } = useTranslation();
   return (
@@ -57,52 +53,6 @@ function GameInviteModal({ name, receiver, onAnswer }: { name: string; receiver:
   );
 }
 
-// "..." menu with one action: block / unblock the friend.
-function HeaderMenu({ friend, blocked, onToggleBlock }: { friend: Friend; blocked: boolean; onToggleBlock: () => void }) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  // Close on outside click or Escape.
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative justify-self-end">
-      <button className={`p-2 rounded-md text-pacova-green hover:bg-pacova-green/10 transition-colors ${NO_GLOW}`} aria-label={t('chat_menu')} onClick={() => setOpen((o) => !o)}>
-        <svg viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor" aria-hidden="true">
-          <circle cx="5" cy="12" r="2" />
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="19" cy="12" r="2" />
-        </svg>
-      </button>
-      {open && (
-        <div role="menu" className={`absolute end-0 top-full mt-2 w-56 max-w-[calc(100vw-3rem)] z-20 overflow-hidden ${PANEL}`}>
-          <button
-            role="menuitem"
-            onClick={() => {
-              onToggleBlock();
-              setOpen(false);
-            }}
-            className="w-full text-start px-4 py-2 font-vt323 text-lg md:text-xl uppercase truncate text-red-500 hover:bg-red-500/10"
-          >
-            {t(blocked ? 'chat_unblock' : 'chat_block', { username: friend.username })}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function Chat() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
@@ -113,10 +63,10 @@ export default function Chat() {
 
   const [draft, setDraft] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [friendsOpen, setFriendsOpen] = useState(false); // friends list on mobile
+  const [friendsOpen, setFriendsOpen] = useState(false);
 
   const pendingInvites = conversation.filter((m) => m.kind === 'game_invite' && m.meta?.status === 'pending');
-  const incomingInvite = pendingInvites.findLast((m) => m.receiver_id === myId); // latest one sent to me
+  const incomingInvite = pendingInvites.findLast((m) => m.receiver_id === myId);
 
   const page = (children: React.ReactNode) => (
     <Background>
@@ -124,7 +74,7 @@ export default function Chat() {
       {children}
     </Background>
   );
-  // Full-page message (loading / reconnecting / no friends).
+
   const screen = (text: string, extra = '') =>
     page(
       <main className="flex-1 flex items-center justify-center">
@@ -149,7 +99,6 @@ export default function Chat() {
     setDraft('');
   }
 
-  // Answer the invite popup: reply to the one I received, or send/cancel a new one.
   function answerInvite(yes: boolean) {
     if (incomingInvite) chat.replyInvite(incomingInvite.id, yes);
     else {
@@ -159,20 +108,19 @@ export default function Chat() {
   }
 
   return page(
-    <main className="flex-1 min-h-0 h-[calc(100dvh-152px)] max-h-[calc(100dvh-152px)] sm:h-[calc(100dvh-128px)] sm:max-h-[calc(100dvh-128px)] max-w-[1320px] mx-auto w-full px-2 py-2 md:px-4 md:py-5 flex gap-5 overflow-hidden">
-      {/* Friends list */}
-      <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0 min-h-0 flex-col overflow-hidden ${PANEL}`}>
-        <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider text-center px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
+    <main className="flex-1 h-[calc(100dvh-152px)] max-h-[calc(100dvh-152px)] sm:h-[calc(100dvh-128px)] sm:max-h-[calc(100dvh-128px)] max-w-[1320px] mx-auto w-full p-2 md:px-4 md:py-5 flex gap-5 overflow-hidden">
+      <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0 flex-col overflow-hidden ${PANEL}`}>
+        <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
           <PacManIcon className="w-7 h-7 shrink-0" />
           {t('chat_friends')}
           <PacManIcon className="w-7 h-7 shrink-0" flip />
         </h2>
-        <div className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0 p-4">
+        <div className="flex-1 flex flex-col gap-3 overflow-y-auto p-4 [scrollbar-color:var(--color-pacova-gray)_transparent]">
           {chat.friends.map((f) => (
             <button
               key={f.id}
               onClick={() => pick(f.id)}
-              className={`flex items-center gap-3 px-3 py-3 rounded-md border-2 transition-colors text-start ${NO_GLOW} ${
+              className={`flex items-center gap-3 px-3 py-3 rounded-md border-2 transition-colors text-start ${
                 f.id === friend.id ? 'border-pacova-green' : 'border-transparent hover:border-pacova-gray'
               }`}
             >
@@ -184,29 +132,32 @@ export default function Chat() {
         </div>
       </aside>
 
-      {/* Selected conversation */}
-      <section className={`flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden ${PANEL}`}>
-        <div className="grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 md:px-5 h-20 border-b-2 border-pacova-green-dark relative">
-          <div className="flex items-center gap-3 min-w-0">
-            <button type="button" onClick={() => setFriendsOpen((o) => !o)} aria-label={t('chat_friends')} className={`md:hidden p-1 text-pacova-green shrink-0 ${NO_GLOW}`}>
-              <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor" aria-hidden="true">
-                <path d="M3 5h18v2.5H3zM3 10.75h18v2.5H3zM3 16.5h18v2.5H3z" />
-              </svg>
+      <section className={`flex-1 flex flex-col overflow-hidden ${PANEL}`}>
+        <div className="flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 border-pacova-green-dark">
+          <button onClick={() => setFriendsOpen((o) => !o)} aria-label={t('chat_friends')} className="md:hidden p-1 text-pacova-green">
+            <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor" aria-hidden="true">
+              <path d="M3 5h18v2.5H3zM3 10.75h18v2.5H3zM3 16.5h18v2.5H3z" />
+            </svg>
+          </button>
+          <button title={t('chat_viewProfile')} onClick={() => navigate(`/profile/${friend.id}`)} className="flex items-center gap-3 min-w-0 disabled:cursor-not-allowed">
+            <FriendAvatar friend={friend} />
+            <span className="font-pixelify text-white text-lg uppercase truncate">{friend.username}</span>
+          </button>
+          <div className="ms-auto flex items-center gap-2 shrink-0">
+            <button onClick={() => setInviteOpen(true)} disabled={pendingInvites.length > 0} title={t('chat_inviteToPlay')} aria-label={t('chat_inviteToPlay')} className="p-2 rounded-md bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed">
+              <PacManIcon className="w-6 h-6" />
             </button>
-            <button type="button" disabled={blocked} title={t('chat_viewProfile')} onClick={() => navigate(`/profile/${friend.id}`)} className="flex items-center gap-3 min-w-0 disabled:cursor-not-allowed">
-              <FriendAvatar friend={friend} />
-              <span className="font-pixelify text-white text-lg uppercase truncate">{friend.username}</span>
-            </button>
+            <button
+  onClick={() => {
+    if (blocked || window.confirm(`Block ${friend.username}?`)) {
+      chat.toggleBlock();
+    }
+  }}
+  className="px-3 py-2 rounded-md font-vt323 text-lg uppercase text-red-500 hover:bg-red-500/10"
+>
+  {blocked ? 'Unblock' : 'Block'}
+</button>
           </div>
-
-          <div className="justify-self-center">
-            <PixelButton variant="warning-yellow" size="sm" onClick={() => setInviteOpen(true)} disabled={blocked || pendingInvites.length > 0} aria-label={t('chat_inviteToPlay')}>
-              <PacManIcon className="w-5 h-5" />
-              <span className="hidden md:inline">{t('chat_inviteToPlay')}</span>
-            </PixelButton>
-          </div>
-
-          <HeaderMenu friend={friend} blocked={blocked} onToggleBlock={chat.toggleBlock} />
         </div>
 
         <MessageList conversation={conversation} friend={friend} myId={myId} status={chat.status} isTyping={chat.typing} friendReadAt={chat.friendReadAt} />
@@ -217,19 +168,18 @@ export default function Chat() {
 
         <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
           <Input
-            className={`min-w-0 w-full !border-pacova-pink !bg-[#080B1A] !text-white placeholder:!text-white/50 !text-lg sm:!text-xl !py-3 disabled:opacity-40 ${NO_GLOW} focus:!shadow-none focus:[box-shadow:none!important]`}
+            className="!border-pacova-pink !bg-[#080B1A] text-lg sm:!text-xl !py-3 disabled:opacity-40"
             value={draft}
             type="text"
             maxLength={1000}
-            disabled={blocked}
             onChange={(e) => {
               setDraft(e.target.value);
               if (e.target.value.trim()) chat.sendTyping();
             }}
-            placeholder={blocked ? t('chat_cannotMessage') : t('chat_typePlaceholder')}
+            placeholder={t('chat_cannotMessage')}
             onKeyDown={(e) => e.key === 'Enter' && send()}
           />
-          <PixelButton type="button" variant="outline-green" size="lg" className={NO_GLOW} onClick={send} disabled={blocked}>
+          <PixelButton variant="outline-green" size="lg" onClick={send}>
             {t('chat_send')}
           </PixelButton>
         </div>

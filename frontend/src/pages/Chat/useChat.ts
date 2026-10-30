@@ -56,7 +56,7 @@ export default function useChat(token: string | null) {
       .then((r) => (r.ok ? r.json() : []))
       .then(setFriendList)
       .catch(console.error);
-  }, [token]);
+  }, [token, blocked]);
 
   // History + block status: on friend change and after a reconnect (to catch up on missed messages).
   useEffect(() => {
@@ -82,8 +82,7 @@ export default function useChat(token: string | null) {
     };
   }, [token, friendId, reconnecting]);
 
-  // One websocket for the whole page; reconnects by itself.
-
+  // One WebSocket connection for the page, with automatic reconnects.
   useEffect(() => {
     if (!token) return;
     let ws: WebSocket;
@@ -92,7 +91,7 @@ export default function useChat(token: string | null) {
     let retry: ReturnType<typeof setTimeout>;
     const timers: Record<number, ReturnType<typeof setTimeout>> = {};
 
-    // Show "typing..." for a user; it switches itself off after 2s.
+    // Keep the typing indicator visible briefly.
     const showTyping = (id: number, on: boolean) => {
       clearTimeout(timers[id]);
       setTyping((p) => ({ ...p, [id]: on }));
@@ -156,12 +155,12 @@ export default function useChat(token: string | null) {
     };
   }, [token]);
 
-  // Only the selected friend's messages, oldest first (ids grow with time).
+  // Messages for the selected friend, oldest first.
   const conversation = Object.values(messages)
     .filter((m) => m.sender_id === friendId || m.receiver_id === friendId)
     .sort((a, b) => a.id - b.id);
 
-  // Tell the server we read this chat: on new messages, friend change, reconnect, and when the tab regains focus.
+  // Mark this conversation as read and update again when the tab becomes visible.
   useEffect(() => {
     const markRead = () => {
       if (friendId && document.visibilityState === 'visible') send({ event: E.READ, data: { sender_id: friendId } });
