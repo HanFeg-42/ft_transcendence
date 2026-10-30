@@ -9,6 +9,8 @@ import {
 } from "react";
 import { useLocation } from "react-router-dom";
 import {
+  clearNotifications,
+  deleteNotification,
   getNotifications,
   getUnreadCount,
   markAllNotificationsRead,
@@ -18,6 +20,13 @@ import {
 import { useAuth } from "./AuthContext";
 import { ChatEvents } from "../../../shared/types/chat-types";
 import type { ChatServerMessage } from "../../../shared/types/chat-types";
+import { Toast } from "../components/ui/Toast";
+import {
+  describeNotification,
+  getActorId,
+  getUserName,
+} from "../utils/notificationText";
+import { useTranslation } from "react-i18next";
 
 interface NotificationContextValue {
   notifications: Notification[];
@@ -27,6 +36,8 @@ interface NotificationContextValue {
   refreshNotifications: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  removeNotification: (id: string) => Promise<void>;
+  clearAll: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextValue | undefined>(
@@ -34,6 +45,7 @@ const NotificationContext = createContext<NotificationContextValue | undefined>(
 );
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const { pathname } = useLocation();
   const refreshId = useRef<symbol | null>(null);
@@ -42,6 +54,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    notification: Notification;
+    name?: string;
+  } | null>(null);
 
   const refreshNotifications = useCallback(async () => {
     if (!token) return;
@@ -71,13 +87,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       if (requestId !== refreshId.current) return;
       console.error("Failed to load notifications:", err);
-      setError("Failed to load notifications");
+      setError("notif_loadError");
     } finally {
       if (requestId === refreshId.current) setLoading(false);
     }
   }, [token]);
 
+  // Auto-dismiss the toast after 4 seconds.
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
+  // Live notifications over the WebSocket.
   useEffect(() => {
     if (!token) return;
 
@@ -85,6 +108,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
     let reconnectDelay = 1000;
     let disposed = false;
+
+    const showToast = async (incoming: Notification) => {
+      const actorId = getActorId(incoming);
+      const name = actorId ? await getUserName(token, actorId) : undefined;
+      if (disposed) return;
+      setToast({ notification: incoming, name });
+    };
 
     const connect = () => {
       if (disposed) return;
@@ -111,7 +141,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         }
 
         if (packet.event === ChatEvents.NOTIFICATION) {
-          void refreshNotifications();
+          const data = packet.data;
+          const incoming: Notification = {
+            id: data.id,
+            type: data.type,
+            payload: data.payload as unknown as Record<string, unknown>,
+            isRead: data.isRead,
+            createdAt: data.createdAt,
+          };
+
+          // Prepend (skip if a refresh already loaded it).
+          setNotifications((current) =>
+            current.some((n) => n.id === incoming.id)
+              ? current
+              : [incoming, ...current],
+          );
+          setUnreadCount((count) => count + 1);
+          void showToast(incoming);
         }
       };
 
@@ -138,8 +184,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
       ws?.close();
     };
-  }, [token, refreshNotifications]);
-
+  }, [token]);
 
   useEffect(() => {
     if (token) {
@@ -149,6 +194,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setUnreadCount(0);
       setLoading(false);
       setError(null);
+      setToast(null);
     }
     return () => {
       refreshId.current = null;
@@ -186,6 +232,29 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setUnreadCount(0);
   };
 
+  const removeNotification = async (id: string) => {
+    if (!token) return;
+
+    const target = notifications.find((n) => n.id === id);
+
+    await deleteNotification(token, id);
+
+    setNotifications((current) => current.filter((n) => n.id !== id));
+
+    if (target && !target.isRead) {
+      setUnreadCount((count) => Math.max(0, count - 1));
+    }
+  };
+
+  const clearAll = async () => {
+    if (!token) return;
+
+    await clearNotifications(token);
+
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
   return (
     <NotificationContext.Provider
       value={{
@@ -196,9 +265,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         refreshNotifications,
         markAsRead,
         markAllAsRead,
+        removeNotification,
+        clearAll,
       }}
     >
       {children}
+      {toast && (
+        <Toast
+          key={toast.notification.id}
+          message={describeNotification(toast.notification, toast.name, t).text}
+          type="info"
+          onClose={() => setToast(null)}
+        />
+      )}
     </NotificationContext.Provider>
   );
 }

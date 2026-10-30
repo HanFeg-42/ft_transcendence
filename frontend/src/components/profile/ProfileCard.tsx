@@ -1,8 +1,9 @@
+
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import PixelButton from '../ui/PixelButton';
 import Card from '../ui/Card';
 import { Link } from 'react-router-dom';
-
 
 interface ProfileCardProps {
   username?: string;
@@ -32,7 +33,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   stats = { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
   onEditClick,
 }) => {
-  const xpPercentage = Math.min(100, Math.round((currentXp / maxXp) * 100));
+  const { t } = useTranslation();
+
+  const xpPercentage =
+    maxXp > 0 ? Math.min(100, Math.round((currentXp / maxXp) * 100)) : 0;
 
   return (
     <Card
@@ -43,7 +47,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <div className="relative mb-6 flex justify-center">
           <div className="w-36 h-36 rounded-full border-2 border-pacova-green shadow-[0_0_25px_rgba(142,214,3,0.7)] flex items-center justify-center overflow-hidden bg-black/60">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
+              <img
+                src={avatarUrl}
+                alt={username}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <span className="text-6xl select-none">👤</span>
             )}
@@ -53,6 +61,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <h2 className="font-pixelify text-3xl tracking-widest uppercase text-white mt-2 text-center">
           {username}
         </h2>
+
         <p className="font-vt323 text-lg text-pacova-green mb-2 text-center tracking-widest uppercase animate-pulse motion-reduce:transition-none">
           {statusText}
         </p>
@@ -64,7 +73,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         )}
 
         <div className="border border-pacova-green/40 px-6 py-1 rounded-full bg-pacova-green/10 font-pixelify text-xs text-pacova-green shadow-[0_0_25px_rgba(142,214,3,0.7)] mb-6 inline-block">
-          LEVEL {level}
+          {t('userProfile_level', { level })}
         </div>
       </div>
 
@@ -76,6 +85,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               style={{ width: `${xpPercentage}%` }}
             />
           </div>
+
           <p className="font-vt323 text-sm text-gray-400 text-center tracking-widest">
             {currentXp} / {maxXp} XP
           </p>
@@ -83,26 +93,46 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
         <div className="w-full space-y-4 font-vt323 text-xl text-gray-300">
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <span className="text-gray-400 tracking-wider">🎮 MATCHES PLAYED</span>
-            <span className="text-white font-bold text-2xl">{stats.matchesPlayed}</span>
+            <span className="text-gray-400 tracking-wider">
+              🎮 {t('userProfile_matchesPlayed')}
+            </span>
+            <span className="text-white font-bold text-2xl">
+              {stats.matchesPlayed}
+            </span>
           </div>
+
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <span className="text-gray-400 tracking-wider">🏅 WINS</span>
-            <span className="text-white font-bold text-2xl">{stats.wins}</span>
+            <span className="text-gray-400 tracking-wider">
+              🏅 {t('userProfile_wins')}
+            </span>
+            <span className="text-white font-bold text-2xl">
+              {stats.wins}
+            </span>
           </div>
+
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <span className="text-gray-400 tracking-wider">☠️ LOSSES</span>
-            <span className="text-white font-bold text-2xl">{stats.losses}</span>
+            <span className="text-gray-400 tracking-wider">
+              ☠️ {t('userProfile_losses')}
+            </span>
+            <span className="text-white font-bold text-2xl">
+              {stats.losses}
+            </span>
           </div>
+
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <span className="text-gray-400 tracking-wider">🎖 WIN RATE</span>
+            <span className="text-gray-400 tracking-wider">
+              🎖 {t('userProfile_winRate')}
+            </span>
             <span className="text-pacova-green font-bold text-2xl drop-shadow-[0_0_8px_rgba(142,214,3,0.6)]">
               {stats.winRate}%
             </span>
           </div>
+
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <Link to="/friends-test" >
-            <span className="text-gray-400 tracking-wider">👤 FREINDS </span> 
+            <Link to="/friends">
+              <span className="text-gray-400 tracking-wider">
+                👤 {t('userProfile_friends')}
+              </span>
             </Link>
           </div>
         </div>
@@ -116,7 +146,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             className="w-full py-3 text-base tracking-widest"
             onClick={onEditClick}
           >
-            EDIT PROFILE
+            {t('userProfile_editProfile')}
           </PixelButton>
         )}
       </div>

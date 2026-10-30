@@ -1,4 +1,6 @@
+
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Background from "../../components/ui/Background";
 import { useAuth } from "../../context/AuthContext";
 
@@ -15,7 +17,6 @@ interface LegalPageProps {
   lastUpdated: string;
 }
 
-/** Shared layout for the Privacy Policy and Terms of Service pages. */
 export default function LegalPage({
   title,
   intro,
@@ -23,6 +24,7 @@ export default function LegalPage({
   lastUpdated,
 }: LegalPageProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <Background>
@@ -31,29 +33,31 @@ export default function LegalPage({
           to={user ? "/home" : "/"}
           className="font-vt323 text-lg text-pacova-green hover:underline uppercase tracking-wide"
         >
-          ← Back
+          {t("legalBack")}
         </Link>
 
         <h1 className="font-press-start text-pacova-pink text-xl sm:text-2xl mt-6 mb-2 leading-relaxed">
           {title}
         </h1>
-        <p className="text-sm text-gray-400 mb-6">Last updated: {lastUpdated}</p>
+        <p className="text-sm text-gray-400 mb-6">
+          {t("legalLastUpdated", { date: lastUpdated })}
+        </p>
         <p className="mb-8 leading-relaxed">{intro}</p>
 
         {sections.map((section, index) => (
-          <section key={section.title} className="mb-8">
+          <section key={index} className="mb-8">
             <h2 className="font-pixelify text-pacova-green text-xl mb-3">
               {index + 1}. {section.title}
             </h2>
-            {section.paragraphs?.map((text) => (
-              <p key={text} className="mb-3 leading-relaxed">
-                {text}
+            {section.paragraphs?.map((paragraph, i) => (
+              <p key={i} className="mb-3 leading-relaxed">
+                {paragraph}
               </p>
             ))}
             {section.items && (
               <ul className="list-disc pl-6 space-y-1 leading-relaxed">
-                {section.items.map((item) => (
-                  <li key={item}>{item}</li>
+                {section.items.map((item, i) => (
+                  <li key={i}>{item}</li>
                 ))}
               </ul>
             )}

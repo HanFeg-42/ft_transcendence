@@ -63,8 +63,8 @@ export default function MessageList({ conversation, friend, myId, status, isTypi
               {canStart && (
                 <button
                   type="button"
-                  // onClick={() => { localStorage.setItem(`started:${gameId}`, '1'); navigate(`${GAME_ROUTE}?gameId=${gameId}`); }}
-                  onClick={() => { localStorage.setItem(`started:${gameId}`, '1'); navigate(GAME_ROUTE); }}
+                  onClick={() => { localStorage.setItem(`started:${gameId}`, '1'); navigate(`${GAME_ROUTE}?gameId=${gameId}`); }}
+                  // onClick={() => { localStorage.setItem(`started:${gameId}`, '1'); navigate(GAME_ROUTE); }}
                   className="flex items-center gap-2 mt-1 px-4 py-2 bg-black/80 border-2 border-amber-400 text-amber-300 font-pixelify text-sm uppercase tracking-wide shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:brightness-125 transition-all rounded"
                 >
                   <PacManIcon className="w-5 h-5" />
