@@ -15,6 +15,7 @@ import {
 } from "../../../../shared/data/game-data";
 import MazeUI from "./MazeUI";
 import Result from "./ResultCard";
+import Dots from "./Dots";
 
 const KEY_MAP: Record<string, Direction> = {
   w: "UP",
@@ -84,27 +85,50 @@ const GameRoom = ({
   }, [error]);
   if (!state)
     return (
-      <p className="font-vt323 text-2xl text-pacova-pink text-center mt-10">
-        Joining the room {gameId}
-      </p>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="font-vt323 text-xl text-gray-300">
+          Joining room {gameId}
+          <Dots />
+        </p>
+      </div>
     );
   if (state.status === "waiting")
     return (
-      <div className="flex flex-col items-center gap-3 font-vt323 text-pacova-pink text-xl mt-10">
-        <p className="text-2xl">Room {gameId}</p>
-        <p>Duration: {state.timeRemaining / 60} min</p>
-        <p>Difficulty: {state.difficulty}</p>
-        <p>Map: {state.mazeId}</p>
-        {state.players.map((p, i) => (
-          <p key={p.id}>Player {i + 1} joined</p>
-        ))}
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 font-vt323 text-pacova-pink text-xl">
+        <p className="text-3xl text-pacova-green">
+          ▼ ROOM <span className="text-pacova-pink">{gameId}</span> ▼
+        </p>
+        <div className="w-80 p-4 flex flex-col gap-2 bg-black/60 border-2 border-pacova-green rounded-xl">
+          <p className="flex justify-between">
+            <span className="text-pacova-green">DIFFICULTY</span>
+            <span className="uppercase">{state.difficulty}</span>
+          </p>
+          <p className="flex justify-between">
+            <span className="text-pacova-green">MAP</span>
+            <span className="uppercase">{state.mazeId}</span>
+          </p>
+          <p className="flex justify-between">
+            <span className="text-pacova-green">TIME</span>
+            <span>{state.timeRemaining / 60} min</span>
+          </p>
+          <p className="flex justify-between">
+            <span className="text-pacova-green">PLAYERS</span>
+            <span>{state.players.length}/2</span>
+          </p>
+        </div>
         {state.players.length === 2 ? (
-          <p>
+          <p className="text-2xl text-pacova-green">
             Starting in <Countdown seconds={START_DELAY_MS / 1000} />
           </p>
         ) : (
-          <p>Waiting for another player...</p>
+          <p className="text-gray-300">
+            Waiting for another player
+            <Dots />
+          </p>
         )}
+        <PixelButton variant="danger-red" onClick={onBackToMenu}>
+          Leave
+        </PixelButton>
       </div>
     );
   const myId = String(user?.id);
