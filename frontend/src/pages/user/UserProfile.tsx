@@ -10,7 +10,7 @@ import ProfileCard from '../../components/profile/ProfileCard';
 import PixelButton from '../../components/ui/PixelButton';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile, type ProfileData } from '../../services/userService';
-import { routeMap } from '../Chat/helpers';
+import { routeMap } from '../Chat/index';
 
 // Read-only view of another user's profile.
 // Separate from profile.tsx, which displays the current user's profile.

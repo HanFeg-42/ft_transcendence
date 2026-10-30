@@ -283,9 +283,7 @@ router.get('/friends', async (req: Request, res: Response) => {
       );
     }
 
-    const friendIds = allFriendIds.filter(id => !blockedIds.has(id));
-
-    if (friendIds.length === 0) return res.json([]);
+    const friendIds = allFriendIds; // blocked friends stay in the list
 
     const users = await getPublicUsers(friendIds);
     const byId = new Map(users.map(user => [user.id, user]));
@@ -296,7 +294,7 @@ router.get('/friends', async (req: Request, res: Response) => {
 
       return [{
         ...user,
-        online: (onlineUsers.get(String(id))?.size ?? 0) > 0,
+        online: !blockedIds.has(id) && (onlineUsers.get(String(id))?.size ?? 0) > 0, // blocked looks offline
       }];
     });
 

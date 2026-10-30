@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from 'react-i18next';
 import Picker from "../../components/game/Picker";
 import { createGame, applyInput, tick } from "../../engine/engine";
 import { findSpawn } from "../../engine/maze";
 import { DEFAULT_MAZE_ID, MAZES } from "../../../../shared/data/game-data";
-import { chooseDirection } from "../../ai/bot";
-import type { BotDifficulty } from "../../ai/bot";
+import { chooseDirection } from '../../engine/bot';
+import type { BotDifficulty } from '../../engine/bot';
 import type { GameState, Direction } from "../../../../shared/types/game-types";
 // Same UI pieces as the local game page (GamePage.tsx)
 import Result from "../../components/game/ResultCard";
