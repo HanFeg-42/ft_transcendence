@@ -1,7 +1,7 @@
 import Input from "../components/ui/Input";
 import PixelButton from "../components/ui/PixelButton";
 import { useState } from "react";
-import ArenaBackground from "../components/ui/ArenaBackground";
+import Background from "../components/ui/Background";
 import Badge from "../components/ui/Badge";
 import GameSettings from "../components/game/GameSettings";
 import {
@@ -11,10 +11,11 @@ import {
 } from "../../../shared/data/game-data";
 import GameRoom from "../components/game/GameRoom";
 import Matchmaking from "../components/game/Matchmaking";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const OnlineGame = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [gameRoom, setGameRoom] = useState<string | null>(
     searchParams.get("gameId"),
   );
@@ -33,9 +34,14 @@ const OnlineGame = () => {
     setError(message);
   };
 
+  const changeScreen = (next: "menu" | "create" | "join") => {
+    setError(null);
+    setScreen(next);
+  };
+
   if (!gameRoom && searching) {
     return (
-      <ArenaBackground>
+      <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
           <Matchmaking
             onMatch={(gameId: string) => {
@@ -46,21 +52,26 @@ const OnlineGame = () => {
             onError={handleError}
           />
         </div>
-      </ArenaBackground>
+      </Background>
     );
   }
 
   if (!gameRoom && screen === "create") {
     return (
-      <ArenaBackground>
+      <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="font-vt323 text-3xl text-pacova-green">
+            ▼ CREATE A ROOM ▼
+          </p>
           {error && <Badge variant="red">{error}</Badge>}
-          <Input
-            placeholder="Enter room name"
-            value={roomInput}
-            onChange={(e) => setRoomInput(e.target.value)}
-            className="text-center"
-          />
+          <div className="w-80">
+            <Input
+              placeholder="Enter room name"
+              value={roomInput}
+              onChange={(e) => setRoomInput(e.target.value)}
+              className="text-center"
+            />
+          </div>
           <GameSettings
             difficulty={difficulty}
             timeLimit={timeLimit}
@@ -69,88 +80,131 @@ const OnlineGame = () => {
             onTimeLimitChange={setTimeLimit}
             onMazeIdChange={setMazeId}
           />
-          <PixelButton
-            onClick={() => {
-              setError(null);
-              setGameRoom(roomInput);
-            }}
-          >
-            Create
-          </PixelButton>
-          <PixelButton onClick={() => setScreen("menu")}>
-            Back to menu
-          </PixelButton>
+          <div className="flex gap-4 mt-2">
+            <PixelButton
+              variant="danger-red"
+              onClick={() => changeScreen("menu")}
+            >
+              Back to menu
+            </PixelButton>
+            <PixelButton
+              variant="filled-green"
+              disabled={!roomInput}
+              onClick={() => {
+                setError(null);
+                setGameRoom(roomInput);
+              }}
+            >
+              Create
+            </PixelButton>
+          </div>
         </div>
-      </ArenaBackground>
+      </Background>
     );
   }
   if (!gameRoom && screen === "join") {
     return (
-      <ArenaBackground>
+      <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <Input
-            label="Room name"
-            error={error ?? undefined}
-            value={roomInput}
-            onChange={(e) => setRoomInput(e.target.value)}
-          />
-          <PixelButton
-            onClick={() => {
-              setError(null);
-              setGameRoom(roomInput);
-            }}
-          >
-            Join
-          </PixelButton>
-          <PixelButton onClick={() => setScreen("menu")}>
-            Back to menu
-          </PixelButton>
+          <p className="font-vt323 text-3xl text-pacova-green">
+            ▼ JOIN A ROOM ▼
+          </p>
+          <div className="w-80">
+            <Input
+              placeholder="Enter room name"
+              error={error ?? undefined}
+              value={roomInput}
+              onChange={(e) => setRoomInput(e.target.value)}
+              className="text-center"
+            />
+          </div>
+          <div className="flex gap-4 mt-2">
+            <PixelButton
+              variant="danger-red"
+              onClick={() => changeScreen("menu")}
+            >
+              Back to menu
+            </PixelButton>
+            <PixelButton
+              variant="filled-green"
+              disabled={!roomInput}
+              onClick={() => {
+                setError(null);
+                setGameRoom(roomInput);
+              }}
+            >
+              Join
+            </PixelButton>
+          </div>
         </div>
-      </ArenaBackground>
+      </Background>
     );
   }
   if (!gameRoom) {
     return (
-      <ArenaBackground>
+      <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="font-vt323 text-3xl text-pacova-green">
+            ▼ PLAY ONLINE ▼
+          </p>
           {error && <Badge variant="red">{error}</Badge>}
-          <PixelButton
-            onClick={() => {
-              setError(null);
-              setSearching(true);
-            }}
-          >
-            Find an opponent
-          </PixelButton>
-          <PixelButton onClick={() => setScreen("create")}>
-            Create a room
-          </PixelButton>
-          <PixelButton onClick={() => setScreen("join")}>
-            Join a room
-          </PixelButton>
+          <div className="w-80 flex flex-col gap-4">
+            <PixelButton
+              variant="filled-green"
+              onClick={() => {
+                setError(null);
+                setSearching(true);
+              }}
+              className="w-full"
+            >
+              Find an opponent
+            </PixelButton>
+            <PixelButton
+              variant="outline-green"
+              onClick={() => changeScreen("create")}
+              className="w-full"
+            >
+              Create a room
+            </PixelButton>
+            <PixelButton
+              variant="outline-green"
+              onClick={() => changeScreen("join")}
+              className="w-full"
+            >
+              Join a room
+            </PixelButton>
+            <div className="mt-4 flex justify-center">
+              <PixelButton
+                variant="danger-red"
+                onClick={() => navigate("/home")}
+              >
+                Home
+              </PixelButton>
+            </div>
+          </div>
         </div>
-      </ArenaBackground>
+      </Background>
     );
   }
   return (
-    <ArenaBackground>
+    <Background>
       <GameRoom
         gameId={gameRoom}
         onError={handleError}
         onBackToMenu={() => {
           setGameRoom(null);
-          setScreen("menu");
+          changeScreen("menu");
         }}
         onPlayAgain={() => {
           setGameRoom(null);
           setSearching(true);
-          setScreen("menu");
+          changeScreen("menu");
         }}
         mazeId={screen === "create" ? mazeId : DEFAULT_MAZE_ID}
         timeLimit={screen === "create" ? timeLimit : DEFAULT_TIME_LIMIT}
         difficulty={screen === "create" ? difficulty : DEFAULT_DIFFICULTY}
       />
-    </ArenaBackground>
+    </Background>
   );
 };
 export default OnlineGame;
