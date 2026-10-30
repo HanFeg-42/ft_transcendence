@@ -1,22 +1,17 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { prisma } from '../prisma';
+import { toIncoming } from '../ws/websocket';
 
 const router = Router();
 
-
-// 1. Fetching Chat History (GET /messages/:friendId)
-router.get('/messages/:friendId', async (req: Request, res: Response) => {
+// Chat history with one friend, newest first, 50 per page (GET /messages/:friendId?cursor=<id>)
+router.get('/messages/:friendId', async (req, res) => {
   const userId = Number(req.headers['x-user-id']);
   const friendId = Number(req.params.friendId);
-  const limit = 50;
   const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
 
-  if (!userId) {
-    return res.status(401).json({ error: 'Missing identity' });
-  }
-  if (!friendId || Number.isNaN(friendId)) {
-    return res.status(400).json({ error: 'Invalid friendId' });
-  }
+  if (!userId) return res.status(401).json({ error: 'Missing identity' });
+  if (!friendId || Number.isNaN(friendId)) return res.status(400).json({ error: 'Invalid friendId' });
 
   const rows = await prisma.message.findMany({
     where: {
@@ -26,26 +21,11 @@ router.get('/messages/:friendId', async (req: Request, res: Response) => {
       ],
     },
     orderBy: { createdAt: 'desc' },
-    take: limit,
+    take: 50,
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
   });
 
-  // Map to the same shape the frontend already expects from the WS payload
-  // (sender_id / receiver_id / created_at, not camelCase).
-  const messages = rows.map((m) => ({
-    id: m.id,
-    sender_id: m.senderId,
-    receiver_id: m.receiverId,
-    content: m.content,
-    created_at: m.createdAt.toISOString(),
-    read_at: m.readAt ? m.readAt.toISOString() : null,
-    kind: m.kind,
-    meta: m.meta,
-  }));
-
-  res.json(messages);
+  res.json(rows.map(toIncoming));
 });
-
-
 
 export default router;

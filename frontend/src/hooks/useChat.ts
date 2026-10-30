@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChatEvents as E } from '../../../../shared/types/chat-types';
+import { ChatEvents as E } from '../../../shared/types/chat-types';
 import type {
   ChatMessageIncoming as Message,
   ChatClientMessage,
   ChatServerMessage,
-} from '../../../../shared/types/chat-types';
+} from '../../../shared/types/chat-types';
+
+
 
 export interface Friend {
   id: number;
@@ -21,6 +23,8 @@ const upsert = (list: Message[]) => (prev: Record<number, Message>) => ({
   ...prev,
   ...Object.fromEntries(list.map((m) => [m.id, m])),
 });
+
+
 
 /** Everything the chat page needs: friends, the selected conversation, and the live websocket events. */
 export default function useChat(token: string | null) {
@@ -50,13 +54,16 @@ export default function useChat(token: string | null) {
     if (socket.current?.readyState === WebSocket.OPEN) socket.current.send(JSON.stringify(packet));
   }, []);
 
+
+
+
   useEffect(() => {
     if (!token) return;
     api(token, 'friends')
       .then((r) => (r.ok ? r.json() : []))
       .then(setFriendList)
       .catch(console.error);
-  }, [token, blocked]);
+  }, [token]);
 
   // History + block status: on friend change and after a reconnect (to catch up on missed messages).
   useEffect(() => {
@@ -91,6 +98,7 @@ export default function useChat(token: string | null) {
     let retry: ReturnType<typeof setTimeout>;
     const timers: Record<number, ReturnType<typeof setTimeout>> = {};
 
+
     // Keep the typing indicator visible briefly.
     const showTyping = (id: number, on: boolean) => {
       clearTimeout(timers[id]);
@@ -101,15 +109,16 @@ export default function useChat(token: string | null) {
     const connect = () => {
       ws = new WebSocket(`wss://${window.location.host}/api/chat/ws?token=${token}`);
       socket.current = ws;
+
       ws.onopen = () => {
         retries = 0;
-        setReconnecting(false);
-      };
+        setReconnecting(false);};
+      
       ws.onclose = () => {
         if (closed) return;
         setReconnecting(true);
-        retry = setTimeout(connect, Math.min(1000 * 2 ** retries++, 15000)); // 1s, 2s, 4s ... max 15s
-      };
+        retry = setTimeout(connect, Math.min(1000 * 2 ** retries++, 15000));};
+      
       ws.onmessage = (event) => {
         let packet: ChatServerMessage;
         try {
@@ -117,6 +126,8 @@ export default function useChat(token: string | null) {
         } catch {
           return;
         }
+
+
         switch (packet.event) {
           // Messages, invites and invite replies all arrive as a full message.
           case E.MESSAGE:
@@ -125,19 +136,23 @@ export default function useChat(token: string | null) {
             if (packet.event === E.MESSAGE) showTyping(packet.data.sender_id, false);
             setMessages(upsert([packet.data]));
             break;
+          
           case E.PRESENCE: {
             const { user_id, status } = packet.data;
             setPresence((p) => ({ ...p, [user_id]: status === 'online' }));
             break;
           }
+
           case E.TYPING:
             showTyping(packet.data.sender_id, true);
             break;
+
           case E.READ: {
             const { reader_id, read_at } = packet.data;
             setReadAt((p) => ({ ...p, [reader_id]: read_at }));
             break;
           }
+
           case E.ERROR:
             setError(packet.data.message);
             setTimeout(() => setError(''), 3000);
@@ -155,6 +170,8 @@ export default function useChat(token: string | null) {
     };
   }, [token]);
 
+
+
   // Messages for the selected friend, oldest first.
   const conversation = Object.values(messages)
     .filter((m) => m.sender_id === friendId || m.receiver_id === friendId)
@@ -170,6 +187,8 @@ export default function useChat(token: string | null) {
     return () => document.removeEventListener('visibilitychange', markRead);
   }, [conversation.length, friendId, reconnecting, send]);
 
+
+  
   return {
     friends,
     friend: friends.find((f) => f.id === friendId),
