@@ -172,6 +172,36 @@ const resources = {
       bot_restart: "RESTART",
       bot_quit: "QUIT",
 
+        // ===== HOW TO PLAY =====
+      howToPlay_title: "HOW TO PLAY",
+      howToPlay_game: "THE GAME",
+      howToPlay_gameDescription:
+        "Welcome to Pacova, a retro arcade chase game! You are Pac-Man, trapped in a glowing neon maze full of dots. Your mission: eat every single dot to clear the level. But you are not alone. Four ghosts roam the maze and they want to catch you. Touch one and you lose a life, and you only have 3. Grab a power pellet and the tables turn: the ghosts turn blue and you can hunt them down for big points. Play solo against the bot, share the screen with a friend, or challenge players online. The highest score wins.",
+      howToPlay_controls: "CONTROLS",
+      howToPlay_controlsDescription:
+        "Use the arrow keys or W A S D to move up, down, left and right. Press a turn a little early, the game remembers it and turns for you at the next corner.",
+      howToPlay_ghosts: "THE GHOSTS",
+      howToPlay_blinky: "BLINKY",
+      howToPlay_blinkyDescription: "chases you",
+      howToPlay_pinky: "PINKY",
+      howToPlay_pinkyDescription: "ambushes ahead",
+      howToPlay_inky: "INKY",
+      howToPlay_inkyDescription: "unpredictable",
+      howToPlay_clyde: "CLYDE",
+      howToPlay_clydeDescription: "chases, then wanders",
+      howToPlay_scoring: "SCORING",
+      howToPlay_dot: "Dot: 10",
+      howToPlay_powerPellet: "Power pellet: 50",
+      howToPlay_ghostPoints: "Ghost: 200, 400, 800, 1600",
+      howToPlay_fruit: "Fruit: bonus",
+      howToPlay_tips: "TIPS",
+      howToPlay_tip1: "Save power pellets for real danger.",
+      howToPlay_tip2: "Use the tunnels to escape.",
+      howToPlay_tip3: "Watch all four ghosts.",
+      howToPlay_back: "Back",
+      howToPlay_play: "Play",
+
+
       // Footer
       footerLegal: "Legal",
       footerPrivacy: "Privacy Policy",
@@ -603,6 +633,7 @@ const resources = {
     disableFailed: "Échec de la désactivation de la 2FA",
     connectionError: "Impossible de se connecter au serveur",
     disableRefreshError: "La 2FA a été désactivée, mais nous n’avons pas pu actualiser votre session.",
+
       // ===== CHAT (chat_*) =====
       chat_loading: "Chargement...",
       chat_reconnecting: "Reconnexion…",
@@ -652,6 +683,37 @@ const resources = {
       bot_time: "TEMPS {{time}}",
       bot_restart: "REJOUER",
       bot_quit: "QUITTER",
+
+      // ===== HOW TO PLAY =====
+      howToPlay_title: "COMMENT JOUER",
+      howToPlay_game: "LE JEU",
+      howToPlay_gameDescription:
+        "Bienvenue dans Pacova, un jeu de poursuite arcade rétro ! Tu incarnes Pac-Man, piégé dans un labyrinthe néon rempli de points. Ta mission : manger tous les points pour terminer le niveau. Mais tu n'es pas seul. Quatre fantômes parcourent le labyrinthe et veulent t'attraper. Si tu en touches un, tu perds une vie. Tu n'en as que 3 ! Attrape une super pastille pour inverser la situation : les fantômes deviennent bleus et tu peux les poursuivre pour gagner beaucoup de points. Joue seul contre le bot, partage l'écran avec un ami ou défie d'autres joueurs en ligne. Le meilleur score gagne.",
+      howToPlay_controls: "COMMANDES",
+      howToPlay_controlsDescription:
+        "Utilise les flèches directionnelles ou W A S D pour te déplacer vers le haut, le bas, la gauche et la droite. Anticipe légèrement tes changements de direction : le jeu mémorise ta commande et tourne pour toi au prochain virage.",
+      howToPlay_ghosts: "LES FANTÔMES",
+      howToPlay_blinky: "BLINKY",
+      howToPlay_blinkyDescription: "te poursuit",
+      howToPlay_pinky: "PINKY",
+      howToPlay_pinkyDescription: "tend des embuscades",
+      howToPlay_inky: "INKY",
+      howToPlay_inkyDescription: "imprévisible",
+      howToPlay_clyde: "CLYDE",
+      howToPlay_clydeDescription: "te poursuit, puis erre",
+      howToPlay_scoring: "SCORE",
+      howToPlay_dot: "Point : 10",
+      howToPlay_powerPellet: "Super pastille : 50",
+      howToPlay_ghostPoints: "Fantôme : 200, 400, 800, 1600",
+      howToPlay_fruit: "Fruit : bonus",
+      howToPlay_tips: "CONSEILS",
+      howToPlay_tip1: "Garde les super pastilles pour les vrais dangers.",
+      howToPlay_tip2: "Utilise les tunnels pour t'échapper.",
+      howToPlay_tip3: "Surveille les quatre fantômes.",
+      howToPlay_back: "Retour",
+      howToPlay_play: "Jouer",
+
+
       // Footer
       footerLegal: "Mentions légales",
       footerPrivacy: "Politique de confidentialité",
@@ -1122,6 +1184,36 @@ const resources = {
       bot_time: "الوقت {{time}}",
       bot_restart: "إعادة اللعب",
       bot_quit: "خروج",
+
+      // ===== HOW TO PLAY =====
+      howToPlay_title: "كيفية اللعب",
+      howToPlay_game: "اللعبة",
+      howToPlay_gameDescription:
+        "مرحبًا بك في باكوفا، لعبة مطاردة كلاسيكية من ألعاب الأركيد! أنت باك مان، محاصر في متاهة نيون متوهجة مليئة بالنقاط. مهمتك: التهام كل نقطة لتجاوز المستوى. لكنك لست وحدك. أربعة أشباح تجوب المتاهة وتريد الإمساك بك. المس أيًا منها وستخسر محاولة، ولديك 3 محاولات فقط. احصل على حبة الطاقة، وسينقلب الوضع: ستتحول الأشباح إلى اللون الأزرق ويمكنك مطاردتها للحصول على نقاط عالية. العب منفردًا ضد الكمبيوتر، أو شارك الشاشة مع صديق، أو تحدَّ لاعبين عبر الإنترنت. يفوز صاحب أعلى نتيجة.",
+      howToPlay_controls: "التحكم",
+      howToPlay_controlsDescription:
+        "استخدم مفاتيح الأسهم أو W A S D للتحرك للأعلى والأسفل واليسار واليمين. اضغط على اتجاه الحركة قبل الوصول إلى المنعطف بقليل، وستتذكر اللعبة اختيارك وتنعطف تلقائيًا عند الزاوية التالية.",
+      howToPlay_ghosts: "الأشباح",
+      howToPlay_blinky: "BLINKY",
+      howToPlay_blinkyDescription: "يطاردك",
+      howToPlay_pinky: "PINKY",
+      howToPlay_pinkyDescription: "ينصب لك الكمائن",
+      howToPlay_inky: "INKY",
+      howToPlay_inkyDescription: "غير متوقع",
+      howToPlay_clyde: "CLYDE",
+      howToPlay_clydeDescription: "يطاردك ثم يتجول",
+      howToPlay_scoring: "النقاط",
+      howToPlay_dot: "النقطة: 10",
+      howToPlay_powerPellet: "حبة القوة: 50",
+      howToPlay_ghostPoints: "الشبح: 200، 400، 800، 1600",
+      howToPlay_fruit: "الفاكهة: نقاط إضافية",
+      howToPlay_tips: "نصائح",
+      howToPlay_tip1: "احتفظ بحبات القوة للحظات الخطر الحقيقي.",
+      howToPlay_tip2: "استخدم الأنفاق للهروب.",
+      howToPlay_tip3: "راقب الأشباح الأربعة.",
+      howToPlay_back: "رجوع",
+      howToPlay_play: "العب",
+
       // Footer
       footerLegal: "قانوني",
       footerPrivacy: "سياسة الخصوصية",
