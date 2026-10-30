@@ -205,11 +205,11 @@ const GameRoom = ({
         {isOpponentAway && (
           <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
             <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
-              <h1 className="font-press-start text-xl text-pacova-pink">
+              <h1 className="font-press-start text-pacova-pink">
                 Opponent disconnected
               </h1>
               <p className="font-vt323 text-2xl text-white/70">Forfeit in</p>
-              <p className="font-press-start text-5xl text-pacova-green drop-shadow-glow-green">
+              <p className="font-press-start text-3xl text-pacova-green drop-shadow-glow-green">
                 <Countdown seconds={FORFEIT_DELAY_MS / 1000} />s
               </p>
             </div>
@@ -240,7 +240,8 @@ const GameRoom = ({
                 </div>
               ) : (
                 <p className="font-vt323 text-2xl text-white/70">
-                  reconnecting...
+                  reconnecting
+                  <Dots />
                 </p>
               )}
             </div>
