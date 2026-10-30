@@ -3,6 +3,7 @@ import {
   TIME_LIMITS,
   DIFFICULTIES,
 } from "../../../../shared/data/game-data";
+import Picker from "./Picker";
 
 const GameSettings = ({
   difficulty,
@@ -21,41 +22,28 @@ const GameSettings = ({
 }) => {
   return (
     <>
-      <select
+      <Picker
+        icon="👻"
+        label="DIFFICULTY"
         value={difficulty}
-        onChange={(e) => onDifficultyChange(e.target.value)}
-        className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
-      >
-        {Object.keys(DIFFICULTIES).map((level) => (
-          <option key={level} value={level}>
-            {level}
-          </option>
-        ))}
-      </select>
-
-      <select
+        options={Object.keys(DIFFICULTIES)}
+        onChange={onDifficultyChange}
+      />
+      <Picker
+        icon="🗺️"
+        label="MAP"
         value={mazeId}
-        onChange={(e) => onMazeIdChange(e.target.value)}
-        className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
-      >
-        {Object.keys(MAZES).map((maze) => (
-          <option key={maze} value={maze}>
-            {maze}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={timeLimit}
-        onChange={(e) => onTimeLimitChange(Number(e.target.value))}
-        className="font-pixelify uppercase text-xl bg-black/60 text-pacova-pink border border-pacova-pink/60 focus:border-pacova-pink px-3 py-2 rounded-md outline-none cursor-pointer"
-      >
-        {TIME_LIMITS.map((seconds) => (
-          <option key={seconds} value={seconds}>
-            {seconds / 60} min
-          </option>
-        ))}
-      </select>
+        options={Object.keys(MAZES)}
+        onChange={onMazeIdChange}
+      />
+      <Picker
+        icon="⏱️"
+        label="TIME"
+        value={String(timeLimit)}
+        options={TIME_LIMITS.map((seconds) => String(seconds))}
+        onChange={(v) => onTimeLimitChange(Number(v))}
+        format={(v) => `${Number(v) / 60} min`}
+      />
     </>
   );
 };
