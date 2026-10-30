@@ -23,7 +23,7 @@ import {
   getLeaderboardRows,
   type LeaderboardRow,
 } from '../../services/leaderboardService';
-import { routeMap } from '../Chat/helpers';
+import { routeMap } from '../Chat/index';
 
 function calculateLevel(wins: number, matchesPlayed: number) {
   const xp = wins * 50 + (matchesPlayed - wins) * 10;

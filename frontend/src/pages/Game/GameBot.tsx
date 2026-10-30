@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { createGame, applyInput, tick } from '../../engine/engine';
 import { DEFAULT_MAZE_ID, MAZES, findSpawn } from '../../engine/maze';
-import { chooseDirection } from '../../ai/bot';
-import type { BotDifficulty } from '../../ai/bot';
+import { chooseDirection } from '../../engine/bot';
+import type { BotDifficulty } from '../../engine/bot';
 import type { GameState, Direction } from '../../../../shared/types/game-types';
 // Same UI pieces as the local game page (GamePage.tsx)
 import MazeUI from '../../components/game/MazeUI';

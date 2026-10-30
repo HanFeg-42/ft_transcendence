@@ -1,216 +1,230 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
+import { Avatar } from '../../components/ui/Avatar';
 import { Input } from '../../components/ui/Input';
+import { Card } from '../../components/ui/Card';
 import PixelButton from '../../components/ui/PixelButton';
-import useChat from './useChat';
-import MessageList from './MessageList';
-import { Sidebar, Header, NewChatModal, GameInviteModal } from './Parts';
-import { type Friend, NO_GLOW, routeMap } from './helpers';
-import { useTranslation } from "react-i18next";
-// import Avatar from '../../components/ui/Avatar';
-// import Avatar from '../../components/ui/Avatar';
+import useChat, { type Friend } from '../../hooks/useChat';
+import MessageList, { PacManIcon } from './MessageList';
+
+
+
+export const routeMap: Record<string, string> = {
+  HOME: '/home',
+  LEADERBOARD: '/leaderboard',
+  PROFILE: '/profile',
+  CHAT: '/chat',
+  NOTIFICATION: '/notifications',
+  SETTINGS: '/settings',
+};
+
+
+const PANEL = 'bg-pacova-surface border-2 border-pacova-green-dark rounded-lg';
+
+function FriendAvatar({ friend }: { friend: Friend }) {
+  const { t } = useTranslation();
+  return (
+    <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
+      {friend.avatar ? (
+        <img 
+        src={friend.avatar} 
+        alt={t('chat_avatarAlt', { username: friend.username })} 
+        className="w-10 h-10 object-cover" />) : (
+        <Avatar iconName="packmann" size="sm" />
+      )}
+    </span>
+  );
+}
+
+
+function GameInviteModal({ name, receiver, onAnswer }: { name: string; receiver: boolean; onAnswer: (yes: boolean) => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <Card variant="green" className="max-w-sm !h-auto text-center">
+        <div className="flex flex-col items-center gap-4">
+          <PacManIcon className="w-16 h-16" />
+          <p className="font-vt323 text-lg">
+            <span className="break-all">{receiver ? t('chat_invitedYou', { name }) : t('chat_inviteTo', { name })}</span>
+            <br />
+            <span className="font-pixelify text-2xl text-pacova-green">Pacova</span>
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <PixelButton variant="filled-green" onClick={() => onAnswer(true)}>
+              {receiver ? t('chat_accept') : t('chat_inviteToPlay')}
+            </PixelButton>
+            <PixelButton variant="outline-magenta" onClick={() => onAnswer(false)}>
+              {receiver ? t('chat_decline') : t('chat_cancel')}
+            </PixelButton>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+
 
 export default function Chat() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const chat = useChat(token);
+  const { friend, conversation, blocked } = chat;
   const myId = user ? Number(user.id) : 0;
-
-  const [selectedId, setSelectedId] = useState(0);
-  const [friendList, setFriendList] = useState<Friend[]>([]);
   const [draft, setDraft] = useState('');
-  const [newChatOpen, setNewChatOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const lastTypingSent = useRef<Record<number, number>>({}); // per friend
   const [friendsOpen, setFriendsOpen] = useState(false);
 
-
-
-  useEffect(() => {
-    if (!token) return;
-    fetch('/api/chat/friends', { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setFriendList(data.map((f: any) => ({ id: f.id, username: f.username, status: f.online ? 'online' : 'offline', avatar: f.avatar ?? null}))))
-      .catch(console.error);
-  }, [token]);
-
-  const friendId = friendList.some((f) => f.id === selectedId) ? selectedId : friendList[0]?.id ?? 0;
-
-  const chat = useChat(token, friendId);
-  const { conversation, sendRead } = chat;
-
-  // Friends with their live online/offline status.
-  const friends = friendList.map((f) => ({
-    ...f,
-    status: f.id === friendId && chat.iBlockedThem ? 'offline' : chat.presence[f.id] ?? f.status,
-  }));
-  const friend = friends.find((f) => f.id === friendId) ?? friends[0];
-
-  const blocked = chat.iBlockedThem;
   const pendingInvites = conversation.filter((m) => m.kind === 'game_invite' && m.meta?.status === 'pending');
-  const invitesForMe = pendingInvites.filter((m) => m.receiver_id === myId);
-  const incomingInvite = invitesForMe[invitesForMe.length - 1]; // latest one
+  const incomingInvite = pendingInvites.findLast((m) => m.receiver_id === myId);
 
 
-  
+  const page = (children: React.ReactNode) => (
+    <Background>
+      <Navbar activeTab="CHAT" onSelectTab={(tab) => routeMap[tab] && navigate(routeMap[tab])} />
+      {children}
+    </Background>
+  );
 
-  // Tell the server we read this chat: on new messages, friend change, and when the tab regains focus.
-  useEffect(() => {
-    const markRead = () => {
-      if (friendId && document.visibilityState === 'visible') sendRead(friendId);
-    };
-    markRead();
-    document.addEventListener('visibilitychange', markRead);
-    return () => document.removeEventListener('visibilitychange', markRead);
-  }, [conversation.length, friendId]);
+  const screen = (text: string, extra = '') =>
+    page(
+      <main className="flex-1 flex items-center justify-center">
+        <h1 className={`font-pixelify text-pacova-pink text-2xl uppercase text-center px-4 ${extra}`}>{text}</h1>
+      </main>,
+    );
 
-  function goToTab(tab: string) {
-    if (routeMap[tab]) navigate(routeMap[tab]);
-  }
+  if (!user || !token) return screen(t('chat_loading'));
+  if (chat.reconnecting) return screen(t('chat_reconnecting'), 'animate-pulse');
+  if (!friend) return screen(t('chat_noFriends'));
 
-  // function selectFriend(id: number) {
-  //   setSelectedId(id);
-  //   setInviteOpen(false);
-  // }
-
-  function handleSend() {
-    const text = draft.trim();
-    if (!text) return;
-    chat.sendMessage(friendId, text);
-    setDraft('');
-  }
-
-  // Update the draft and tell the friend we're typing (at most once every 2s).
-  function handleDraftChange(value: string) {
-    setDraft(value);
-    if (value.trim() && Date.now() - (lastTypingSent.current[friendId] ?? 0) > 2000) {
-      chat.sendTyping(friendId);
-      lastTypingSent.current[friendId] = Date.now();
-    }
-  }
-
-  // selecting a friend closes the list
-  function selectFriend(id: number) {
-    setSelectedId(id);
+  function pick(id: number) {
+    chat.select(id);
     setInviteOpen(false);
     setFriendsOpen(false);
   }
 
-
-  if (!user || !token) {
-    return (
-      <Background>
-        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
-        <main className="flex-1 flex items-center justify-center">
-          <h1 className="font-pixelify text-pacova-pink text-3xl uppercase">{t('chat_loading')}</h1>
-        </main>
-      </Background>
-    );
+  function send() {
+    const text = draft.trim();
+    if (!text) return;
+    chat.sendMessage(text);
+    setDraft('');
   }
 
-  if (chat.reconnecting) {
-    return (
-      <Background>
-        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
-        <main className="flex-1 flex items-center justify-center">
-          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase animate-pulse">{t('chat_reconnecting')}</h1>
-        </main>
-      </Background>
-    );
+  function answerInvite(yes: boolean) {
+    if (incomingInvite) chat.replyInvite(incomingInvite.id, yes);
+    else {
+      if (yes) chat.sendInvite();
+      setInviteOpen(false);
+    }
   }
 
-  if (!friend) {
-    return (
-      <Background>
-        <Navbar activeTab="CHAT" onSelectTab={goToTab} />
-        <main className="flex-1 flex items-center justify-center">
-          <h1 className="font-pixelify text-pacova-pink text-2xl uppercase text-center px-4">
-            {t('chat_noFriends')}
-          </h1>
-        </main>
-      </Background>
-    );
-  }
 
-  return (
-    <Background>
-      <Navbar activeTab="CHAT" onSelectTab={goToTab} />
-      <main className="flex-1 min-h-0 h-[calc(100dvh-152px)] max-h-[calc(100dvh-152px)] sm:h-[calc(100dvh-128px)] sm:max-h-[calc(100dvh-128px)] max-w-[1320px] mx-auto w-full px-2 py-2 md:px-4 md:py-5 flex gap-5 overflow-hidden">
-        <Sidebar friends={friends} selectedId={friendId} onSelect={selectFriend} onNewChat={() => setNewChatOpen(true)} open={friendsOpen}/>
 
-        <section className="flex-1 min-w-0 min-h-0 flex flex-col bg-pacova-surface border-2 border-pacova-green-dark rounded-lg overflow-hidden">
-          <Header
-            key={friend.id}
-            friend={friend}
-            blocked={blocked}
-            onToggleBlock={chat.toggleBlock}
-            onInvite={() => setInviteOpen(true)}
-            inviteDisabled={blocked || pendingInvites.length > 0}
-            onToggleFriends={() => setFriendsOpen((o) => !o)}
-          />
+  return page(
+    <main className="flex-1 h-[calc(100dvh-152px)] max-h-[calc(100dvh-152px)] sm:h-[calc(100dvh-128px)] sm:max-h-[calc(100dvh-128px)] max-w-[1320px] mx-auto w-full p-2 md:px-4 md:py-5 flex gap-5 overflow-hidden">
 
-          <MessageList
-            conversation={conversation}
-            friend={friend}
-            myId={myId}
-            status={chat.status}
-            isTyping={chat.typing[friendId] ?? false}
-            friendReadAt={chat.readAt[friendId] ?? null}
-          />
 
-          {incomingInvite ? (
-            <GameInviteModal
-              receiver
-              name={friend.username}
-              onYes={() => chat.replyInvite(incomingInvite.id, true)}
-              onNo={() => chat.replyInvite(incomingInvite.id, false)}
-            />
-          ) : (
-            inviteOpen && (
-              <GameInviteModal
-                name={friend.username}
-                onYes={() => {
-                  chat.sendInvite(friendId);
-                  setInviteOpen(false);
-                }}
-                onNo={() => setInviteOpen(false)}
-              />
-            )
-          )}
+      <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0 flex-col overflow-hidden ${PANEL}`}>
+        <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
+          <PacManIcon className="w-7 h-7 shrink-0" />
+          {t('chat_friends')}
+          <PacManIcon className="w-7 h-7 shrink-0" flip />
+        </h2>
 
-            {chat.error && <p className="px-4 font-vt323 text-lg text-pacova-pink">{chat.error}</p>}
+        <div className="flex-1 flex flex-col gap-3 overflow-y-auto p-4 [scrollbar-color:var(--color-pacova-gray)_transparent]">
+          {chat.friends.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => pick(f.id)}
+              className={`flex items-center gap-3 px-3 py-3 rounded-md border-2 transition-colors text-start ${
+                f.id === friend.id ? 'border-pacova-green' : 'border-transparent hover:border-pacova-gray'
+              }`}
+            >
+              <FriendAvatar friend={f} />
+              <span className="font-vt323 text-white text-lg uppercase truncate flex-1">{f.username}</span>
+              <span className={`w-3 h-3 rounded-full shrink-0 ${f.online ? 'bg-pacova-green' : 'bg-gray-500'}`} aria-label={f.online ? 'online' : 'offline'} />
+            </button>
+          ))}
+        </div>
+      </aside>
 
-          <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
-            <Input
-              className={`min-w-0 w-full !border-pacova-pink !bg-[#080B1A] !text-white placeholder:!text-white/50 !text-lg sm:!text-xl !py-3 disabled:opacity-40 ${NO_GLOW} focus:!shadow-none focus:[box-shadow:none!important]`}
-              value={draft}
-              type="text"
-              maxLength={1000}
-              disabled={blocked}
-              onChange={(e) => handleDraftChange(e.target.value)}
-              placeholder={blocked ? t('chat_cannotMessage') : t('chat_typePlaceholder')}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSend();
-              }}
-            />
-            <PixelButton type="button" variant="outline-green" size="lg" className={NO_GLOW} onClick={handleSend} disabled={blocked}>
-              <span className="inline-flex items-center gap-2">
-                <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor" aria-hidden="true">
-                  <path d="M21.7 3.3a1 1 0 0 0-1.03-.24l-18 6a1 1 0 0 0 .08 1.92l7.26 1.82 1.82 7.26a1 1 0 0 0 .91.76h.06a1 1 0 0 0 .9-.57l6-18a1 1 0 0 0 0-1.95ZM4.6 10.1l12.1-4.03-6.04 6.04L4.6 10.1Zm7.96 7.96-1.04-4.16 6.04-6.04-5 10.2Z" />
-                </svg>
-                <span className="hidden sm:inline">{t('chat_send')}</span>
-              </span>
-            </PixelButton>
+      <section className={`flex-1 flex flex-col overflow-hidden ${PANEL}`}>
+        <div className="flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 border-pacova-green-dark">
+          <button 
+          onClick={() => setFriendsOpen((o) => !o)} 
+          aria-label={t('chat_friends')} 
+          className="md:hidden p-1 text-pacova-green">
+            <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor" aria-hidden="true">
+              <path d="M3 5h18v2.5H3zM3 10.75h18v2.5H3zM3 16.5h18v2.5H3z" />
+            </svg>
+          </button>
+
+          <button 
+          title={t('chat_viewProfile')} 
+          disabled={blocked} 
+          onClick={() => navigate(`/profile/${friend.id}`)} 
+          className="flex items-center gap-3 min-w-0 disabled:cursor-not-allowed">
+            <FriendAvatar friend={friend} />
+            <span className="font-pixelify text-white text-lg uppercase truncate">{friend.username}</span>
+          </button>
+
+          <div className="ms-auto flex items-center gap-2 shrink-0">
+            <button 
+            onClick={() => setInviteOpen(true)} 
+            disabled={pendingInvites.length > 0 || blocked} 
+            title={t('chat_inviteToPlay')} 
+            aria-label={t('chat_inviteToPlay')} 
+            className="p-2 rounded-md bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed">
+              <PacManIcon className="w-6 h-6" />
+            </button>
+
+            <button
+            onClick={() => chat.toggleBlock()}
+            className="px-3 py-2 rounded-md font-vt323 text-lg uppercase text-red-500 hover:bg-red-500/10">
+            {blocked ?  t('chat_unblock') : t('chat_block')}
+          </button>
           </div>
-        </section>
-      </main>
+        </div>
 
-      {newChatOpen && (
-        <NewChatModal friends={friends} onSelect={selectFriend} onClose={() => setNewChatOpen(false)} />
-      )}
-    </Background>
+        <MessageList 
+          conversation={conversation} 
+          friend={friend} 
+          myId={myId} 
+          status={chat.status} 
+          isTyping={chat.typing} 
+          friendReadAt={chat.friendReadAt}/>
+
+        {(incomingInvite || inviteOpen) && 
+        <GameInviteModal 
+          receiver={!!incomingInvite} 
+          name={friend.username} 
+          onAnswer={answerInvite} />}
+
+        {chat.error && <p className="px-4 font-vt323 text-lg text-pacova-pink">{chat.error}</p>}
+
+        <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
+          <Input
+            className="!border-pacova-pink !bg-[#080B1A] text-lg sm:!text-xl !py-3 disabled:opacity-40"
+            value={draft}
+            type="text"
+            maxLength={1000}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (e.target.value.trim()) chat.sendTyping();
+            }}
+            placeholder={t('chat_typePlaceholder')}
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+          />
+          <PixelButton type="button" variant="outline-green" size="lg" onClick={send}>
+            {t('chat_send')}
+          </PixelButton>
+        </div>
+      </section>
+    </main>,
   );
 }
