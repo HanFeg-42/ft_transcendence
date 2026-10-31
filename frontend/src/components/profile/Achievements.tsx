@@ -6,14 +6,19 @@ import championImg from '../../assets/achievement/champion.png';
 import cherrysImg from '../../assets/achievement/cherrys.png';
 import ghostHanterImg from '../../assets/achievement/ghost-hanter.png';
 import pacManiacImg from '../../assets/achievement/pac-maniac.png';
-// import speederImg from '../../assets/achievement/speeder.png';
-// import tournamentImg from '../../assets/achievement/tournament.png';
 
 const ACHIEVEMENT_IMAGES: Record<string, string> = {
   champion: championImg,
   'ghost-hunter': ghostHanterImg,
   'cherry-collector': cherrysImg,
   'pac-maniac': pacManiacImg,
+};
+
+const ACHIEVEMENT_TARGETS: Record<string, number> = {
+  champion: 2,
+  'ghost-hunter': 50,
+  'cherry-collector': 200,
+  'pac-maniac': 500,
 };
 
 export interface Achievement {
@@ -54,6 +59,15 @@ export default function Achievements({
             { defaultValue: item.description }
           );
 
+          const target = ACHIEVEMENT_TARGETS[item.id] ?? 1;
+
+          const progressPercent = item.unlocked
+            ? 100
+            : Math.max(
+                0,
+                Math.min(100, (item.progress / target) * 100)
+              );
+
           return (
             <Card
               key={item.id}
@@ -86,14 +100,13 @@ export default function Achievements({
                   {description}
                 </p>
 
-                {Math.max(0, Math.min(100, item.progress)) > 0 &&
-                  !item.unlocked && (
+                {!item.unlocked && (
                   <div className="w-full bg-black/60 rounded-full h-1.5 mt-2">
                     <div
                       className="h-full bg-pacova-green rounded-full transition-all duration-500"
                       style={{
-                      width: `${Math.max(0, Math.min(100, item.progress))}%`,
-                    }}
+                        width: `${progressPercent}%`,
+                      }}
                     />
                   </div>
                 )}

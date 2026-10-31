@@ -109,6 +109,7 @@ export interface GameState {
   status: GameStatus;
   players: Player[];
   chasers: Chaser[];
+  matchId?: string;
   pellets: boolean[][];
   fruits: boolean[][];
   timeRemaining: number;

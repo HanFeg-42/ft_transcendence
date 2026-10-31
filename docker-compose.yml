@@ -84,6 +84,8 @@ services:
     container_name: user
     env_file:
       - .env
+    ports: 
+      - "3004:3004"
     depends_on:
       postgres:
         condition: service_healthy

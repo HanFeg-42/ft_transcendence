@@ -23,7 +23,7 @@ interface ProfileCardProps {
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
-  username = 'NOUSS',
+  username = 'Player',
   statusText = 'Ready to play',
   bio,
   level = 1,

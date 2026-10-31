@@ -65,6 +65,8 @@ const resources = {
       userProfile_vs: "VS {{opponent}}",
       userProfile_achievements: "▼ ACHIEVEMENTS",
       userProfile_matchWin: "Wins",
+      userProfile_matchLoss: "lose",
+
       "userProfile_achievement_champion_title": 'Champion',
       "userProfile_achievement_champion_description": 'Win 100 matches',      "userProfile_achievement_ghost-hunter_title": "Ghost Hunter",
       "userProfile_achievement_ghost-hunter_description": "Defeat 50 ghosts",
@@ -299,6 +301,7 @@ const resources = {
       userProfile_vs: "CONTRE {{opponent}}",
       userProfile_achievements: "▼ SUCCÈS",
       userProfile_matchWin: "Gagnes",
+      userProfile_matchLoss: "perdre",
       //achv
       userProfile_achievement_champion_title: "Champion",
       userProfile_achievement_champion_description: "Gagner 100 parties",
@@ -557,6 +560,7 @@ const resources = {
       userProfile_vs: "ضد {{opponent}}",
       userProfile_achievements: "▼ الإنجازات",
       userProfile_matchWin: "فاز",
+      userProfile_matchLoss: "خسر",
       "userProfile_achievement_champion_title": 'البطل',
       "userProfile_achievement_champion_description": 'اربح 100 مباراة',
       "userProfile_achievement_ghost-hunter_title": 'صائد الأشباح',

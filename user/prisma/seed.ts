@@ -1,34 +1,79 @@
+
 import { prisma } from '../src/prisma';
 
-
-// const ACHIEVEMENTS = [
-//   { id: 'champion',          title: 'CHAMPION',          description: 'Win 100 matches',         image: 'champion.png',      borderColor: 'border-amber-400',  textColor: 'text-amber-400' },
-//   { id: 'ghost-hunter',      title: 'GHOST HUNTER',      description: 'Defeat 50 ghosts',        image: 'ghost-hanter.png',  borderColor: 'border-pink-500',   textColor: 'text-pink-500' },
-//   { id: 'cherry-collector',  title: 'CHERRY COLLECTOR',  description: 'Collect 200 cherries',    image: 'cherrys.png',       borderColor: 'border-red-500',    textColor: 'text-red-500' },
-//   { id: 'speedster',         title: 'SPEEDSTER',         description: 'Win 10 matches in a row', image: 'speeder.png',       borderColor: 'border-yellow-400', textColor: 'text-yellow-400' },
-//   { id: 'pac-maniac',        title: 'PAC-MANIAC',        description: 'Play 500 matches',        image: 'pac-maniac.png',    borderColor: 'border-cyan-400',   textColor: 'text-cyan-400' },
-//   { id: 'tournament-player', title: 'TOURNAMENT PLAYER', description: 'Join 10 tournaments',     image: 'tournament.png',    borderColor: 'border-purple-500', textColor: 'text-purple-500' },
-// ];
-
-
 const ACHIEVEMENTS = [
-  { id: 'champion',          title: 'CHAMPION',          description: '--',     image: 'champion.png',      borderColor: 'border-yellow-400', textColor: 'text-amber-400' },
-  { id: 'ghost-hunter',      title: 'GHOST HUNTER',      description: '--',     image: 'ghost-hanter.png',  borderColor: 'border-pink-500',   textColor: 'text-pink-500' },
-  { id: 'cherry-collector',  title: 'CHERRY COLLECTOR',  description: '--',     image: 'cherrys.png',       borderColor: 'border-red-500',    textColor: 'text-red-500' },
-  { id: 'pac-maniac',        title: 'PAC-MANIAC',        description: '--',     image: 'pac-maniac.png',    borderColor: 'border-blue-400',   textColor: 'text-cyan-400' },
+  {
+    id: 'champion',
+    title: 'CHAMPION',
+    description: '--',
+    image: 'champion.png',
+    borderColor: 'border-yellow-400',
+    textColor: 'text-amber-400',
+  },
+  {
+    id: 'ghost-hunter',
+    title: 'GHOST HUNTER',
+    description: '--',
+    image: 'ghost-hanter.png',
+    borderColor: 'border-pink-500',
+    textColor: 'text-pink-500',
+  },
+  {
+    id: 'cherry-collector',
+    title: 'CHERRY COLLECTOR',
+    description: '--',
+    image: 'cherrys.png',
+    borderColor: 'border-red-500',
+    textColor: 'text-red-500',
+  },
+  {
+    id: 'pac-maniac',
+    title: 'PAC-MANIAC',
+    description: '--',
+    image: 'pac-maniac.png',
+    borderColor: 'border-blue-400',
+    textColor: 'text-cyan-400',
+  },
 ];
 
-
 async function main() {
-  for (const a of ACHIEVEMENTS) {
+  const activeIds = ACHIEVEMENTS.map((achievement) => achievement.id);
+
+  // Delete obsolete achievements only.
+  // Related UserAchievement records are deleted through onDelete: Cascade.
+  await prisma.achievement.deleteMany({
+    where: {
+      id: {
+        notIn: activeIds,
+      },
+    },
+  });
+
+  // Create missing achievements or update existing ones.
+  for (const achievement of ACHIEVEMENTS) {
     await prisma.achievement.upsert({
-      where: { id: a.id },
-      update: a,
-      create: a,
+      where: {
+        id: achievement.id,
+      },
+      update: {
+        title: achievement.title,
+        description: achievement.description,
+        image: achievement.image,
+        borderColor: achievement.borderColor,
+        textColor: achievement.textColor,
+      },
+      create: achievement,
     });
   }
+
+  console.log('Successfully seeded the 4 active achievements.');
 }
 
-// main()
-//   .catch(console.error)
-//   .finally(() => prisma.$disconnect());
+main()
+  .catch((error) => {
+    console.error('Failed to seed achievements:', error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

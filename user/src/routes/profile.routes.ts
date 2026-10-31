@@ -98,12 +98,6 @@ router.get('/me', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
-    const ACTIVE_ACHIEVEMENT_IDS = [
-    'champion',
-    'ghost-hunter',
-    'cherry-collector',
-    'pac-maniac',
-  ];
     const achievements = await prisma.achievement.findMany({
       include: {
         users: {
@@ -113,12 +107,7 @@ router.get('/me', async (req: Request, res: Response) => {
       },
     });
 
-    /////filtrer les acheiveemnt que j'ai suprime
-    const activeAchievements = achievements.filter((achievement) =>
-      ACTIVE_ACHIEVEMENT_IDS.includes(achievement.id)
-    );
-
-    const formattedAchievements = activeAchievements.map((a) => {
+    const formattedAchievements = achievements.map((a) => {
       const userProgress = a.users[0];
       return {
         id: a.id,
@@ -191,13 +180,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
 
 
 
-////////////////////
-
-
-
-
-
-
 // GET /profile/batch?ids=1,4,7 
 /**
  * @route GET /batch
@@ -250,29 +232,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
-    const achievements = await prisma.achievement.findMany({
-      include: {
-        users: {
-          where: { userId },
-          select: { unlocked: true, progress: true, unlockedAt: true },
-        },
-      },
-    });
-
-    const formattedAchievements = achievements.map((a) => {
-      const userProgress = a.users[0];
-      return {
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        image: a.image,
-        borderColor: a.borderColor,
-        textColor: a.textColor,
-        unlocked: userProgress?.unlocked ?? false,
-        progress: userProgress?.progress ?? 0,
-      };
-    });
-
     return res.json({
       id: user.userId,
       username: user.displayName,
@@ -283,7 +242,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       currentXp: 500,
       maxXp: 1000,
       stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
-      achievements: formattedAchievements,
+      // achievements: formattedAchievements,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
