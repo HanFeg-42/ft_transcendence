@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Countdown from "../../components/game/Countdown";
 import HudTop from "./HudTop";
 import HudPlayer from "./HudPlayer";
@@ -16,6 +16,7 @@ import {
 import MazeUI from "./MazeUI";
 import Result from "./ResultCard";
 import Dots from "./Dots";
+import { getProfileById } from "../../services/userService";
 
 const KEY_MAP: Record<string, Direction> = {
   w: "UP",
@@ -65,6 +66,23 @@ const GameRoom = ({
     timeLimit,
     difficulty,
   );
+  const myId = String(user?.id);
+  const opponent = state?.players.find((p) => p.id !== myId);
+  const [opponentName, setOpponentName] = useState("Opponent");
+
+  useEffect(() => {
+    if (!opponent?.id || !token) return;
+    const loadOpponentName = async () => {
+      try {
+        setOpponentName(
+          (await getProfileById(token, Number(opponent.id))).username,
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadOpponentName();
+  }, [opponent?.id]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -83,6 +101,7 @@ const GameRoom = ({
       onError(error);
     }
   }, [error]);
+
   if (!state)
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -92,6 +111,7 @@ const GameRoom = ({
         </p>
       </div>
     );
+
   if (state.status === "waiting")
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 font-vt323 text-pacova-pink text-xl">
@@ -131,10 +151,21 @@ const GameRoom = ({
         </PixelButton>
       </div>
     );
-  const myId = String(user?.id);
-  const opponent = state.players.find((p) => p.id !== myId);
+
   const isOpponentAway = state.status === "playing" && !opponent?.connected;
   const won = state.winnerId === myId;
+  const getName = (id: string) =>
+    id === myId ? (user?.username ?? "You") : opponentName;
+
+  const hudLabel = (id: string) =>
+    id === myId ? (
+      <span className="font-press-start text-xs text-pacova-green">You</span>
+    ) : (
+      <span className="font-press-start text-xs text-pacova-pink">
+        Opponent
+      </span>
+    );
+
   const titleColor = won
     ? "text-pacova-green drop-shadow-glow-green"
     : "text-pacova-pink drop-shadow-glow-pink";
@@ -150,9 +181,15 @@ const GameRoom = ({
           <HudTop state={state} />
         </div>
         <div className={styles.leftBar}>
+          <span className="font-press-start text-xs text-pacova-green max-w-[120px]  truncate">
+            {hudLabel(state.players[0].id)}
+          </span>
           <HudPlayer player={state.players[0]} />
         </div>
         <div className={styles.rightBar}>
+          <span className="font-press-start text-xs text-pacova-green max-w-[120px]  truncate">
+            {hudLabel(state.players[1].id)}
+          </span>
           <HudPlayer player={state.players[1]} />
         </div>
         <div className={styles.mazeWrapper}>
@@ -170,13 +207,13 @@ const GameRoom = ({
               </h1>
               <div className="flex gap-4 w-full">
                 <Result
-                  name={`player 1`} // a place holder that needs to be replaced by username later
+                  name={getName(state.players[0].id)}
                   score={state.players[0].score}
                   lives={state.players[0].lives}
                   win={state.players[0].id === state.winnerId}
                 />
                 <Result
-                  name={`player 2`} // a place holder that needs to be replaced by username later
+                  name={getName(state.players[1].id)}
                   score={state.players[1].score}
                   lives={state.players[1].lives}
                   win={state.players[1].id === state.winnerId}
