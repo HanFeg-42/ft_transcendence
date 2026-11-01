@@ -6,13 +6,23 @@ import type {
 } from "../../../shared/types/game-types";
 import { createGame, tick, applyInput } from "../engine/engine";
 import { TICKS_PER_SECOND } from "../../../shared/data/game-data";
+import {
+  DEFAULT_TIME_LIMIT,
+  DEFAULT_MAZE_ID,
+  DEFAULT_DIFFICULTY,
+} from "../../../shared/data/game-data";
 
 const TICK_INTERVAL_MS = 1000 / TICKS_PER_SECOND;
 export function useLocalGame(
   playerId: string = "player-1",
   playersCount: number = 1,
+  timeLimit: number = DEFAULT_TIME_LIMIT,
+  mazeId: string = DEFAULT_MAZE_ID,
+  difficulty: string = DEFAULT_DIFFICULTY,
 ) {
-  const stateRef = useRef<GameState>(createGame(playerId));
+  const stateRef = useRef<GameState>(
+    createGame(playerId, timeLimit, mazeId, difficulty),
+  );
   const [, setFrame] = useState(0);
 
   useEffect(() => {

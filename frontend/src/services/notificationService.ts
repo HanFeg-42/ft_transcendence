@@ -2,12 +2,9 @@ const API_URL = "/api/chat";
 
 export interface Notification {
   id: string;
-  userId: number;
+  userId?: number;
   type: string;
-  payload: {
-    messageId: number;
-    senderId: number;
-  };
+  payload: Record<string, unknown>;
   isRead: boolean;
   createdAt: string;
 }
@@ -85,9 +82,7 @@ export async function markNotificationRead(
   }
 }
 
-export async function markAllNotificationsRead(
-  token: string,
-): Promise<void> {
+export async function markAllNotificationsRead(token: string): Promise<void> {
   const response = await fetch(`${API_URL}/notifications/read-all`, {
     method: "POST",
     headers: {
@@ -97,5 +92,34 @@ export async function markAllNotificationsRead(
 
   if (!response.ok) {
     throw new Error("Failed to mark all notifications as read");
+  }
+}
+
+export async function deleteNotification(
+  token: string,
+  notificationId: string,
+): Promise<void> {
+  const response = await fetch(`${API_URL}/notifications/${notificationId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete notification");
+  }
+}
+
+export async function clearNotifications(token: string): Promise<void> {
+  const response = await fetch(`${API_URL}/notifications`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to clear notifications");
   }
 }

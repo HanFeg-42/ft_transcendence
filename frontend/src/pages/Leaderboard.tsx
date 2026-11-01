@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Background from "../components/ui/Background";
 import { Navbar } from "../components/ui/Navbar";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +22,7 @@ const routeMap: Record<string, string> = {
 export default function Leaderboard() {
   const { token, user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,11 +37,11 @@ export default function Leaderboard() {
     try {
       setRows(await getLeaderboardRows(token, 100));
     } catch {
-      setError("Failed to load the leaderboard. Please try again.");
+      setError(t("leaderboardPage.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     void loadLeaderboard();
@@ -60,13 +62,9 @@ export default function Leaderboard() {
       <Navbar activeTab="LEADERBOARD" onSelectTab={handleSelectTab} />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
-        {/* <h1 className="font-pixelify text-pacova-green text-3xl uppercase mb-6">
-          Leaderboard
-        </h1> */}
-
         {loading ? (
           <p role="status" className="font-vt323 text-xl text-white">
-            Loading leaderboard...
+            {t("leaderboardPage.loading")}
           </p>
         ) : error ? (
           <div role="alert" className="font-vt323 text-xl text-pacova-pink">
@@ -76,43 +74,55 @@ export default function Leaderboard() {
               onClick={() => void loadLeaderboard()}
               className="mt-4 border border-pacova-pink rounded px-4 py-2 hover:bg-pacova-pink/10"
             >
-              Retry
+              {t("leaderboardPage.retry")}
             </button>
           </div>
         ) : rows.length === 0 ? (
           <p className="font-vt323 text-xl text-white">
-            No champions yet. Win a match to appear here!
+            {t("leaderboardPage.empty")}
           </p>
         ) : (
           <>
             <p className="font-vt323 text-xl text-gray-300 mb-6">
               {myRow
-                ? `Your rank: #${myRow.rank} with ${myRow.wins} ${myRow.wins === 1 ? "win" : "wins"}`
-                : "You have no wins yet. Win a match to enter the leaderboard!"}
+                ? t("leaderboardPage.yourRank", {
+                    rank: myRow.rank,
+                    wins: myRow.wins,
+                  })
+                : t("leaderboardPage.noWins")}
             </p>
 
             <div className="overflow-x-auto">
               <table className="w-full font-vt323 text-xl text-white">
                 <caption className="sr-only">
-                  Top players ranked by number of wins
+                  {t("leaderboardPage.caption")}
                 </caption>
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-pacova-pink/40">
-                    <th scope="col" className="py-2 pr-4 w-20">Rank</th>
-                    <th scope="col" className="py-2 pr-4">Player</th>
-                    <th scope="col" className="py-2 text-right">Wins</th>
+                    <th scope="col" className="py-2 pr-4 w-20">
+                      {t("leaderboardPage.rank")}
+                    </th>
+                    <th scope="col" className="py-2 pr-4">
+                      {t("leaderboardPage.player")}
+                    </th>
+                    <th scope="col" className="py-2 text-right">
+                      {t("leaderboardPage.wins")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => {
                     const isMe = row.userId === user?.id;
+
                     return (
                       <tr
                         key={row.userId}
                         aria-current={isMe ? "true" : undefined}
                         className={`border-b border-white/10 ${isMe ? "bg-pacova-pink/15" : ""}`}
                       >
-                        <td className={`py-3 pr-4 ${row.rank <= 3 ? "text-pacova-green" : ""}`}>
+                        <td
+                          className={`py-3 pr-4 ${row.rank <= 3 ? "text-pacova-green" : ""}`}
+                        >
                           #{row.rank}
                         </td>
                         <td className="py-3 pr-4">
@@ -137,7 +147,7 @@ export default function Leaderboard() {
                             )}
                             <span>
                               {row.username}
-                              {isMe && " (you)"}
+                              {isMe && ` (${t("leaderboardPage.you")})`}
                             </span>
                           </Link>
                         </td>

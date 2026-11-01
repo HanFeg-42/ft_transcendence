@@ -92,7 +92,7 @@ app.use(
     }
   })
 );
-
+  app.use('/chat/internal', (_req, res) => res.status(404).end());
 app.use(
   '/chat',
   authenticateToken,

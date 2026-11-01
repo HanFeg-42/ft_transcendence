@@ -145,5 +145,21 @@ router.post('/notifications/read-all', async (req: Request, res: Response) => {
   });
 });
 
+router.delete('/notifications/:id', async (req: Request, res: Response) => {
+  const userId = Number(req.headers['x-user-id']);
+  if (!userId) return res.status(401).json({ error: 'Missing identity' });
+  let id: bigint;
+  try { id = BigInt(req.params.id); } catch { return res.status(400).json({ error: 'Invalid notification id' }); }
+  const r = await prisma.notification.deleteMany({ where: { id, userId } });
+  return r.count ? res.json({ deleted: true }) : res.status(404).json({ error: 'Notification not found' });
+});
+
+router.delete('/notifications', async (req: Request, res: Response) => {
+  const userId = Number(req.headers['x-user-id']);
+  if (!userId) return res.status(401).json({ error: 'Missing identity' });
+  const r = await prisma.notification.deleteMany({ where: { userId } });
+  return res.json({ deleted: true, count: r.count });
+});
+
 
 export default router;
