@@ -37,6 +37,12 @@ const OnlineGame = () => {
   const changeScreen = (next: "menu" | "create" | "join") => {
     setError(null);
     setScreen(next);
+    setRoomInput("");
+  };
+
+  const backToMenu = () => {
+    changeScreen("menu");
+    setGameRoom(null);
   };
 
   if (!gameRoom && searching) {
@@ -56,90 +62,86 @@ const OnlineGame = () => {
     );
   }
 
-  if (!gameRoom && screen === "create") {
-    return (
-      <Background>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <p className="font-vt323 text-3xl text-pacova-green">
-            ▼ CREATE A ROOM ▼
-          </p>
-          {error && <Badge variant="red">{error}</Badge>}
-          <div className="w-80">
-            <Input
-              placeholder="Enter room name"
-              value={roomInput}
-              onChange={(e) => setRoomInput(e.target.value)}
-              className="text-center"
-            />
-          </div>
-          <GameSettings
-            difficulty={difficulty}
-            timeLimit={timeLimit}
-            mazeId={mazeId}
-            onDifficultyChange={setDifficulty}
-            onTimeLimitChange={setTimeLimit}
-            onMazeIdChange={setMazeId}
+  let form;
+
+  if (screen === "create") {
+    form = (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <p className="font-vt323 text-3xl text-pacova-green">
+          ▼ CREATE A ROOM ▼
+        </p>
+        <div className="w-80">
+          <Input
+            placeholder="Enter room name"
+            value={roomInput}
+            onChange={(e) => setRoomInput(e.target.value)}
+            className="text-center"
+            disabled={gameRoom !== null}
           />
-          <div className="flex gap-4 mt-2">
-            <PixelButton
-              variant="danger-red"
-              onClick={() => changeScreen("menu")}
-            >
-              Back to menu
-            </PixelButton>
-            <PixelButton
-              variant="filled-green"
-              disabled={!roomInput}
-              onClick={() => {
-                setError(null);
-                setGameRoom(roomInput);
-              }}
-            >
-              Create
-            </PixelButton>
-          </div>
-        </div>
-      </Background>
-    );
-  }
-  if (!gameRoom && screen === "join") {
-    return (
-      <Background>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <p className="font-vt323 text-3xl text-pacova-green">
-            ▼ JOIN A ROOM ▼
+          <p className="h-6 text-center font-vt323 text-red-500 text-md">
+            {error}
           </p>
-          <div className="w-80">
-            <Input
-              placeholder="Enter room name"
-              error={error ?? undefined}
-              value={roomInput}
-              onChange={(e) => setRoomInput(e.target.value)}
-              className="text-center"
-            />
-          </div>
-          <div className="flex gap-4 mt-2">
-            <PixelButton
-              variant="danger-red"
-              onClick={() => changeScreen("menu")}
-            >
-              Back to menu
-            </PixelButton>
-            <PixelButton
-              variant="filled-green"
-              disabled={!roomInput}
-              onClick={() => {
-                setError(null);
-                setGameRoom(roomInput);
-              }}
-            >
-              Join
-            </PixelButton>
-          </div>
         </div>
-      </Background>
+        <GameSettings
+          difficulty={difficulty}
+          timeLimit={timeLimit}
+          mazeId={mazeId}
+          onDifficultyChange={setDifficulty}
+          onTimeLimitChange={setTimeLimit}
+          onMazeIdChange={setMazeId}
+        />
+        <div className="flex gap-4 mt-2">
+          <PixelButton variant="danger-red" onClick={backToMenu}>
+            Back to menu
+          </PixelButton>
+          <PixelButton
+            variant="filled-green"
+            disabled={!roomInput || gameRoom !== null}
+            onClick={() => {
+              setGameRoom(roomInput);
+            }}
+          >
+            Create
+          </PixelButton>
+        </div>
+      </div>
     );
   }
+  if (screen === "join") {
+    form = (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <p className="font-vt323 text-3xl text-pacova-green">▼ JOIN A ROOM ▼</p>
+        <div className="w-80">
+          <Input
+            placeholder="Enter room name"
+            value={roomInput}
+            onChange={(e) => setRoomInput(e.target.value)}
+            className="text-center"
+            disabled={gameRoom !== null}
+          />
+          <p className="h-6 text-center font-vt323 text-red-500 text-md">
+            {error}
+          </p>
+        </div>
+        <div className="flex gap-4 mt-2">
+          <PixelButton variant="danger-red" onClick={backToMenu}>
+            Back to menu
+          </PixelButton>
+          <PixelButton
+            variant="filled-green"
+            disabled={!roomInput || gameRoom !== null}
+            onClick={() => {
+              setGameRoom(roomInput);
+            }}
+          >
+            Join
+          </PixelButton>
+        </div>
+      </div>
+    );
+  }
+  if (!gameRoom && form) return <Background>{form}</Background>;
+
   if (!gameRoom) {
     return (
       <Background>
@@ -191,10 +193,7 @@ const OnlineGame = () => {
       <GameRoom
         gameId={gameRoom}
         onError={handleError}
-        onBackToMenu={() => {
-          setGameRoom(null);
-          changeScreen("menu");
-        }}
+        onBackToMenu={backToMenu}
         onPlayAgain={() => {
           setGameRoom(null);
           setSearching(true);
@@ -203,6 +202,8 @@ const OnlineGame = () => {
         mazeId={screen === "create" ? mazeId : DEFAULT_MAZE_ID}
         timeLimit={screen === "create" ? timeLimit : DEFAULT_TIME_LIMIT}
         difficulty={screen === "create" ? difficulty : DEFAULT_DIFFICULTY}
+        intent={screen === "menu" ? undefined : screen}
+        joiningScreen={form}
       />
     </Background>
   );

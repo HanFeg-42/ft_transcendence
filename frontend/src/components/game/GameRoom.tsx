@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Countdown from "../../components/game/Countdown";
 import HudTop from "./HudTop";
 import HudPlayer from "./HudPlayer";
@@ -38,17 +38,21 @@ const GameRoom = ({
   mazeId,
   timeLimit,
   difficulty,
+  intent,
   onError,
   onPlayAgain,
   onBackToMenu,
+  joiningScreen,
 }: {
   gameId: string;
   mazeId: string;
   timeLimit: number;
   difficulty: string;
+  intent?: "create" | "join";
   onError: (message: string) => void;
   onPlayAgain: () => void;
   onBackToMenu: () => void;
+  joiningScreen?: ReactNode;
 }) => {
   const { user, token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
@@ -65,6 +69,7 @@ const GameRoom = ({
     mazeId,
     timeLimit,
     difficulty,
+    intent,
   );
   const myId = String(user?.id);
   const opponent = state?.players.find((p) => p.id !== myId);
@@ -101,6 +106,12 @@ const GameRoom = ({
       onError(error);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (gaveUp && !state) onError("Could not connect to the game server");
+  }, [gaveUp]);
+
+  if (!state && joiningScreen) return joiningScreen;
 
   if (!state)
     return (

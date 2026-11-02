@@ -34,6 +34,7 @@ export interface JoinGamePayload {
   mazeId?: string;
   timeLimit?: number;
   difficulty?: string;
+  intent?: "create" | "join";
 }
 //2.Data sent when a player presses an arrow key
 export interface PlayerInputPayload {

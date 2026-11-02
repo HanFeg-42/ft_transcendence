@@ -21,9 +21,11 @@ export function useGameSocket(
   mazeId?: string,
   timeLimit?: number,
   difficulty?: string,
+  intent?: "create" | "join",
 ) {
   const socketRef = useRef<WebSocket | null>(null);
   const gameOverRef = useRef<boolean>(false);
+  const firstJoinRef = useRef<boolean>(true);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
   const [gaveUp, setGaveUp] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -81,9 +83,17 @@ export function useGameSocket(
         ws.send(
           JSON.stringify({
             event: GameClientEvents.JOIN_GAME,
-            data: { gameId, username, mazeId, timeLimit, difficulty },
+            data: {
+              gameId,
+              username,
+              mazeId,
+              timeLimit,
+              difficulty,
+              intent: firstJoinRef.current ? intent : "join",
+            },
           }),
         );
+        firstJoinRef.current = false;
       };
 
       // Listen for incoming messages from the backend
