@@ -71,8 +71,6 @@ export async function getOrCreateProfile(userId: number) {
         statusText: 'Ready to play',
       },
     });
-  
-  
     const achievements = await prisma.achievement.findMany();
     await prisma.userAchievement.createMany({
       data: achievements.map((a) => ({
@@ -196,6 +194,7 @@ router.get('/profiles', async (req: Request, res: Response) => {
  * @returns {400} No valid user IDs were provided.
  * @returns {500} Failed to load the requested profiles.
  */
+
 router.get('/batch', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';

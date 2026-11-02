@@ -19,6 +19,7 @@ interface ProfileCardProps {
     losses: number;
     winRate: number;
   };
+  isOwnProfile:boolean;
   onEditClick?: () => void;
 }
 
@@ -31,6 +32,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   maxXp = 500,
   avatarUrl,
   stats = { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
+  isOwnProfile,
   onEditClick,
 }) => {
   const { t } = useTranslation();
@@ -41,7 +43,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   return (
     <Card
       variant="green"
-      className="w-full h-full flex flex-col items-center p-6 md:p-8 bg-pacova-surface/60 backdrop-blur-sm"
+      className="w-full max-w-3xl h-full flex flex-col items-center p-6 md:p-8 bg-pacova-surface/60 backdrop-blur-sm"
     >
       <div className="flex flex-col items-center w-full mt-4 flex-none">
         <div className="relative mb-6 flex justify-center">
@@ -129,11 +131,12 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
 
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
+          {isOwnProfile && (
             <Link to="/friends">
               <span className="text-gray-400 tracking-wider">
                 👤 {t('userProfile_friends')}
               </span>
-            </Link>
+            </Link>)}
           </div>
         </div>
       </div>
