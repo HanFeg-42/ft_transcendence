@@ -162,11 +162,15 @@ const pickChaserDirection = (chaser: Chaser, state: GameState) => {
   let bestDistance = isFrightened ? -Infinity : Infinity;
   let bestDirs: Direction[] = [];
 
-  const validDirections = DIRECTIONS.filter(
-    (dir) =>
-      isTileFree(state, ahead(chaser.tile, dir), chaser) &&
-      (!chaser.dir || dir !== OPPOSITE[chaser.dir]),
+  const freeDirections = DIRECTIONS.filter((dir) =>
+    isTileFree(state, ahead(chaser.tile, dir), chaser),
   );
+  const forwardDirections = freeDirections.filter(
+    (dir) => !chaser.dir || dir !== OPPOSITE[chaser.dir],
+  );
+
+  const validDirections =
+    forwardDirections.length > 0 ? forwardDirections : freeDirections;
 
   for (const dir of validDirections) {
     const distance = nearestPlayerDistance(
