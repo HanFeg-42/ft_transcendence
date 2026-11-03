@@ -204,6 +204,7 @@ export const tick = (state: GameState) => {
   const maze = MAZES[state.mazeId];
 
   state.tick++;
+
   state.players.forEach((player) => {
     stepPlayer(maze, player);
 
@@ -217,6 +218,11 @@ export const tick = (state: GameState) => {
         state.chasers.forEach((c) => (c.isEaten = false));
       }
     }
+  });
+  const deadPlayers: Player[] = [];
+  const deadChasers: Chaser[] = [];
+
+  state.players.forEach((player) => {
     const touchedChaser = state.chasers.find(
       (chaser) =>
         tilesAreEqual(player.tile, chaser.tile) ||
@@ -225,17 +231,24 @@ export const tick = (state: GameState) => {
         (player.dir &&
           tilesAreEqual(ahead(player.tile, player.dir), chaser.tile)),
     );
+
     if (touchedChaser) {
       if (state.vulnerableTimer && !touchedChaser.isEaten) {
-        touchedChaser.isEaten = true;
-        touchedChaser.dir = null;
-        touchedChaser.tile = touchedChaser.spawn;
-        touchedChaser.step = 0;
+        deadChasers.push(touchedChaser);
         player.score += 200;
         player.ghostsEaten++;
-      } else handlePlayerDeath(player, state);
+      } else deadPlayers.push(player);
     }
   });
+
+  deadPlayers.forEach((p) => handlePlayerDeath(p, state));
+  deadChasers.forEach((c) => {
+    c.isEaten = true;
+    c.dir = null;
+    c.tile = c.spawn;
+    c.step = 0;
+  });
+
   state.chasers.forEach((chaser) => {
     if (chaser.step == 0) pickChaserDirection(chaser, state);
     stepChaser(chaser, DIFFICULTIES[state.difficulty!]);
