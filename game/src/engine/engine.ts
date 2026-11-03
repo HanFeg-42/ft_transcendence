@@ -21,6 +21,15 @@ import {
 
 const CENTER_OFFSET = 4;
 
+const DIRECTIONS: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
+
+const OPPOSITE: Record<Direction, Direction> = {
+  UP: "DOWN",
+  DOWN: "UP",
+  LEFT: "RIGHT",
+  RIGHT: "LEFT",
+};
+
 export const addPlayer = (playerId: string, state: GameState) => {
   const maze = MAZES[state.mazeId];
 
@@ -151,11 +160,12 @@ const nearestPlayerDistance = (target: Tile, players: Player[]) => {
 const pickChaserDirection = (chaser: Chaser, state: GameState) => {
   const isFrightened = state.vulnerableTimer && !chaser.isEaten;
   let bestDistance = isFrightened ? -Infinity : Infinity;
-  let bestDir = null;
+  let bestDirs: Direction[] = [];
 
-  const directions: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
-  const validDirections = directions.filter((dir) =>
-    isTileFree(state, ahead(chaser.tile, dir), chaser),
+  const validDirections = DIRECTIONS.filter(
+    (dir) =>
+      isTileFree(state, ahead(chaser.tile, dir), chaser) &&
+      (!chaser.dir || dir !== OPPOSITE[chaser.dir]),
   );
 
   for (const dir of validDirections) {
@@ -164,11 +174,14 @@ const pickChaserDirection = (chaser: Chaser, state: GameState) => {
       state.players,
     );
     if (isFrightened ? distance > bestDistance : distance < bestDistance) {
-      bestDir = dir;
+      bestDirs = [dir];
       bestDistance = distance;
-    }
+    } else if (distance === bestDistance) bestDirs.push(dir);
   }
-  chaser.dir = bestDir;
+  chaser.dir =
+    bestDirs.length > 0
+      ? bestDirs[Math.floor(Math.random() * bestDirs.length)]
+      : null;
 };
 
 const handlePlayerDeath = (player: Player, state: GameState) => {
