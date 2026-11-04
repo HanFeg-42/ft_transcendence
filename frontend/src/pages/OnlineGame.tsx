@@ -14,7 +14,7 @@ import Matchmaking from "../components/game/Matchmaking";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const OnlineGame = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setParams] = useSearchParams();
   const navigate = useNavigate();
   const [gameRoom, setGameRoom] = useState<string | null>(
     searchParams.get("gameId"),
@@ -28,7 +28,7 @@ const OnlineGame = () => {
   const [screen, setScreen] = useState<"menu" | "create" | "join">("menu");
 
   const handleError = (message: string) => {
-    setGameRoom(null);
+    changeRoom(null);
     setRoomInput("");
     setSearching(false);
     setError(message);
@@ -40,9 +40,14 @@ const OnlineGame = () => {
     setRoomInput("");
   };
 
+  const changeRoom = (gameId: string | null) => {
+    setGameRoom(gameId);
+    setParams(gameId ? { gameId } : {}, { replace: true });
+  };
+
   const backToMenu = () => {
     changeScreen("menu");
-    setGameRoom(null);
+    changeRoom(null);
   };
 
   if (!gameRoom && searching) {
@@ -52,7 +57,7 @@ const OnlineGame = () => {
           <Matchmaking
             onMatch={(gameId: string) => {
               setSearching(false);
-              setGameRoom(gameId);
+              changeRoom(gameId);
             }}
             onCancel={() => setSearching(false)}
             onError={handleError}
@@ -98,7 +103,7 @@ const OnlineGame = () => {
             variant="filled-green"
             disabled={!roomInput || gameRoom !== null}
             onClick={() => {
-              setGameRoom(roomInput);
+              changeRoom(roomInput);
             }}
           >
             Create
@@ -131,7 +136,7 @@ const OnlineGame = () => {
             variant="filled-green"
             disabled={!roomInput || gameRoom !== null}
             onClick={() => {
-              setGameRoom(roomInput);
+              changeRoom(roomInput);
             }}
           >
             Join
@@ -195,7 +200,7 @@ const OnlineGame = () => {
         onError={handleError}
         onBackToMenu={backToMenu}
         onPlayAgain={() => {
-          setGameRoom(null);
+          changeRoom(null);
           setSearching(true);
           changeScreen("menu");
         }}
