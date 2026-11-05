@@ -5,6 +5,7 @@ COPY game/package.json game/package-lock.json ./
 RUN npm ci
 
 COPY shared/types ../shared/types
+COPY shared/data ../shared/data
 COPY game/ .
 RUN npx prisma generate
 

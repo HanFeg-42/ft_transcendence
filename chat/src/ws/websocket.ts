@@ -1,14 +1,10 @@
 import http from "http";
 import { WebSocketServer, WebSocket, RawData } from "ws";
-import {
-  ChatEvents,
-  ChatMessageIncoming,
-  ChatClientMessage,
-  ChatServerMessage,
-} from "../../../shared/types/chat-types";
+import { ChatEvents, ChatMessageIncoming, ChatClientMessage } from "../../../shared/types/chat-types";
 import { prisma } from "../prisma";
 import {
   onlineUsers,
+  sendTo,
   getMessagePartners,
   sendPresence,
   broadcastPresenceToPartners,
@@ -18,11 +14,25 @@ import { NotificationTypes } from "../../../shared/types/notification-types";
 
 
 
-
-
 const AUTH_URL = process.env.AUTH_SERVICE_URL || "http://auth:3001";
+const INVITE_TTL_MS = 60_000; // an invite expires after 60s
 const hits = new WeakMap<WebSocket, number[]>(); // recent send times per socket
 const known = new Set<number>(); // user ids already confirmed to exist
+
+// DB message -> the shape the frontend expects (also used by routes/messages.ts)
+export const toIncoming = (m: {
+  id: number; senderId: number; receiverId: number; content: string;
+  createdAt: Date; readAt: Date | null; kind: string; meta: unknown;
+}): ChatMessageIncoming => ({
+  id: m.id,
+  sender_id: m.senderId,
+  receiver_id: m.receiverId,
+  content: m.content,
+  created_at: m.createdAt.toISOString(),
+  read_at: m.readAt ? m.readAt.toISOString() : null,
+  kind: m.kind as ChatMessageIncoming["kind"],
+  meta: m.meta as ChatMessageIncoming["meta"],
+});
 
 function sendError(ws: WebSocket, message: string) {
   if (ws.readyState !== WebSocket.OPEN) return;
@@ -63,21 +73,19 @@ async function validate(ws: WebSocket, p: any, myId: string): Promise<string | n
   return null;
 }
 
-
+// true if EITHER user blocked the other
 async function isBlocked(a: number, b: number): Promise<boolean> {
   const row = await prisma.blockedUser.findFirst({
-    where: {
-      OR: [
-        { blockerId: a, blockedId: b },
-        { blockerId: b, blockedId: a },
-      ],
-    },
+    where: { OR: [{ blockerId: a, blockedId: b }, { blockerId: b, blockedId: a }] },
   });
   return !!row;
 }
 
-
-const INVITE_TTL_MS = 60_000; // an invite expires after 60s
+// Partners who haven't blocked us (and we haven't blocked): the only ones who may see our status.
+async function visiblePartners(userId: string, partners: number[]) {
+  const blocked = await Promise.all(partners.map((p) => isBlocked(p, Number(userId))));
+  return partners.filter((_, i) => !blocked[i]);
+}
 
 // Close a pending invite (accepted / declined / expired) and tell both users.
 // `byUser` is set when someone answers, so only the invited user can do it.
@@ -91,307 +99,137 @@ async function settleInvite(id: number, status: "accepted" | "declined" | "expir
   const final = status !== "expired" && Date.now() - invite.createdAt.getTime() > INVITE_TTL_MS ? "expired" : status;
 
   const updated = await prisma.message.update({ where: { id }, data: { meta: { ...meta, status: final } } });
-  const payload = JSON.stringify({
-    event: ChatEvents.GAME_INVITE_REPLY,
-    data: {
-      id: updated.id,
-      sender_id: updated.senderId,
-      receiver_id: updated.receiverId,
-      content: updated.content,
-      created_at: updated.createdAt.toISOString(),
-      read_at: null,
-      kind: "game_invite",
-      meta: updated.meta,
-    } as ChatMessageIncoming,
-  });
-  for (const uid of [invite.senderId, invite.receiverId])
-    for (const socket of onlineUsers.get(String(uid)) ?? [])
-      if (socket.readyState === WebSocket.OPEN) socket.send(payload);
+  const packet = { event: ChatEvents.GAME_INVITE_REPLY, data: toIncoming(updated) } as const;
+  sendTo(invite.senderId, packet);
+  sendTo(invite.receiverId, packet);
 }
 
-
-
-// 1. Handling New Connections (handleConnection)
 async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   const userId = req.headers["x-user-id"] as string | undefined;
-  if (!userId) {
-    console.warn("[CHAT-SERVICE] Connection missing x-user-id, rejecting");
-    ws.close(1008, "Missing identity");
-    return;
-  }
-
-  // console.log("[CHAT-SERVICE] Client connected:", userId);
+  if (!userId) return ws.close(1008, "Missing identity");
 
   const wasOffline = !onlineUsers.has(userId);
   const sockets = onlineUsers.get(userId) ?? new Set<WebSocket>();
   sockets.add(ws);
   onlineUsers.set(userId, sockets);
 
-  ws.on("message", (rawData: RawData) => 
+  ws.on("message", (rawData: RawData) =>
     handleMessage(ws, rawData, userId).catch(() => sendError(ws, "Something went wrong")),
   );
-
-
-  ws.on("close", (code) => handleClose(ws, code, userId));
-  ws.on("error", (err) => handleError(ws, err));
+  ws.on("close", () => handleClose(ws, userId));
+  ws.on("error", () => {}); // required: an unhandled socket "error" would crash the process
 
   const partners = await getMessagePartners(userId);
+  const visible = await visiblePartners(userId, partners);
 
-  // Snapshot: tell THIS newly connected client who among their message
-  // partners is already online
+  // Snapshot: tell THIS new client who among their partners is online (blocked ones look offline)
   for (const partnerId of partners) {
-    const status = onlineUsers.has(String(partnerId)) ? "online" : "offline";
-    sendPresence(ws, partnerId, status);
+    const online = onlineUsers.has(String(partnerId)) && visible.includes(partnerId);
+    sendPresence(ws, partnerId, online ? "online" : "offline");
   }
-  // Only the FIRST socket for this user is a real "came online" transition —
-  // a second tab opening shouldn't re-announce someone already online.
-  if (wasOffline) {
-    broadcastPresenceToPartners(partners, Number(userId), "online");
-  }
+  // Only the FIRST socket is a real "came online" transition (a second tab isn't).
+  if (wasOffline) broadcastPresenceToPartners(visible, Number(userId), "online");
 }
 
-
-
-
-
-
-// 2. Handling Incoming Messages (handleMessage)
 async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
-  const rawText = rawData.toString();
-
   let packet: ChatClientMessage;
   try {
-    packet = JSON.parse(rawText);
-  } catch (err) {
+    packet = JSON.parse(rawData.toString());
+  } catch {
     return sendError(ws, "Invalid JSON");
   }
-
 
   const error = await validate(ws, packet, userId);
   if (error) return sendError(ws, error);
 
-
-
+  const me = Number(userId);
 
   switch (packet.event) {
     case ChatEvents.MESSAGE: {
-      const outgoing = packet.data;
-      // console.log(`[CHAT-SERVICE] Message from ${userId}:`, outgoing);
+      const { receiver_id, content } = packet.data;
+      if (await isBlocked(receiver_id, me)) return sendError(ws, "You can't message this user");
 
-      if (await isBlocked(outgoing.receiver_id, Number(userId))) break;   // MESSAGE
-
-      const saved = await prisma.message.create({
-        data: {
-          senderId: Number(userId),
-          receiverId: outgoing.receiver_id,
-          content: outgoing.content,
-        },
-      });
+      const saved = await prisma.message.create({ data: { senderId: me, receiverId: receiver_id, content } });
 
       try {
-        await notifyUser(outgoing.receiver_id, NotificationTypes.MESSAGE, {
+        await notifyUser(receiver_id, NotificationTypes.MESSAGE, {
           messageId: saved.id,
-          senderId: Number(userId),
+          senderId: me,
         });
-      } catch (err) {
-        console.error("[CHAT-SERVICE] Failed to create message notification:", err);
+      } catch {
+        // a failed notification must not block the message
       }
 
-      const reply: ChatMessageIncoming = {
-        id: saved.id,
-        sender_id: saved.senderId,
-        receiver_id: saved.receiverId,
-        content: saved.content,
-        created_at: saved.createdAt.toISOString(),
-        read_at: saved.readAt ? saved.readAt.toISOString() : null,
-        kind: saved.kind as "text" | "game_invite",
-        meta: saved.meta as ChatMessageIncoming["meta"],
-      };
-
-      const message: ChatServerMessage = {
-        event: ChatEvents.MESSAGE,
-        data: reply,
-      };
-      const payload = JSON.stringify(message);
-
-      // Deliver to every socket the RECEIVER has open (multi-tab).
-      const receiverSockets = onlineUsers.get(String(outgoing.receiver_id));
-      if (receiverSockets) {
-        for (const socket of receiverSockets) {
-          if (socket.readyState === WebSocket.OPEN) socket.send(payload);
-        }
-      } else {
-        console.warn(
-          `[CHAT-SERVICE] Receiver ${outgoing.receiver_id} not online, message not delivered live (still persisted)`,
-        );
-      }
-
-      // ADDED: echo to the SENDER'S other open tabs (not this socket — it
-      // already appended its own copy optimistically) so multi-tab stays synced.
-      const senderSockets = onlineUsers.get(userId);
-      if (senderSockets) {
-        for (const socket of senderSockets) {
-          if (socket.readyState === WebSocket.OPEN)
-            socket.send(payload);
-        }
-      }
+      // To the receiver's tabs AND the sender's tabs (the sender's UI waits for this echo).
+      const message = { event: ChatEvents.MESSAGE, data: toIncoming(saved) } as const;
+      sendTo(receiver_id, message);
+      sendTo(me, message);
       break;
     }
 
     case ChatEvents.READ: {
-      const outgoing = packet.data; // { sender_id: number } — "I read messages from this sender"
-      const friendId = outgoing.sender_id;
-      const currentUserId = Number(userId);
-
-      
-      if (await isBlocked(friendId, currentUserId)) break;                // READ
-
+      // "I read the messages from sender_id"
+      const friendId = packet.data.sender_id;
+      if (await isBlocked(friendId, me)) break;
 
       const now = new Date();
-
-      // 2. Update all unread messages sent by friendId to currentUserId in the DB
       await prisma.message.updateMany({
-        where: {
-          senderId: friendId,
-          receiverId: currentUserId,
-          readAt: null,
-        },
-        data: {
-          readAt: now,
-        },
+        where: { senderId: friendId, receiverId: me, readAt: null },
+        data: { readAt: now },
       });
-
-      // 3. Construct payload to notify friendId that currentUserId read their messages
-      const readEventMessage: ChatServerMessage = {
-        event: ChatEvents.READ,
-        data: {
-          reader_id: currentUserId,
-          read_at: now.toISOString(),
-        },
-      };
-      const payload = JSON.stringify(readEventMessage);
-
-      // 4. Forward event to friendId's active sockets so their UI turns green (✓✓) live
-      const friendSockets = onlineUsers.get(String(friendId));
-      if (friendSockets) {
-        for (const socket of friendSockets) {
-          if (socket.readyState === WebSocket.OPEN) {
-            socket.send(payload);
-          }
-        }
-      }
+      // tell the friend so their ✓✓ turns live
+      sendTo(friendId, { event: ChatEvents.READ, data: { reader_id: me, read_at: now.toISOString() } });
       break;
     }
 
     case ChatEvents.TYPING: {
-      const outgoing = packet.data; // { receiver_id: number }
-      const receiverId = outgoing.receiver_id;
-      const senderId = Number(userId);
-
-     
-      if (await isBlocked(receiverId, senderId)) break;                   // TYPING
-
-      const typingEvent: ChatServerMessage = {
-        event: ChatEvents.TYPING,
-        data: { sender_id: senderId },
-      };
-      const payload = JSON.stringify(typingEvent);
-
-      const receiverSockets = onlineUsers.get(String(receiverId));
-      if (receiverSockets) {
-        for (const socket of receiverSockets) {
-          if (socket.readyState === WebSocket.OPEN) socket.send(payload);
-        }
-      }
+      const { receiver_id } = packet.data;
+      if (await isBlocked(receiver_id, me)) break;
+      sendTo(receiver_id, { event: ChatEvents.TYPING, data: { sender_id: me } });
       break;
     }
 
     case ChatEvents.GAME_INVITE: {
       const { receiver_id } = packet.data;
-      const senderId = Number(userId);
-
-      
-     
-      if ((await isBlocked(receiver_id, senderId)) || !onlineUsers.has(String(receiver_id)))
+      if ((await isBlocked(receiver_id, me)) || !onlineUsers.has(String(receiver_id)))
         return sendError(ws, "User is not available to play");
 
       const saved = await prisma.message.create({
         data: {
-          senderId,
+          senderId: me,
           receiverId: receiver_id,
           content: "Game invite",
           kind: "game_invite",
           meta: { gameId: crypto.randomUUID(), status: "pending" },
         },
       });
+      setTimeout(() => settleInvite(saved.id, "expired").catch(() => {}), INVITE_TTL_MS);
 
-      setTimeout(() => settleInvite(saved.id, "expired").catch(console.error), INVITE_TTL_MS);
-
-      const reply: ChatMessageIncoming = {
-        id: saved.id,
-        sender_id: saved.senderId,
-        receiver_id: saved.receiverId,
-        content: saved.content,
-        created_at: saved.createdAt.toISOString(),
-        read_at: null,
-        kind: "game_invite",
-        meta: saved.meta as ChatMessageIncoming["meta"],
-      };
-      const payload = JSON.stringify({
-        event: ChatEvents.GAME_INVITE,
-        data: reply,
-      });
-
-      // sender needs the real id/gameId back too, not just the receiver
-      for (const [id, sockets] of [
-        [String(receiver_id), onlineUsers.get(String(receiver_id))],
-        [userId, onlineUsers.get(userId)],
-      ] as const) {
-        if (!sockets) continue;
-        for (const socket of sockets)
-          if (socket.readyState === WebSocket.OPEN) socket.send(payload);
-      }
+      // the sender needs the real id/gameId back too
+      const invite = { event: ChatEvents.GAME_INVITE, data: toIncoming(saved) } as const;
+      sendTo(receiver_id, invite);
+      sendTo(me, invite);
       break;
     }
 
-     case ChatEvents.GAME_INVITE_REPLY: {
-      await settleInvite(packet.data.message_id, packet.data.accept ? "accepted" : "declined", Number(userId));
+    case ChatEvents.GAME_INVITE_REPLY:
+      await settleInvite(packet.data.message_id, packet.data.accept ? "accepted" : "declined", me);
       break;
-    }
   }
 }
 
-
-
-
-
-// 3. Handling Disconnection (handleClose)
-async function handleClose(ws: WebSocket, code: number, userId: string) {
-  // console.log(`[CHAT-SERVICE] Client disconnected: ${userId} (Code: ${code})`);
-
+async function handleClose(ws: WebSocket, userId: string) {
   const sockets = onlineUsers.get(userId);
   if (!sockets) return;
 
   sockets.delete(ws);
-  // Only drop to "offline" once their LAST socket closes.
+  // Only "offline" once their LAST socket closes.
   if (sockets.size === 0) {
     onlineUsers.delete(userId);
     const partners = await getMessagePartners(userId);
-    broadcastPresenceToPartners(partners, Number(userId), "offline");
+    broadcastPresenceToPartners(await visiblePartners(userId, partners), Number(userId), "offline");
   }
 }
-
-
-
-
-// 4. Error Handling & Initialization (setupWebSocket)
-function handleError(ws: WebSocket, err: Error) {
-  console.error("[CHAT-SERVICE] Socket error:", err.message);
-}
-
-
-
-
 
 export function setupWebSocket(server: http.Server) {
   const wss = new WebSocketServer({ server });
@@ -403,6 +241,7 @@ export function setupWebSocket(server: http.Server) {
     handleConnection(ws, req);
   });
 
+  // heartbeat: drop sockets that stopped answering pings
   setInterval(() => {
     for (const ws of wss.clients) {
       if (!alive.has(ws)) { ws.terminate(); continue; }
@@ -411,13 +250,9 @@ export function setupWebSocket(server: http.Server) {
     }
   }, 15000);
 
-
-    // restart cleanup: timers are lost, so close every invite still pending
+  // restart cleanup: timers are lost, so close every invite still pending
   prisma.message
     .findMany({ where: { kind: "game_invite", meta: { path: ["status"], equals: "pending" } } })
     .then((rows) => Promise.all(rows.map((m) => settleInvite(m.id, "expired"))))
-    .catch(console.error);
-
-
-  console.log("[CHAT-SERVICE] WebSocket server initialized");
+    .catch(() => {});
 }

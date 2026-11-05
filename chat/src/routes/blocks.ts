@@ -56,28 +56,19 @@ function notifyBlockUpdate(blockerId: number, blockedId: number, blocked: boolea
 router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
   const blockerId = currentUserId(req);
   const blockedId = parsePositiveId(req.params.blockedId);
-
+ 
   if (!blockerId) return res.status(401).json({ error: 'Missing identity' });
   if (!blockedId || blockedId === blockerId) {
     return res.status(400).json({ error: 'Invalid blockedId' });
   }
-
+ 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.blockedUser.upsert({
-        where: { blockerId_blockedId: { blockerId, blockedId } },
-        update: {},
-        create: { blockerId, blockedId },
-      });
-
-      await tx.friendship.deleteMany({
-        where: {
-          userLowId: Math.min(blockerId, blockedId),
-          userHighId: Math.max(blockerId, blockedId),
-        },
-      });
+    await prisma.blockedUser.upsert({
+      where: { blockerId_blockedId: { blockerId, blockedId } },
+      update: {},
+      create: { blockerId, blockedId },
     });
-
+ 
     notifyBlockUpdate(blockerId, blockedId, true);
     return res.status(201).json({ blocked: true });
   } catch (error) {

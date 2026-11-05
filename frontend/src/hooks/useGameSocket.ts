@@ -19,6 +19,8 @@ export function useGameSocket(
   gameId: string,
   username: string,
   mazeId?: string,
+  timeLimit?: number,
+  difficulty?: string,
 ) {
   const socketRef = useRef<WebSocket | null>(null);
   const gameOverRef = useRef<boolean>(false);
@@ -79,7 +81,7 @@ export function useGameSocket(
         ws.send(
           JSON.stringify({
             event: GameClientEvents.JOIN_GAME,
-            data: { gameId, username, mazeId },
+            data: { gameId, username, mazeId, timeLimit, difficulty },
           }),
         );
       };

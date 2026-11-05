@@ -5,6 +5,7 @@ import {
   GameServerEvents,
 } from "../../../../shared/types/game-types";
 import PixelButton from "../ui/PixelButton";
+import Dots from "./Dots";
 
 const Matchmaking = ({
   onMatch,
@@ -30,14 +31,20 @@ const Matchmaking = ({
       if (packet.event === GameServerEvents.ERROR) onError(packet.data.message);
     };
     return () => ws.close();
-  }, []);
+  }, [url]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4">
-      <p className="font-vt323 text-2xl text-pacova-pink">
-        Searching for a player...
+    <div className="flex flex-col gap-4  items-center">
+      <p className="font-vt323 text-3xl text-pacova-green">
+        ▼ FINDING OPPONENT ▼
       </p>
-      <PixelButton onClick={onCancel}>Cancel</PixelButton>
+      <p className="font-vt323 text-xl text-gray-300">
+        Searching for a player
+        <Dots />
+      </p>
+      <PixelButton variant="danger-red" onClick={onCancel}>
+        Cancel
+      </PixelButton>
     </div>
   );
 };

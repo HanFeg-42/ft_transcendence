@@ -6,7 +6,8 @@ import messagesRouter from './routes/messages';
 import blocksRouter from './routes/blocks';
 import notificationsRouter from './routes/notifications';
 
-const app = express(); // application / request handling logic
+
+const app = express();
 const PORT = process.env.PORT || 3003;
 
 app.use(express.json());
@@ -19,10 +20,7 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', service: 'chat' });
 });
 
-// added for ws
-const server = http.createServer(app); // creates a server
-setupWebSocket(server);
+const server = http.createServer(app);
+setupWebSocket(server); // websocket shares the same port
 
-server.listen(PORT, () => {
-  // console.log(`[CHAT] Service running on port ${PORT}`);
-});
+server.listen(PORT);
