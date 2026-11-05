@@ -4,138 +4,61 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Background from "../components/ui/Background";
 import Navbar from "../components/ui/Navbar";
-import { useAuth } from "../context/AuthContext";
 import Card from "../components/ui/Card";
+import { useAuth } from "../context/AuthContext";
 
-
-type Relation =
-  | "self"
-  | "friend"
-  | "incoming_request"
-  | "outgoing_request"
-  | "blocked"
-  | "none";
-
-type PublicUser = {
-  id: number;
-  username: string;
-  avatar?: string | null;
-  online?: boolean;
-  relation?: Relation;
-};
-
-type FriendRequest = {
-  id: string;
-  userId: number;
-  username: string;
-  avatar?: string | null;
-  createdAt?: string;
-};
-
-type BlockedUser = {
-  id: number;
-  username: string;
-  avatar?: string | null;
-};
-
-type BlockStatus = {
-  iBlockedThem: boolean;
-  theyBlockedMe: boolean;
-};
-
-type RequestLists = {
-  incoming: FriendRequest[];
-  outgoing: FriendRequest[];
-};
-
+type Relation = "self" | "friend" | "incoming_request" | "outgoing_request" | "blocked" | "none";
+type User = { id: number; username: string; avatar?: string | null; online?: boolean; relation?: Relation };
+type Req = { id: string; userId: number; username: string; avatar?: string | null };
+type BlockStatus = { iBlockedThem: boolean; theyBlockedMe: boolean };
 type Tab = "all" | "online" | "pending" | "blocked";
-
-type SocketPacket = {
-  event?: string;
-  type?: string;
-  data?: unknown;
-};
+type Msg = { kind: "error" | "notice"; text: string } | null;
 
 const API = "/api/chat";
+const ROUTES: Record<string, string> = {
+  HOME: "/home", PROFILE: "/profile", CHAT: "/chat",
+  NOTIFICATION: "/notifications", SETTINGS: "/settings", LEADERBOARD: "/leaderboard",
+};
+const SOCKET_REFRESH = ["friend_request", "friend_request_cancelled", "friend_request_declined", "friend_accepted", "friend_removed"];
 
-const buttonClass =
-  "rounded-lg px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm " +
-  "font-medium transition disabled:cursor-not-allowed disabled:opacity-40";
+const btn = (color: string) =>
+  `rounded-lg px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${color}`;
+const primary = btn("bg-pacova-pink text-white hover:brightness-110");
+const green = btn("bg-pacova-green text-[#0D0914] hover:brightness-110");
+const danger = btn("border border-red-500/40 text-red-400 hover:bg-red-500/10");
+const iconBtn = "rounded-lg p-2 sm:px-2 sm:py-2 sm:text-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
+const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? v : []);
 
-const primaryButton =
-  `${buttonClass} bg-pacova-pink text-white hover:brightness-110`;
-
-const greenButton =
-  `${buttonClass} bg-pacova-green text-[#0D0914] hover:brightness-110`;
-
-const dangerButton =
-  `${buttonClass} border border-red-500/40 text-red-400 hover:bg-red-500/10`;
-
-async function apiRequest<T>(
-  path: string,
-  token: string,
-  init: RequestInit = {},
-): Promise<T> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
-  let response: Response;
-
-  try {
-    response = await fetch(`${API}${path}`, {
-      ...init,
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...init.headers,
-      },
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(
-        "Request timed out. Check the API gateway and chat service.",
-      );
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const message =
-      data && typeof data.error === "string"
-        ? data.error
-        : `Request failed (${response.status})`;
-
-    throw new Error(`${response.status}: ${message}`);
-  }
-
+async function api<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(API + path, {
+    ...init,
+    signal: AbortSignal.timeout(10000),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...init.headers,
+    },
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`${res.status}: ${data?.error ?? "Request failed"}`);
   return data as T;
 }
 
-function UserAvatar({
-  user,
-}: {
-  user: Pick<PublicUser, "username" | "avatar" | "online">;
-}) {
+function Avatar({ user }: { user: Pick<User, "username" | "avatar" | "online"> }) {
   const { t } = useTranslation();
-  const [imageFailed, setImageFailed] = useState(false);
-
+  const [failed, setFailed] = useState(false);
   return (
     <div
-      className={`relative flex h-10 w-10 shrink-0 items-center justify-center
-        overflow-hidden rounded-full border-2
-        ${user.online ? "border-pacova-green" : "border-pacova-gray/50"}
-        bg-[#211027] font-pixelify text-lg text-pacova-pink`}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-[#211027] font-pixelify text-lg text-pacova-pink ${
+        user.online ? "border-pacova-green" : "border-pacova-gray/50"
+      }`}
     >
-      {user.avatar && !imageFailed ? (
+      {user.avatar && !failed ? (
         <img
           src={user.avatar}
           alt={t("friends_avatarAlt", { username: user.username })}
           className="h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
+          onError={() => setFailed(true)}
         />
       ) : (
         user.username.slice(0, 1).toUpperCase() || "?"
@@ -151,693 +74,386 @@ export default function Friends() {
 
   const [query, setQuery] = useState("");
   const queryRef = useRef(query);
-  const livePresenceRef = useRef<Record<number, boolean>>({});
   queryRef.current = query;
+  const presence = useRef<Record<number, boolean>>({});
 
-  const [results, setResults] = useState<PublicUser[]>([]);
-  const [friends, setFriends] = useState<PublicUser[]>([]);
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
-  const [blockStatuses, setBlockStatuses] = useState<
-    Record<number, BlockStatus>
-  >({});
-  const [requests, setRequests] = useState<RequestLists>({
-    incoming: [],
-    outgoing: [],
-  });
-
+  const [results, setResults] = useState<User[]>([]);
+  const [friends, setFriends] = useState<User[]>([]);
+  const [blocked, setBlocked] = useState<User[]>([]);
+  const [statuses, setStatuses] = useState<Record<number, BlockStatus>>({});
+  const [requests, setRequests] = useState<{ incoming: Req[]; outgoing: Req[] }>({ incoming: [], outgoing: [] });
   const [tab, setTab] = useState<Tab>("all");
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
-  const [busyKey, setBusyKey] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState("");
+  const [msg, setMsg] = useState<Msg>(null);
+
+  const fail = (text: string) => setMsg({ kind: "error", text });
+  const call = useCallback(<T,>(path: string, init?: RequestInit) => api<T>(path, token!, init), [token]);
 
   useEffect(() => {
-    if (!error && !notice) return;
+    if (!msg) return;
+    const id = setTimeout(() => setMsg(null), 3000);
+    return () => clearTimeout(id);
+  }, [msg]);
 
-    const timer = setTimeout(() => {
-      setError("");
-      setNotice("");
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [error, notice]);
-
-  const handleSelectTab = (selectedTab: string) => {
-    const routes: Record<string, string> = {
-      HOME: "/home",
-      PROFILE: "/profile",
-      CHAT: "/chat",
-      NOTIFICATION: "/notifications",
-      SETTINGS: "/settings",
-      LEADERBOARD: "/leaderboard",
-    };
-
-    if (routes[selectedTab]) {
-      navigate(routes[selectedTab]);
-    }
-  };
-
-  const refreshLists = useCallback(
+  const loadLists = useCallback(
     async (showLoading = true) => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
+      if (!token) return setLoading(false);
       if (showLoading) setLoading(true);
-
       try {
-        const [friendData, requestData] = await Promise.all([
-          apiRequest<PublicUser[]>("/friends", token),
-          apiRequest<RequestLists>("/friends/requests", token),
+        const [f, r] = await Promise.all([
+          call<User[]>("/friends"),
+          call<{ incoming: Req[]; outgoing: Req[] }>("/friends/requests"),
         ]);
-
-        setFriends(
-          Array.isArray(friendData)
-            ? friendData.map((friend) =>
-                livePresenceRef.current[friend.id] !== undefined
-                  ? {
-                      ...friend,
-                      online: livePresenceRef.current[friend.id],
-                    }
-                  : friend,
-              )
-            : [],
-        );
-
-        setRequests({
-          incoming: Array.isArray(requestData?.incoming)
-            ? requestData.incoming
-            : [],
-          outgoing: Array.isArray(requestData?.outgoing)
-            ? requestData.outgoing
-            : [],
-        });
+        setFriends(arr<User>(f).map((u) => (presence.current[u.id] !== undefined ? { ...u, online: presence.current[u.id] } : u)));
+        setRequests({ incoming: arr(r?.incoming), outgoing: arr(r?.outgoing) });
       } catch {
-        setError(t("friends_errors_loadFriends"));
+        fail(t("friends_errors_loadFriends"));
       } finally {
         if (showLoading) setLoading(false);
       }
     },
-    [token, t],
+    [token, call, t],
   );
 
-  const refreshBlockedUsers = useCallback(async () => {
+  const loadBlocked = useCallback(async () => {
     if (!token) return;
-
     try {
-      const data = await apiRequest<BlockedUser[]>("/blocks", token);
-      setBlockedUsers(Array.isArray(data) ? data : []);
+      setBlocked(arr(await call<User[]>("/blocks")));
     } catch {
-      setError(t("friends_errors_loadBlockedUsers"));
+      fail(t("friends_errors_loadBlockedUsers"));
     }
-  }, [token, t]);
+  }, [token, call, t]);
 
-  const refreshBlockStatuses = useCallback(
-    async (users: PublicUser[]) => {
-      if (!token) return;
-
-      const entries = await Promise.all(
-        users
-          .filter((user) => user.relation !== "self")
-          .map(async (user) => {
-            try {
-              const status = await apiRequest<BlockStatus>(
-                `/blocks/status/${user.id}`,
-                token,
-              );
-
-              return [user.id, status] as const;
-            } catch {
-              return null;
-            }
-          }),
-      );
-
-      const statuses: Record<number, BlockStatus> = {};
-
-      for (const entry of entries) {
-        if (entry) statuses[entry[0]] = entry[1];
-      }
-
-      setBlockStatuses(statuses);
-    },
-    [token],
-  );
-
-  const refreshSearch = useCallback(async () => {
+  // Throws on failure; callers decide whether to show an error.
+  const search = useCallback(async () => {
     if (!token) return;
-
-    const currentQuery = queryRef.current.trim();
-
-    if (!currentQuery) {
+    const q = queryRef.current.trim();
+    if (!q) {
       setResults([]);
-      setBlockStatuses({});
+      setStatuses({});
       return;
     }
+    const users = arr<User>(await call<User[]>(`/users/search?q=${encodeURIComponent(q)}`));
+    setResults(users);
+    const entries = await Promise.all(
+      users
+        .filter((u) => u.relation !== "self")
+        .map((u) => call<BlockStatus>(`/blocks/status/${u.id}`).then((s) => [u.id, s] as const).catch(() => null)),
+    );
+    setStatuses(Object.fromEntries(entries.filter((e): e is readonly [number, BlockStatus] => !!e)));
+  }, [token, call]);
 
-    try {
-      const data = await apiRequest<PublicUser[]>(
-        `/users/search?q=${encodeURIComponent(currentQuery)}`,
-        token,
-      );
-
-      const users = Array.isArray(data) ? data : [];
-      setResults(users);
-      void refreshBlockStatuses(users);
-    } catch {
-      // Keep current results if the request temporarily fails.
-    }
-  }, [token, refreshBlockStatuses]);
+  const refreshAll = useCallback(
+    () => Promise.all([loadLists(false), loadBlocked(), search().catch(() => {})]),
+    [loadLists, loadBlocked, search],
+  );
 
   useEffect(() => {
-    void refreshLists();
-    void refreshBlockedUsers();
-  }, [refreshLists, refreshBlockedUsers]);
+    void loadLists();
+    void loadBlocked();
+  }, [loadLists, loadBlocked]);
 
   useEffect(() => {
     if (!token) return;
-
-    let socket: WebSocket | null = null;
-    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
-    let reconnectDelay = 1000;
+    let ws: WebSocket | null = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let delay = 1000;
     let disposed = false;
 
     const connect = () => {
       if (disposed) return;
-
-      const protocol =
-        window.location.protocol === "https:" ? "wss:" : "ws:";
-
-      const ws = new WebSocket(
-        `${protocol}//${window.location.host}/api/chat/ws?token=${encodeURIComponent(token)}`,
-      );
-
-      socket = ws;
+      const proto = location.protocol === "https:" ? "wss:" : "ws:";
+      ws = new WebSocket(`${proto}//${location.host}/api/chat/ws?token=${encodeURIComponent(token)}`);
 
       ws.onopen = () => {
-        reconnectDelay = 1000;
-        livePresenceRef.current = {};
-        void refreshLists(false);
+        delay = 1000;
+        presence.current = {};
+        void loadLists(false);
       };
 
-      ws.onmessage = (message: MessageEvent) => {
-        let packet: SocketPacket;
-
+      ws.onmessage = (m: MessageEvent) => {
+        let p: { event?: string; type?: string; data?: any };
         try {
-          packet = JSON.parse(message.data) as SocketPacket;
+          p = JSON.parse(m.data);
         } catch {
           return;
         }
-
-        const eventName = packet.event ?? packet.type;
-
-        if (
-          [
-            "friend_request",
-            "friend_request_cancelled",
-            "friend_request_declined",
-            "friend_accepted",
-            "friend_removed",
-          ].includes(eventName ?? "")
-        ) {
-          void refreshLists(false);
-          void refreshSearch();
+        const name = p.event ?? p.type ?? "";
+        if (SOCKET_REFRESH.includes(name) || name === "block_updated") {
+          void loadLists(false);
+          void search().catch(() => {});
+          if (name === "block_updated") void loadBlocked();
           return;
         }
-
-        if (eventName === "block_updated") {
-          void refreshLists(false);
-          void refreshBlockedUsers();
-          void refreshSearch();
-          return;
-        }
-
-        if (
-          packet.event === "presence" &&
-          packet.data &&
-          typeof packet.data === "object"
-        ) {
-          const presence = packet.data as {
-            user_id?: number;
-            status?: "online" | "offline";
-          };
-
-          if (
-            typeof presence.user_id !== "number" ||
-            (presence.status !== "online" &&
-              presence.status !== "offline")
-          ) {
-            return;
-          }
-
-          const online = presence.status === "online";
-          livePresenceRef.current[presence.user_id] = online;
-
-          setFriends((current) =>
-            current.map((friend) =>
-              friend.id === presence.user_id
-                ? { ...friend, online }
-                : friend,
-            ),
-          );
-
-          setResults((current) =>
-            current.map((user) =>
-              user.id === presence.user_id
-                ? { ...user, online }
-                : user,
-            ),
-          );
+        if (p.event === "presence" && p.data && typeof p.data === "object") {
+          const { user_id, status } = p.data;
+          if (typeof user_id !== "number" || (status !== "online" && status !== "offline")) return;
+          const online = status === "online";
+          presence.current[user_id] = online;
+          const patch = (list: User[]) => list.map((u) => (u.id === user_id ? { ...u, online } : u));
+          setFriends(patch);
+          setResults(patch);
         }
       };
 
       ws.onclose = () => {
         if (disposed) return;
-
-        reconnectTimer = setTimeout(() => {
-          reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+        timer = setTimeout(() => {
+          delay = Math.min(delay * 2, 30000);
           connect();
-        }, reconnectDelay);
+        }, delay);
       };
-
-      ws.onerror = () => ws.close();
+      ws.onerror = () => ws?.close();
     };
 
     connect();
-
     return () => {
       disposed = true;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      socket?.close();
+      clearTimeout(timer);
+      ws?.close();
     };
-  }, [token, refreshLists, refreshBlockedUsers, refreshSearch]);
+  }, [token, loadLists, loadBlocked, search]);
 
-  const searchUsers = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const submitSearch = async (e: FormEvent) => {
+    e.preventDefault();
     if (!token) return;
-
     if (!query.trim()) {
       setResults([]);
-      setBlockStatuses({});
-      setError(t("friends_errors_enterUsername"));
-      return;
+      setStatuses({});
+      return fail(t("friends_errors_enterUsername"));
     }
-
     setSearching(true);
-    setError("");
-
+    setMsg(null);
     try {
-      const data = await apiRequest<PublicUser[]>(
-        `/users/search?q=${encodeURIComponent(query.trim())}`,
-        token,
-      );
-
-      const users = Array.isArray(data) ? data : [];
-      setResults(users);
-      void refreshBlockStatuses(users);
+      await search();
     } catch {
-      setError(t("friends_errors_searchFailed"));
+      fail(t("friends_errors_searchFailed"));
     } finally {
       setSearching(false);
     }
   };
 
-  const runAction = async (
-    key: string,
-    path: string,
-    method: string,
-    body?: unknown,
-    successMessage = t("friends_messages_actionCompleted"),
-  ) => {
+  // Shared runner: busy flag, notice/error, then refresh everything.
+  const run = async (key: string, task: () => Promise<string>, errorText: string) => {
     if (!token) return;
-
-    setBusyKey(key);
-    setError("");
-    setNotice("");
-
+    setBusy(key);
+    setMsg(null);
     try {
-      await apiRequest(path, token, {
-        method,
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      });
-
-      setNotice(successMessage);
-
-      await Promise.all([
-        refreshLists(false),
-        refreshBlockedUsers(),
-        refreshSearch(),
-      ]);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "";
-
-      if (
-        path.startsWith("/friends/requests/") &&
-        /404|not found/i.test(message)
-      ) {
-        await Promise.all([refreshLists(false), refreshSearch()]);
-        setError("");
-        setNotice(
-          t("friends_messages_requestNoLongerPending"),
-        );
-      } else {
-        setError(t("friends_errors_actionFailed"));
-      }
-    } finally {
-      setBusyKey("");
-    }
-  };
-
-  const toggleBlock = async (
-    user: PublicUser | BlockedUser,
-    shouldBlock: boolean,
-  ) => {
-    if (!token) return;
-
-    setBusyKey(`block-${user.id}`);
-    setError("");
-    setNotice("");
-
-    try {
-      await apiRequest(`/blocks/${user.id}`, token, {
-        method: shouldBlock ? "POST" : "DELETE",
-      });
-
-      let successMessage = shouldBlock
-        ? t("friends_messages_blocked", { username: user.username })
-        : t("friends_messages_unblocked", { username: user.username });
-
-      if (!shouldBlock) {
-        try {
-          const status = await apiRequest<BlockStatus>(
-            `/blocks/status/${user.id}`,
-            token,
-          );
-
-          setBlockStatuses((current) => ({
-            ...current,
-            [user.id]: status,
-          }));
-
-          if (status.theyBlockedMe) {
-            successMessage =
-              t("friends_messages_unblockedButStillBlocked", { username: user.username });
-          }
-        } catch {
-          // The unblock succeeded; refresh will retry fetching the status.
-        }
-      } else {
-        setBlockStatuses((current) => ({
-          ...current,
-          [user.id]: {
-            iBlockedThem: true,
-            theyBlockedMe: current[user.id]?.theyBlockedMe ?? false,
-          },
-        }));
-      }
-
-      setNotice(successMessage);
-
-      await Promise.all([
-        refreshLists(false),
-        refreshBlockedUsers(),
-        refreshSearch(),
-      ]);
+      setMsg({ kind: "notice", text: await task() });
+      await refreshAll();
     } catch {
-      setError(
-        shouldBlock
-          ? t("friends_errors_blockFailed")
-          : t("friends_errors_unblockFailed"),
-      );
+      fail(errorText);
     } finally {
-      setBusyKey("");
+      setBusy("");
     }
   };
 
-  const renderSearchAction = (user: PublicUser) => {
-    const busy = busyKey === `user-${user.id}`;
-    const blockStatus = blockStatuses[user.id];
+  const act = (key: string, path: string, method: string, ok: string, body?: unknown) =>
+    run(
+      key,
+      async () => {
+        try {
+          await call(path, { method, body: body ? JSON.stringify(body) : undefined });
+          return ok;
+        } catch (e) {
+          if (path.startsWith("/friends/requests/") && /404|not found/i.test(String(e)))
+            return t("friends_messages_requestNoLongerPending");
+          throw e;
+        }
+      },
+      t("friends_errors_actionFailed"),
+    );
 
-    if (
-      blockStatus?.iBlockedThem ||
-      blockStatus?.theyBlockedMe ||
-      user.relation === "blocked"
-    ) {
-      if (blockStatus?.iBlockedThem) {
-        return (
-          <button
-            className={greenButton}
-            disabled={!!busyKey}
-            onClick={() => void toggleBlock(user, false)}
-          >
-            {busyKey === `block-${user.id}` ? t("friends_buttons_unblocking") : t("friends_buttons_unblock")}
-          </button>
-        );
-      }
+  const toggleBlock = (u: User, block: boolean) =>
+    run(
+      `block-${u.id}`,
+      async () => {
+        await call(`/blocks/${u.id}`, { method: block ? "POST" : "DELETE" });
+        const status = await call<BlockStatus>(`/blocks/status/${u.id}`).catch(() => null);
+        if (status) setStatuses((c) => ({ ...c, [u.id]: status }));
+        const p = { username: u.username };
+        if (!block && status?.theyBlockedMe) return t("friends_messages_unblockedButStillBlocked", p);
+        return t(block ? "friends_messages_blocked" : "friends_messages_unblocked", p);
+      },
+      t(block ? "friends_errors_blockFailed" : "friends_errors_unblockFailed"),
+    );
 
+  const unblockBtn = (u: User) => (
+    <button className={green} disabled={!!busy} onClick={() => void toggleBlock(u, false)}>
+      {busy === `block-${u.id}` ? t("friends_buttons_unblocking") : t("friends_buttons_unblock")}
+    </button>
+  );
+
+  const searchAction = (u: User) => {
+    if (u.relation === "self") return null;
+    const s = statuses[u.id];
+    if (s?.iBlockedThem) return unblockBtn(u);
+    if (s?.theyBlockedMe || u.relation === "blocked")
       return <span className="text-sm text-gray-500">{t("friend_tabs_blocked")}</span>;
-    }
 
-    if (user.relation === "self") return null;
+    const p = { username: u.username };
+    const key = `user-${u.id}`;
+    const req =
+      u.relation === "incoming_request"
+        ? requests.incoming.find((r) => r.userId === u.id)
+        : u.relation === "outgoing_request"
+          ? requests.outgoing.find((r) => r.userId === u.id)
+          : undefined;
+    const needsReq = u.relation === "incoming_request" || u.relation === "outgoing_request";
 
-    if (user.relation === "friend") {
-      return (
-        <button
-          className={dangerButton}
-          disabled={!!busyKey}
-          onClick={() =>
-            void runAction(
-              `user-${user.id}`,
-              `/friends/${user.id}`,
-              "DELETE",
-              undefined,
-              t("friends_messages_removed", { username: user.username }),
-            )
-          }
-        >
-          {busy ? t("friends_buttons_working") : t("friends_buttons_remove")}
-        </button>
-      );
-    }
-
-    if (user.relation === "incoming_request") {
-      const request = requests.incoming.find(
-        (item) => item.userId === user.id,
-      );
-
-      return (
-        <button
-          className={greenButton}
-          disabled={!!busyKey || !request}
-          onClick={() =>
-            request &&
-            void runAction(
-              `user-${user.id}`,
-              `/friends/requests/${request.id}/accept`,
-              "POST",
-              undefined,
-              t("friends_messages_accepted", { username: user.username }),
-            )
-          }
-        >
-          {busy ? t("friends_buttons_working") : t("friends_buttons_accept")}
-        </button>
-      );
-    }
-
-    if (user.relation === "outgoing_request") {
-      const request = requests.outgoing.find(
-        (item) => item.userId === user.id,
-      );
-
-      return (
-        <button
-          className={dangerButton}
-          disabled={!!busyKey || !request}
-          onClick={() =>
-            request &&
-            void runAction(
-              `user-${user.id}`,
-              `/friends/requests/${request.id}`,
-              "DELETE",
-              undefined,
-              t("friends_messages_cancelled"),
-            )
-          }
-        >
-          {busy ? t("friends_buttons_working") : t("friends_buttons_cancel")}
-        </button>
-      );
-    }
+    // [class, path, method, success message, label key, body]
+    const cfg: Record<string, [string, string, string, string, string, unknown?]> = {
+      friend: [danger, `/friends/${u.id}`, "DELETE", t("friends_messages_removed", p), "remove"],
+      incoming_request: [green, `/friends/requests/${req?.id}/accept`, "POST", t("friends_messages_accepted", p), "accept"],
+      outgoing_request: [danger, `/friends/requests/${req?.id}`, "DELETE", t("friends_messages_cancelled"), "cancel"],
+    };
+    const [cls, path, method, ok, label, body] =
+      cfg[u.relation ?? ""] ?? [primary, "/friends/requests", "POST", t("friends_messages_invitationSent", p), "addFriend", { userId: u.id }];
 
     return (
       <button
-        className={primaryButton}
-        disabled={!!busyKey}
-        onClick={() =>
-          void runAction(
-            `user-${user.id}`,
-            "/friends/requests",
-            "POST",
-            { userId: user.id },
-            t("friends_messages_invitationSent", { username: user.username }),
-          )
-        }
+        className={cls}
+        disabled={!!busy || (needsReq && !req)}
+        onClick={() => void act(key, path, method, ok, body)}
       >
-        {busy ? t("friends_buttons_working") : t("friends_buttons_addFriend")}
+        {busy === key ? t("friends_buttons_working") : t(`friends_buttons_${label}`)}
       </button>
     );
   };
 
-  const renderUserRow = (
-    user: PublicUser | BlockedUser,
-    action?: ReactNode,
-    showPresence = true,
-  ) => (
-    <div
-      key={user.id}
-      className="flex min-w-0 items-center gap-3 border-b
-        border-white/[0.06] px-3 py-3 last:border-b-0
-        hover:bg-white/[0.025]"
-    >
-      <UserAvatar user={user} />
-
+  const userRow = (u: User, action?: ReactNode, showPresence = true) => (
+    <div key={u.id} className="flex min-w-0 items-center gap-3 border-b border-white/[0.06] px-3 py-3 last:border-b-0 hover:bg-white/[0.025]">
+      <Avatar user={u} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white">
-          {user.username}
-        </p>
-
-        {showPresence && "online" in user && user.online !== undefined && (
-          <p
-            className={`mt-0.5 text-xs ${
-              user.online ? "text-pacova-green" : "text-gray-500"
-            }`}
-          >
+        <p className="truncate text-sm font-semibold text-white">{u.username}</p>
+        {showPresence && u.online !== undefined && (
+          <p className={`mt-0.5 text-xs ${u.online ? "text-pacova-green" : "text-gray-500"}`}>
             <span className="mr-1">●</span>
-            {user.online ? t("friends_status_online") : t("friends_status_offline")}
+            {u.online ? t("friends_status_online") : t("friends_status_offline")}
           </p>
         )}
       </div>
-
       {action}
     </div>
   );
 
-  const renderRequestRow = (request: FriendRequest) => (
-    <div
-      key={request.id}
-      className="flex min-w-0 items-center gap-3 border-b
-        border-white/[0.06] px-3 py-3 last:border-b-0"
-    >
-      <UserAvatar user={request} />
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white">
-          {request.username}
-        </p>
-
-        <p className="mt-0.5 text-xs text-gray-500">
-          {t("friends_requests_wantsToBeFriend")}
-        </p>
+  const requestRow = (r: Req) => {
+    const p = { username: r.username };
+    const decide = (path: "accept" | "decline", msgKey: string) =>
+      void act(`request-${r.id}`, `/friends/requests/${r.id}/${path}`, "POST", t(msgKey, p));
+    return (
+      <div key={r.id} className="flex min-w-0 items-center gap-3 border-b border-white/[0.06] px-3 py-3 last:border-b-0">
+        <Avatar user={r} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-white">{r.username}</p>
+          <p className="mt-0.5 text-xs text-gray-500">{t("friends_requests_wantsToBeFriend")}</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            aria-label={t("friends_requests_acceptAriaLabel", p)}
+            title={t("friends_requests_acceptTitle")}
+            className="rounded-lg p-2 text-pacova-green hover:bg-pacova-green/10"
+            disabled={!!busy}
+            onClick={() => decide("accept", "friends_messages_accepted")}
+          >
+            ✓
+          </button>
+          <button
+            aria-label={t("friends_requests_declineAriaLabel", p)}
+            title={t("friends_requests_declineTitle")}
+            className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+            disabled={!!busy}
+            onClick={() => decide("decline", "friends_messages_declined")}
+          >
+            ✕
+          </button>
+        </div>
       </div>
+    );
+  };
 
-      <div className="flex gap-2">
+  const friendRow = (f: User) => {
+    const p = { username: f.username };
+    const isBlocked = blocked.some((b) => b.id === f.id);
+    return userRow(
+      f,
+      <div className="flex shrink-0 items-center gap-1">
         <button
-          aria-label={t("friends_requests_acceptAriaLabel", { username: request.username })}
-          title={t("friends_requests_acceptTitle")}
-          className="rounded-lg p-2 text-pacova-green hover:bg-pacova-green/10"
-          disabled={!!busyKey}
-          onClick={() =>
-            void runAction(
-              `request-${request.id}`,
-              `/friends/requests/${request.id}/accept`,
-              "POST",
-              undefined,
-              t("friends_messages_accepted", { username: request.username }),
-            )
-          }
+          title={t("friends_actions_chatWith", p)}
+          aria-label={t("friends_actions_chatWith", p)}
+          className={`${iconBtn} text-gray-300 hover:bg-white/10`}
+          onClick={() => navigate("/chat")}
         >
-          ✓
+          💬
         </button>
-
         <button
-          aria-label={t("friends_requests_declineAriaLabel", { username: request.username })}
-          title={t("friends_requests_declineTitle")}
-          className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
-          disabled={!!busyKey}
-          onClick={() =>
-            void runAction(
-              `request-${request.id}`,
-              `/friends/requests/${request.id}/decline`,
-              "POST",
-              undefined,
-              t("friends_messages_declined", { username: request.username }),
-            )
-          }
+          title={t("friends_actions_blockUser", p)}
+          aria-label={t("friends_actions_blockUser", p)}
+          className={`${iconBtn} text-red-400 hover:bg-red-500/10`}
+          disabled={!!busy || isBlocked }
+          onClick={() => void toggleBlock(f, true)}
         >
-          ✕
+          <span className="sm:hidden">🚫</span>
+          <span className="hidden sm:inline">
+            {busy === `block-${f.id}` ? t("friends_buttons_blocking") : t("friends_buttons_block")}
+          </span>
         </button>
-      </div>
-    </div>
-  );
+        <button
+          title={t("friends_actions_removeUser", p)}
+          aria-label={t("friends_actions_removeUser", p)}
+          className={`${iconBtn} text-gray-400 hover:bg-red-500/10 hover:text-red-400`}
+          disabled={!!busy}
+          onClick={() => void act(`friend-${f.id}`, `/friends/${f.id}`, "DELETE", t("friends_messages_removed", p))}
+        >
+          <span className="sm:hidden">➖</span>
+          <span className="hidden sm:inline">{t("friends_buttons_remove")}</span>
+        </button>
+      </div>,
+    );
+  };
 
-  const visibleFriends = friends.filter(
-    (friend) => tab !== "online" || friend.online === true,
-  );
+  const list = <T,>(items: T[], emptyKey: string, row: (i: T) => ReactNode) =>
+    items.length ? (
+      items.map(row)
+    ) : (
+      <p className="px-4 py-10 text-center text-sm text-gray-500">{t(emptyKey)}</p>
+    );
 
-  const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: "all", label: t("friends_tabs_all"), count: friends.length },
-    {
-      id: "online",
-      label: t("friends_tabs_online"),
-      count: friends.filter((friend) => friend.online === true).length,
-    },
-    { id: "pending", label: t("friends_tabs_pending"), count: requests.incoming.length },
-    { id: "blocked", label: t("friends_tabs_blocked"), count: blockedUsers.length },
+  const onlineFriends = friends.filter((f) => f.online === true);
+  const tabs: [Tab, number][] = [
+    ["all", friends.length],
+    ["online", onlineFriends.length],
+    ["pending", requests.incoming.length],
+    ["blocked", blocked.length],
   ];
 
   return (
     <Background>
-      <Navbar activeTab="PROFILE" onSelectTab={handleSelectTab} />
+      <Navbar activeTab="PROFILE" onSelectTab={(s: string) => ROUTES[s] && navigate(ROUTES[s])} />
 
       <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-4 py-6 sm:px-6">
         <Card variant="gray" className="flex-1">
           <div className="p-4 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="font-pixelify text-2xl text-white">
-                  👤 {t("friends_title")}
-                </h1>
-
-                <p className="mt-1 text-xs text-gray-400 sm:text-sm">
-                  {t("friends_subtitle")}
-                </p>
+                <h1 className="font-pixelify text-2xl text-white">👤 {t("friends_title")}</h1>
+                <p className="mt-1 text-xs text-gray-400 sm:text-sm">{t("friends_subtitle")}</p>
               </div>
 
-              <form
-                onSubmit={searchUsers}
-                className="flex w-full gap-2 sm:w-auto"
-              >
+              <form onSubmit={submitSearch} className="flex w-full gap-2 sm:w-auto">
                 <input
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("friends_searchPlaceholder")}
                   aria-label={t("friends_searchAriaLabel")}
-                  className="min-w-0 flex-1 rounded-lg border
-                    border-white/10 bg-[#171120] px-3 py-2
-                    text-sm text-white outline-none
-                    placeholder:text-gray-500
-                    focus:border-pacova-green/30 sm:w-48"
+                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#171120] px-3 py-2 text-sm text-white outline-none placeholder:text-gray-500 focus:border-pacova-green/30 sm:w-48"
                 />
-
                 <button
                   type="submit"
                   aria-label={t("friends_searchButtonAriaLabel")}
-                  className="rounded-lg bg-white/[0.06] px-3
-                    text-gray-300 hover:bg-white/10"
+                  className="rounded-lg bg-white/[0.06] px-3 text-gray-300 hover:bg-white/10"
                   disabled={searching}
                 >
                   {searching ? "..." : "🔍︎"}
@@ -847,16 +463,11 @@ export default function Friends() {
 
             {results.length > 0 && (
               <div className="my-4 rounded-lg border border-pacova-pink/20">
-                <div className="px-3 pt-2 text-xs font-semibold text-pacova-pink">
-                  {t("friends_searchResults")}
-                </div>
-
-                {results.map((user) =>
-                  renderUserRow(
-                    user,
-                    <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
-                      {renderSearchAction(user)}
-                    </div>,
+                <div className="px-3 pt-2 text-xs font-semibold text-pacova-pink">{t("friends_searchResults")}</div>
+                {results.map((u) =>
+                  userRow(
+                    u,
+                    <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">{searchAction(u)}</div>,
                     false,
                   ),
                 )}
@@ -864,137 +475,45 @@ export default function Friends() {
             )}
 
             <div className="mt-5 flex flex-wrap gap-2">
-              {tabs.map((item) => (
+              {tabs.map(([id, count]) => (
                 <button
-                  key={item.id}
-                  onClick={() => setTab(item.id)}
-                  className={`rounded-lg px-4 py-2 text-xs
-                    font-medium transition sm:text-sm ${
-                      tab === item.id
-                        ? "bg-pacova-pink text-white"
-                        : "bg-white/[0.045] text-gray-400 hover:bg-white/[0.08]"
-                    }`}
+                  key={id}
+                  onClick={() => setTab(id)}
+                  className={`rounded-lg px-4 py-2 text-xs font-medium transition sm:text-sm ${
+                    tab === id ? "bg-pacova-pink text-white" : "bg-white/[0.045] text-gray-400 hover:bg-white/[0.08]"
+                  }`}
                 >
-                  {item.label}
-
-                  {item.count !== undefined && (
-                    <span className="ml-2 opacity-70">{item.count}</span>
-                  )}
+                  {t(`friends_tabs_${id}`)}
+                  <span className="ml-2 opacity-70">{count}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {error && (
+          {msg && (
             <div
-              role="alert"
-              className="mx-4 mb-3 rounded-lg border border-red-500/30
-                bg-red-950/20 px-3 py-2 text-sm text-red-300 sm:mx-6"
+              role={msg.kind === "error" ? "alert" : "status"}
+              className={`mx-4 mb-3 rounded-lg border px-3 py-2 text-sm sm:mx-6 ${
+                msg.kind === "error"
+                  ? "border-red-500/30 bg-red-950/20 text-red-300"
+                  : "border-pacova-green/20 bg-pacova-green/5 text-pacova-green"
+              }`}
             >
-              {error}
-            </div>
-          )}
-
-          {notice && (
-            <div
-              role="status"
-              className="mx-4 mb-3 rounded-lg border border-pacova-green/20
-                bg-pacova-green/5 px-3 py-2 text-sm text-pacova-green sm:mx-6"
-            >
-              {notice}
+              {msg.text}
             </div>
           )}
 
           <div className="mx-4 mb-5 rounded-lg border border-white/[0.07] sm:mx-6">
             {loading ? (
-              <p className="py-10 text-center text-sm text-pacova-pink">
-                {t("friends_loading")}
-              </p>
+              <p className="py-10 text-center text-sm text-pacova-pink">{t("friends_loading")}</p>
             ) : tab === "pending" ? (
-              requests.incoming.length === 0 ? (
-                <p className="px-4 py-10 text-center text-sm text-gray-500">
-                  {t("friends_empty_pending")}
-                </p>
-              ) : (
-                requests.incoming.map(renderRequestRow)
-              )
+              list(requests.incoming, "friends_empty_pending", requestRow)
             ) : tab === "blocked" ? (
-              blockedUsers.length === 0 ? (
-                <p className="px-4 py-10 text-center text-sm text-gray-500">
-                  {t("friends_empty_blocked")}
-                </p>
-              ) : (
-                blockedUsers.map((user) =>
-                  renderUserRow(
-                    user,
-                    <button
-                      className={greenButton}
-                      disabled={!!busyKey}
-                      onClick={() => void toggleBlock(user, false)}
-                    >
-                      {busyKey === `block-${user.id}`
-                        ? t("friends_buttons_unblocking")
-                        : t("friends_buttons_unblock")}
-                    </button>,
-                  ),
-                )
-              )
-            ) : visibleFriends.length === 0 ? (
-              <p className="px-4 py-10 text-center text-sm text-gray-500">
-                {tab === "online"
-                  ? t("friends_empty_online")
-                  : t("friends_empty_friends")}
-              </p>
+              list(blocked, "friends_empty_blocked", (u) => userRow(u, unblockBtn(u)))
+            ) : tab === "online" ? (
+              list(onlineFriends, "friends_empty_online", friendRow)
             ) : (
-              visibleFriends.map((friend) =>
-                renderUserRow(
-                  friend,
-                  <div className="flex shrink-0 items-center gap-1">
-                    <button
-                      title={t("friends_actions_chatWith", { username: friend.username })}
-                      aria-label={t("friends_actions_chatWith", { username: friend.username })}
-                      className="rounded-lg p-2 text-gray-300 hover:bg-white/10 sm:px-3 sm:py-2 sm:text-sm"
-                      onClick={() => navigate("/chat")}
-                    >
-                      💬
-                    </button>
-
-                    <button
-                      title={t("friends_actions_blockUser", { username: friend.username })}
-                      aria-label={t("friends_actions_blockUser", { username: friend.username })}
-                      className="rounded-lg p-2 text-red-400 hover:bg-red-500/10 sm:px-2 sm:py-2 sm:text-sm"
-                      disabled={!!busyKey}
-                      onClick={() => void toggleBlock(friend, true)}
-                    >
-                      <span className="sm:hidden">🚫</span>
-                      <span className="hidden sm:inline">
-                        {busyKey === `block-${friend.id}`
-                          ? t("friends_buttons_blocking")
-                          : t("friends_buttons_block")}
-                      </span>
-                    </button>
-
-                    <button
-                      title={t("friends_actions_removeUser", { username: friend.username })}
-                      aria-label={t("friends_actions_removeUser", { username: friend.username })}
-                      className="rounded-lg p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-400 sm:px-2 sm:py-2 sm:text-sm"
-                      disabled={!!busyKey}
-                      onClick={() =>
-                        void runAction(
-                          `friend-${friend.id}`,
-                          `/friends/${friend.id}`,
-                          "DELETE",
-                          undefined,
-                          t("friends_messages_removed", { username: friend.username }),
-                        )
-                      }
-                    >
-                      <span className="sm:hidden">➖</span>
-                      <span className="hidden sm:inline">{t("friends_buttons_remove")}</span>
-                    </button>
-                  </div>,
-                ),
-              )
+              list(friends, "friends_empty_friends", friendRow)
             )}
           </div>
         </Card>
