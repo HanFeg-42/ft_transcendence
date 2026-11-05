@@ -26,6 +26,7 @@ export function useGameSocket(
   const socketRef = useRef<WebSocket | null>(null);
   const gameOverRef = useRef<boolean>(false);
   const firstJoinRef = useRef<boolean>(true);
+  const urlRef = useRef<string>(url);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
   const [gaveUp, setGaveUp] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -65,13 +66,16 @@ export function useGameSocket(
     console.error("[GAME-CLIENT] Socket error observed");
   }
   useEffect(() => {
+    urlRef.current = url;
+  }, [url]);
+  useEffect(() => {
     // 1. Establish connection to the backend server
     let stopped = false;
     let attempts = 0;
     let retryId: number | undefined;
 
     const connect = () => {
-      const ws = new WebSocket(url);
+      const ws = new WebSocket(urlRef.current);
       socketRef.current = ws;
       window.setTimeout(() => {
         if (ws.readyState === WebSocket.CONNECTING) ws.close();
@@ -130,7 +134,7 @@ export function useGameSocket(
       clearTimeout(retryId);
       stopped = true;
     };
-  }, [url]);
+  }, []);
 
   // Send player movement input to the backend
   function sendPlayerInput(direction: Direction) {
