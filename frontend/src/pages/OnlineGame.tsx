@@ -29,7 +29,6 @@ const OnlineGame = () => {
 
   const handleError = (message: string) => {
     changeRoom(null);
-    setRoomInput("");
     setSearching(false);
     setError(message);
   };
@@ -77,6 +76,7 @@ const OnlineGame = () => {
         </p>
         <div className="w-80">
           <Input
+            maxLength={20}
             placeholder="Enter room name"
             value={roomInput}
             onChange={(e) => setRoomInput(e.target.value)}
@@ -101,9 +101,9 @@ const OnlineGame = () => {
           </PixelButton>
           <PixelButton
             variant="filled-green"
-            disabled={!roomInput || gameRoom !== null}
+            disabled={!roomInput.trim() || gameRoom !== null}
             onClick={() => {
-              changeRoom(roomInput);
+              changeRoom(roomInput.trim());
             }}
           >
             Create
@@ -118,6 +118,7 @@ const OnlineGame = () => {
         <p className="font-vt323 text-3xl text-pacova-green">▼ JOIN A ROOM ▼</p>
         <div className="w-80">
           <Input
+            maxLength={20}
             placeholder="Enter room name"
             value={roomInput}
             onChange={(e) => setRoomInput(e.target.value)}
@@ -134,9 +135,9 @@ const OnlineGame = () => {
           </PixelButton>
           <PixelButton
             variant="filled-green"
-            disabled={!roomInput || gameRoom !== null}
+            disabled={!roomInput.trim() || gameRoom !== null}
             onClick={() => {
-              changeRoom(roomInput);
+              changeRoom(roomInput.trim());
             }}
           >
             Join

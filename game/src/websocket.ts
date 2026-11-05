@@ -146,15 +146,21 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     // --- Join a room ---
     const { gameId, mazeId, timeLimit, difficulty, intent }: JoinGamePayload =
       packet.data;
-    if (!gameId || typeof gameId !== "string") {
+    if (
+      !gameId ||
+      typeof gameId !== "string" ||
+      gameId.trim() === "" ||
+      gameId.length > 36
+    ) {
       ws.send(
         JSON.stringify({
           event: GameServerEvents.ERROR,
-          data: { message: "Invalid gameId" },
+          data: { message: "Invalid room name" },
         }),
       );
       return;
     }
+
     for (const sockets of gameRooms.values()) {
       if (sockets.has(ws)) {
         ws.send(
