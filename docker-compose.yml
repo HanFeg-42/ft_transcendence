@@ -78,9 +78,7 @@ services:
       - pacova
 
   user:
-    build:
-      context: .
-      dockerfile: user/Dockerfile
+    build: ./user
     container_name: user
     env_file:
       - .env
@@ -88,9 +86,8 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./user/uploads:/app/user/uploads
-      # Development convenience: lets `prisma migrate dev` write new migrations to the host
-      - ./user/prisma/migrations:/app/user/prisma/migrations
+      - uploads_data:/app/uploads
+      - ./user/prisma/migrations:/app/prisma/migrations
     networks:
       - pacova
 
@@ -102,3 +99,5 @@ networks:
 volumes:
   postgres_data:
     name: postgres_data
+  uploads_data:
+    name: uploads_data

@@ -43,11 +43,6 @@ clean: down
 fclean: clean
 	$(DOCKER_COMPOSE) down -v --rmi all --remove-orphans
 
-# 	@echo "Cleaning up local node_modules and Docker cache..."
-# 	@for dir in $(SERVICES); do \
-# 		rm -rf $$dir/node_modules; \
-# 	done
-
 
 re: fclean build up
 

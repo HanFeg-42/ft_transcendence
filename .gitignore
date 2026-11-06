@@ -1,20 +1,26 @@
-# Dependencies
 node_modules/
+build/
+dist/
+
 .pnp
 .pnp.js
 
-# Vite build output
-dist/
-
-# Local Environment secrets
 .env
-
-# OS garbage files
-.DS_Store
-Thumbs.db
+.env.*
 
 user/uploads
-
 docker-compose.override.yml
-
 generated/
+
+*.tsbuildinfo
+*.log
+npm-debug.log*
+coverage/
+
+*.pem
+*.key 
+
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
