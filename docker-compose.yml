@@ -58,7 +58,7 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: frontend
     ports:
-      - "8443:443"
+      - "443:443"
     depends_on:
       - api-gateway
     networks:
@@ -84,8 +84,6 @@ services:
     container_name: user
     env_file:
       - .env
-    ports: 
-      - "3004:3004"
     depends_on:
       postgres:
         condition: service_healthy

@@ -41,6 +41,26 @@
   --radius-pixel-md: 4px;
   --radius-pixel-lg: 8px;
 }
+
+
+/* --- PACOVA TEXT COLORS --- */
+
+/* Dark mode : couleurs par défaut */
+:root {
+  --pacova-text-primary: #ffffff;
+  --pacova-text-secondary: #d1d5db;
+  --pacova-text-muted: #9ca3af;
+}
+
+/* Light mode : couleurs adaptées au fond clair */
+.pacova-light {
+  --pacova-text-primary: #30213f;
+  --pacova-text-secondary: #574765;
+  --pacova-text-muted: #786b83;
+}
+
+
+
 @layer utilities {
   /* Exact 3-step pixel cutout from your Figma board */
   .pixel-corners-3step {
@@ -63,6 +83,19 @@
     );
     background-size: 100% 4px;
   }
+
+    .pacova-text-primary {
+      color: var(--pacova-text-primary);
+    }
+
+    .pacova-text-secondary {
+      color: var(--pacova-text-secondary);
+    }
+
+    .pacova-text-muted {
+      color: var(--pacova-text-muted);
+    }
+
 }
 /* Animated Grid Scrolling */
 @keyframes gridMove {
