@@ -38,11 +38,7 @@ export function useGameSocket(
     let packet;
     try {
       packet = JSON.parse(event.data);
-    } catch (err) {
-      console.warn(
-        "[GAME-CLIENT] Invalid JSON received, ignoring:",
-        event.data,
-      );
+    } catch {
       return; // drop the bad message, keep the connection alive
     }
     // Check if incoming packet matches game state update
@@ -61,13 +57,10 @@ export function useGameSocket(
     console.log(`[GAME-CLIENT] Connection closed (Code: ${event.code})`);
   }
 
-  // Handle socket errors
-  function handleError() {
-    console.error("[GAME-CLIENT] Socket error observed");
-  }
   useEffect(() => {
     urlRef.current = url;
   }, [url]);
+  
   useEffect(() => {
     // 1. Establish connection to the backend server
     let stopped = false;
@@ -121,10 +114,6 @@ export function useGameSocket(
         }, RECONNECT_DELAY_MS);
       };
 
-      // Listen for socket errors
-      ws.onerror = () => {
-        handleError();
-      };
     };
     connect();
 
@@ -139,7 +128,6 @@ export function useGameSocket(
   // Send player movement input to the backend
   function sendPlayerInput(direction: Direction) {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      console.warn("[GAME-CLIENT] Cannot send input, socket not connected");
       return;
     }
 
