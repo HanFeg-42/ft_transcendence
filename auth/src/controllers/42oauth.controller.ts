@@ -205,6 +205,7 @@ export const handle42Callback = async (
 
     // On transforme la réponse JSON et on applique notre type FortyTwoUser
     const ftData: FortyTwoUser = await userResponse.json();
+    console.log("[42 DEBUG] image =", JSON.stringify(ftData.image));
 
     if (!userResponse.ok) {
       throw new Error(
