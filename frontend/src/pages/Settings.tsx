@@ -256,7 +256,7 @@ const sectiontext: Record<string, string> = {
                   />
                 </div>
 
-                <span className="min-w-0 flex-1 font-press-start text-sm text-pacova-green">
+                <span className={`min-w-0 flex-1 font-press-start text-sm ${sectiontext[activeSection]}`}>
                   {t(activeSection.toLowerCase())}
                 </span>
 
@@ -301,9 +301,19 @@ const sectiontext: Record<string, string> = {
                       </button>
                     );
                   })}
+             <div className="mt-5 border-t border-pacova-pink/30 pt-5">
+              <PixelButton
+                onClick={handleLogout}
+                variant="outline-green"
+                className="w-full"
+              >
+                {t("logout")}
+              </PixelButton>
+            </div>
                 </nav>
               )}
             </div>
+
 
             {/* ACCOUNT */}
             {activeSection === "ACCOUNT" && (
