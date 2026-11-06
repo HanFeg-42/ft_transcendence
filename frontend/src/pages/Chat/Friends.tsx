@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import Background from "../components/ui/Background";
-import Navbar from "../components/ui/Navbar";
-import Card from "../components/ui/Card";
-import { useAuth } from "../context/AuthContext";
+import Background from "../../components/ui/Background";
+import Navbar from "../../components/ui/Navbar";
+import Card from "../../components/ui/Card";
+import { useAuth } from "../../context/AuthContext";
 
 type Relation = "self" | "friend" | "incoming_request" | "outgoing_request" | "blocked" | "none";
 type User = { id: number; username: string; avatar?: string | null; online?: boolean; relation?: Relation };

@@ -15,7 +15,7 @@ import UserProfile from "./pages/user/UserProfile";
 import Privacy from "./pages/legal/PrivacyPolicy";
 import Terms from "./pages/legal/TermsOfService";
 import Leaderboard from "./pages/Leaderboard";
-import Friends from "./pages/Friends";
+import Friends from "./pages/Chat/Friends";
 import NotFound from "./pages/NotFound";
 import BotPage from "./pages/Game/GameBot";
 import OnlineGame from "./pages/OnlineGame";
