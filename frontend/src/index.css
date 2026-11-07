@@ -54,9 +54,9 @@
 
 /* Light mode : couleurs adaptées au fond clair */
 .pacova-light {
-  --pacova-text-primary: #30213f;
-  --pacova-text-secondary: #574765;
-  --pacova-text-muted: #786b83;
+  --pacova-text-primary: #421226;
+  --pacova-text-secondary: #5e4c6e;
+  --pacova-text-muted: #7b7085;
 }
 
 

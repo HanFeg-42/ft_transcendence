@@ -65,7 +65,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
         </div>
 
-        <h2 className="font-pixelify text-3xl tracking-widest uppercase text-white mt-2 text-center">
+        <h2 className="font-pixelify text-3xl tracking-widest uppercase pacova-text-primary mt-2 text-center">
           {username}
         </h2>
 
