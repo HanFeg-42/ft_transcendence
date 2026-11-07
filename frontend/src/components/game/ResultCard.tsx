@@ -6,14 +6,14 @@ const Result: React.FC<{
   win: boolean;
 }> = ({ name, score, lives, win }) => (
   <div
-    className={`flex-1 p-3 rounded-xl border-2 text-center bg-pacova-purple/40 ${
+    className={`flex-1 min-w-0 p-3 rounded-xl border-2 text-center bg-pacova-purple/40 ${
       win
         ? "border-pacova-green shadow-neon-green"
         : "border-white/20 opacity-70"
     }`}
   >
     <p
-      className={`font-press-start text-sm ${win ? "text-pacova-green drop-shadow-glow-green" : "text-white/60"}`}
+      className={`font-press-start text-sm truncate ${win ? "text-pacova-green drop-shadow-glow-green" : "text-white/60"}`}
     >
       {name}
     </p>
