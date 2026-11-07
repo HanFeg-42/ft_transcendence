@@ -236,6 +236,7 @@ export const tick = (state: GameState) => {
       }
     }
   });
+  
   const deadPlayers: Player[] = [];
   const deadChasers: Chaser[] = [];
 
@@ -244,8 +245,8 @@ export const tick = (state: GameState) => {
       (chaser) =>
         tilesAreEqual(player.tile, chaser.tile) ||
         (chaser.dir &&
-          tilesAreEqual(player.tile, ahead(chaser.tile, chaser.dir))) ||
-        (player.dir &&
+          player.dir &&
+          tilesAreEqual(ahead(chaser.tile, chaser.dir), player.tile) &&
           tilesAreEqual(ahead(player.tile, player.dir), chaser.tile)),
     );
 
