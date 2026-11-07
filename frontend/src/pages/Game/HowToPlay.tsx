@@ -5,10 +5,10 @@ import Background from "../../components/ui/Background";
 import Card from "../../components/ui/Card";
 import PixelButton from "../../components/ui/PixelButton";
 import pacman from "../../assets/icons/packmann.png";
-import blinky from "../../assets/icons/gost-red.png";
-import pinky from "../../assets/icons/gost-pink.png";
-import inky from "../../assets/icons/gost-blue.png";
-import clyde from "../../assets/icons/gost-orange.png";
+import redGhost from "../../assets/icons/gost-red.png";
+import pinkGhost from "../../assets/icons/gost-pink.png";
+import blueGhost from "../../assets/icons/gost-blue.png";
+import orangeGhost from "../../assets/icons/gost-orange.png";
 
 // Colors chosen to stay readable on both the dark and the light theme
 const TITLE = "font-press-start text-sm mb-3 text-[#F32077]";
@@ -47,24 +47,13 @@ export default function HowToPlay() {
 
           <Card variant="pink">
             <h2 className={TITLE}>{t("howToPlay_ghosts")}</h2>
-            <ul className={`${TEXT} flex flex-col gap-3`}>
-              <li className="flex items-center gap-3">
-                <img src={blinky} alt="Blinky" className="w-10" />
-                <span><b className="text-[#ef4444]">{t("howToPlay_blinky")}</b> - {t("howToPlay_blinkyDescription")}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <img src={pinky} alt="Pinky" className="w-10" />
-                <span><b className="text-[#ec4899]">{t("howToPlay_pinky")}</b> - {t("howToPlay_pinkyDescription")}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <img src={inky} alt="Inky" className="w-10" />
-                <span><b className="text-[#0891b2]">{t("howToPlay_inky")}</b> - {t("howToPlay_inkyDescription")}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <img src={clyde} alt="Clyde" className="w-10" />
-                <span><b className="text-[#ea580c]">{t("howToPlay_clyde")}</b> - {t("howToPlay_clydeDescription")}</span>
-              </li>
-            </ul>
+            <div className="flex gap-3 mb-3">
+              <img src={redGhost} alt="" className="w-10" />
+              <img src={pinkGhost} alt="" className="w-10" />
+              <img src={blueGhost} alt="" className="w-10" />
+              <img src={orangeGhost} alt="" className="w-10" />
+            </div>
+            <p className={TEXT}>{t("howToPlay_ghostsDescription")}</p>
           </Card>
 
           <Card variant="pink">
