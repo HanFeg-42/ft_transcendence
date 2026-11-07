@@ -184,7 +184,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({
                 />
               </div>
 
-              <div className="w-20 text-center font-bold text-white text-2xl">
+              <div className="w-30 text-center font-bold text-white text-xl">
                 {match.score}
               </div>
 

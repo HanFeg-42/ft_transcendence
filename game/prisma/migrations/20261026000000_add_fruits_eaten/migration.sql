@@ -1,0 +1,2 @@
+ALTER TABLE "MatchParticipant"
+  ADD COLUMN "fruitsEaten" INTEGER NOT NULL DEFAULT 0;

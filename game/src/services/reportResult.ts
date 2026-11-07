@@ -5,7 +5,7 @@ const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://user:3004";
 export const reportResult = async (state: GameState) => {
   for (const p of state.players) {
     try {
-      const response = await fetch(`${USER_SERVICE_URL}/profile/update-stats`, {
+      const response = await fetch(`${USER_SERVICE_URL}/achievements/update-stats`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-user-id": p.id },
         body: JSON.stringify({
@@ -14,6 +14,9 @@ export const reportResult = async (state: GameState) => {
             : state.winnerId === p.id
               ? "win"
               : "loss",
+              fruitsEaten: p.fruitsEaten,
+              ghostsEaten: p.ghostsEaten
+              
         }),
       });
       if (!response.ok) {

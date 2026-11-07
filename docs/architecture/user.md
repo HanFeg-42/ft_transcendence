@@ -27,7 +27,7 @@ flowchart LR
 
 ## Achievements
 
-- Six achievements are seeded (`prisma/seed.ts`): Champion, Ghost Hunter, Cherry Collector, Speedster, Pac-Maniac, Tournament Player.
+- Six achievements are seeded (`prisma/seed.ts`): Champion, Ghost Hunter, Cherry Collector, Pac-Maniac, Player.
 - Each user has one `UserAchievement` row per achievement with `unlocked`, `progress` and `unlockedAt`; the profile page shows them.
 
 ```mermaid

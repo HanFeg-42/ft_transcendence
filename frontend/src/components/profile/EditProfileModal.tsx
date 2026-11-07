@@ -72,7 +72,7 @@ export default function EditProfileModal({
 
       onClose();
     } catch (err: unknown) {
-      console.error('[EDIT-PROFILE] Failed to save:', err);
+      // console.error('[EDIT-PROFILE] Failed to save:', err);
       setError(t('userProfile_saveError'));
     } finally {
       setSaving(false);
@@ -113,7 +113,7 @@ export default function EditProfileModal({
       const data = await res.json();
       setAvatarUrl(data.avatarUrl);
     } catch (err: unknown) {
-      console.error('[EDIT-PROFILE] Avatar upload failed:', err);
+      // console.error('[EDIT-PROFILE] Avatar upload failed:', err);
       setError(t('userProfile_uploadError'));
     } finally {
       setUploading(false);
@@ -151,22 +151,22 @@ export default function EditProfileModal({
             </div>
 
             <div>
-              <label className="font-pixelify text-sm text-pacova-green uppercase tracking-wider block mb-2">
-                {t('userProfile_avatarUrl')}
-              </label>
 
-              <input
+              {/* <input
                 type="text"
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
                 className="w-full bg-black/60 border border-pacova-green/40 rounded px-4 py-2 font-vt323 text-lg text-white focus:outline-none focus:border-pacova-green"
                 placeholder="https://..."
-              />
+                /> */}
 
-              <div className="mt-2 text-center">
-                <span className="font-vt323 text-xs text-gray-400">
+              <div className="mt-2">
+                <label className="pt-8 font-pixelify text-sm text-pacova-green uppercase tracking-wider block mb-2">
+                  {t('userProfile_avatarUrl')}
+                </label>
+                {/* <span className="font-vt323 text-xs text-gray-400">
                   {t('userProfile_or')}
-                </span>
+                </span> */}
               </div>
 
               <div className="mt-2">

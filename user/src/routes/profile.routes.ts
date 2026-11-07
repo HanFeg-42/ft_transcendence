@@ -37,6 +37,124 @@ function getUserIdFromHeader(req: Request): number | null {
   return isNaN(id) ? null : id;
 }
 
+// Download a 42 avatar once and serve it from our own /uploads folder.
+async function cacheRemoteAvatar(userId: number, url: string): Promise<string> {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' || u.hostname !== 'cdn.intra.42.fr') return url;
+
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+    const type = r.headers.get('content-type') || '';
+    if (!type.startsWith('image/')) throw new Error(`Not an image: ${type}`);
+
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > 2 * 1024 * 1024) throw new Error('Image too large');
+
+    const ext = type.includes('png') ? '.png'
+      : type.includes('webp') ? '.webp'
+      : type.includes('gif') ? '.gif'
+      : '.jpg';
+    const filename = `avatar_${userId}_${Date.now()}${ext}`;
+    await fs.promises.writeFile(path.join(uploadDir, filename), buf);
+
+    return `/uploads/avatars/${filename}`;
+  } catch (err) {
+    console.warn('[USER] Could not cache 42 avatar:', err);
+    return url; // keep the remote URL as a fallback
+  }
+}
+
+
+
+// // Helper : récupère ou crée le Profile
+// export async function getOrCreateProfile(userId: number) {
+//   let profile = await prisma.profile.findUnique({
+//     where: { userId },
+//   });
+
+//   // Always retrieve the Auth user, even if the profile already exists.
+//   let authUser: any = null;
+
+//   try {
+//     const authRes = await fetch(
+//       `http://auth:3001/users/${userId}`,
+//       {
+//         headers: {
+//           'x-user-id': userId.toString(),
+//         },
+//       }
+//     );
+
+//     if (authRes.ok) {
+//       authUser = await authRes.json();
+//     } else {
+//       console.warn(
+//         '[USER] Auth service returned:',
+//         authRes.status
+//       );
+//     }
+//   } catch (err) {
+//     console.warn(
+//       '[USER] Could not retrieve Auth user:',
+//       err
+//     );
+//   }
+
+//   const displayName =
+//     authUser?.username || `Player${userId}`;
+
+//   const authAvatar = authUser?.avatar;
+
+//   // Do not replace a custom Pacova avatar with the 42 avatar.
+//   let avatarUrl = profile?.avatarUrl;
+
+//   if (
+//     authAvatar &&
+//     (!avatarUrl || avatarUrl === '/default-avatar.png')
+//   ) {
+//     avatarUrl = await cacheRemoteAvatar(userId, authAvatar);
+//   }
+
+//   if (!profile) {
+//     profile = await prisma.profile.create({
+//       data: {
+//         userId,
+//         displayName,
+//         avatarUrl: avatarUrl || '/default-avatar.png',
+//         bio: '',
+//         statusText: 'Ready to play',
+//       },
+//     });
+
+//     const achievements = await prisma.achievement.findMany();
+
+//     await prisma.userAchievement.createMany({
+//       data: achievements.map((a) => ({
+//         userId,
+//         achievementId: a.id,
+//         progress: 0,
+//         unlocked: false,
+//       })),
+//       skipDuplicates: true,
+//     });
+//   } else if (
+//     avatarUrl &&
+//     avatarUrl !== profile.avatarUrl
+//   ) {
+//     profile = await prisma.profile.update({
+//       where: { userId },
+//       data: { avatarUrl },
+//     });
+//   }
+
+//   return profile;
+// }
+
+
+
+
 // Helper : récupère ou crée le Profile
 export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
@@ -52,7 +170,9 @@ export async function getOrCreateProfile(userId: number) {
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
-        avatarUrl = authUser.avatar || '/default-avatar.png';
+        avatarUrl = authUser.avatar
+        ? await cacheRemoteAvatar(userId, authUser.avatar)
+        : '/default-avatar.png';
       }
       else {
         avatarUrl = '/default-avatar.png';
@@ -71,8 +191,6 @@ export async function getOrCreateProfile(userId: number) {
         statusText: 'Ready to play',
       },
     });
-  
-  
     const achievements = await prisma.achievement.findMany();
     await prisma.userAchievement.createMany({
       data: achievements.map((a) => ({
@@ -138,7 +256,7 @@ router.get('/me', async (req: Request, res: Response) => {
     return res.status(500).json({ error: err.message });
   }
 });
-///////////////////////
+
 
 
 /** GET /profiles?ids=1,2,3 */
@@ -180,13 +298,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
 
 
 
-////////////////////
-
-
-
-
-
-
 // GET /profile/batch?ids=1,4,7 
 /**
  * @route GET /batch
@@ -203,6 +314,7 @@ router.get('/profiles', async (req: Request, res: Response) => {
  * @returns {400} No valid user IDs were provided.
  * @returns {500} Failed to load the requested profiles.
  */
+
 router.get('/batch', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
@@ -239,29 +351,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const user = await getOrCreateProfile(userId);
 
-    const achievements = await prisma.achievement.findMany({
-      include: {
-        users: {
-          where: { userId },
-          select: { unlocked: true, progress: true, unlockedAt: true },
-        },
-      },
-    });
-
-    const formattedAchievements = achievements.map((a) => {
-      const userProgress = a.users[0];
-      return {
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        image: a.image,
-        borderColor: a.borderColor,
-        textColor: a.textColor,
-        unlocked: userProgress?.unlocked ?? false,
-        progress: userProgress?.progress ?? 0,
-      };
-    });
-
     return res.json({
       id: user.userId,
       username: user.displayName,
@@ -272,7 +361,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       currentXp: 500,
       maxXp: 1000,
       stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
-      achievements: formattedAchievements,
+      // achievements: formattedAchievements,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });

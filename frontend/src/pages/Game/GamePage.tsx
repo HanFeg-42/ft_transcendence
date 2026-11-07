@@ -18,13 +18,15 @@ import {
   DEFAULT_DIFFICULTY,
 } from "../../../../shared/data/game-data";
 import Background from "../../components/ui/Background";
+import { useTranslation } from 'react-i18next';
+
+
 
 const GameSession: React.FC<{
   gameMode: 1 | 2;
   timeLimit: number;
   mazeId: string;
-  difficulty: string;
-}> = ({ gameMode, timeLimit, mazeId, difficulty }) => {
+  difficulty: string;}> = ({ gameMode, timeLimit, mazeId, difficulty }) => {
   const { state, sendInput } = useLocalGame(
     "player-1",
     gameMode,
@@ -32,7 +34,7 @@ const GameSession: React.FC<{
     mazeId,
     difficulty,
   );
-
+  const { t } = useTranslation();
   useKeyboard((dir: Direction) => sendInput("player-1", dir), "arrows");
   useKeyboard((dir: Direction) => sendInput("player-2", dir), "wasd");
 
@@ -68,10 +70,12 @@ const GameSession: React.FC<{
       {state.status !== "playing" && (
         <div className={styles.gameOverLayout}>
           <h1 className={styles.gameoverstate}>
-            {state.status === "won" ? "WIN 🏆" : "GAME OVER"}
+            {state.status === "won"
+              ? `${t('local_game_win')} 🏆`
+              : t('local_game_over')}
           </h1>
           <h1 className={styles.gameOverScore}>
-            Score : {state.players[0]?.score ?? 0}
+            {t('local_game_score_label')} : {state.players[0]?.score ?? 0}
           </h1>
           <div className="flex flex-row gap-6">
             <PixelButton
@@ -79,11 +83,11 @@ const GameSession: React.FC<{
               size="lg"
               onClick={() => window.location.reload()}
             >
-              RESTART
+              {t('local_game_restart')}
             </PixelButton>
             <a href="/home" className="inline-flex">
               <PixelButton variant="danger-red" size="lg">
-                QUIT
+                {t('local_game_quit')}
               </PixelButton>
             </a>
           </div>
@@ -94,6 +98,7 @@ const GameSession: React.FC<{
 };
 
 const GamePage: React.FC = () => {
+  const { t } = useTranslation();
   const [gameMode, setGameMode] = useState<null | 1 | 2>(null);
   const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
@@ -135,7 +140,7 @@ const GamePage: React.FC = () => {
             onMazeIdChange={setMazeId}
           />
           <PixelButton variant="filled-green" onClick={() => setStarted(true)}>
-            Start
+            {t('local_game_start')}
           </PixelButton>
         </div>
       </Background>

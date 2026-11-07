@@ -45,6 +45,7 @@ function createBotGame(mazeId: string): GameState {
     lives: 3,
     score: 0,
     pelletsEaten: 0,
+    fruitsEaten: 0,
     ghostsEaten: 0,
     connected: true,
     joinedAt: Date.now(),

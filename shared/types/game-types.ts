@@ -92,6 +92,7 @@ export interface Player {
   lives: number;
   score: number;
   pelletsEaten: number;
+  fruitsEaten: number;
   ghostsEaten: number;
   connected: boolean;
   joinedAt?: number;
@@ -109,7 +110,9 @@ export interface GameState {
   status: GameStatus;
   players: Player[];
   chasers: Chaser[];
+  matchId?: string;
   pellets: boolean[][];
+  fruits: boolean[][];
   timeRemaining: number;
   timeLimit?: number;
   startedAt?: number;

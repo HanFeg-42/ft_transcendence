@@ -79,6 +79,9 @@ export default function ProfilePage() {
     ])
       .then(([profileData, statsData, leaderboardData]) => {
         setProfile(profileData);
+        console.log('[PROFILE] Achievements reçus:', profileData.achievements);
+        console.log('[PROFILE] User ID:', profileData.id);
+        console.log('[PROFILE] Achievements:', profileData.achievements);
         setStats(statsData);
         setLeaderboard(leaderboardData);
         setLoading(false);
@@ -123,8 +126,12 @@ export default function ProfilePage() {
         onSelectTab={(tab) => handleSelectTab(tab, navigate)}
       />
 
-      <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-4 xl:col-span-3 flex flex-col">
+      <main className={isOwnProfile ? "flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
+                                    : "flex pt-8 items-center justify-center min-h-[70vh]"}>
+        <div className={isOwnProfile
+          ? "lg:col-span-4 xl:col-span-3 flex flex-col"
+          : "w-full max-w-lg flex flex-col"
+        }>          
           {loading ? (
             <Card
               variant="gray"
@@ -162,6 +169,7 @@ export default function ProfilePage() {
                     }
                   : undefined
               }
+              isOwnProfile={isOwnProfile}
               onEditClick={
                 isOwnProfile ? () => setIsEditOpen(true) : undefined
               }
@@ -169,6 +177,8 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {isOwnProfile && (
+        <>
         <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch flex-1">
             <div className="md:col-span-2 flex flex-col h-full">
@@ -186,6 +196,7 @@ export default function ProfilePage() {
 
           <Achievements achievements={profile?.achievements ?? []} />
         </div>
+        </>)}
       </main>
 
       {isOwnProfile && (
