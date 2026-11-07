@@ -3,7 +3,6 @@ import { prisma } from '../prisma';
 import { onlineUsers } from '../ws/presence';
 import { WebSocket } from 'ws';
 
-
 const router = Router();
 
 function currentUserId(req: Request): number | null {
@@ -51,7 +50,6 @@ function notifyBlockUpdate(blockerId: number, blockedId: number, blocked: boolea
   }
 }
 
-
 // 1. Blocking a user (POST /blocks/:blockedId)
 router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
   const blockerId = currentUserId(req);
@@ -77,7 +75,6 @@ router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
   }
 });
 
-
 // 2. Unblocking a user (DELETE /blocks/:blockedId)
 router.delete('/blocks/:blockedId', async (req: Request, res: Response) => {
   const blockerId = currentUserId(req);
@@ -97,7 +94,6 @@ router.delete('/blocks/:blockedId', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 // 3. Check block status (GET /blocks/status/:friendId)
 router.get('/blocks/status/:friendId', async (req: Request, res: Response) => {
@@ -125,7 +121,6 @@ router.get('/blocks/status/:friendId', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 // 4. List users blocked by the current user (GET /blocks)
 router.get('/blocks', async (req: Request, res: Response) => {

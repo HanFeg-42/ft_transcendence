@@ -15,7 +15,7 @@ import UserProfile from "./pages/user/UserProfile";
 import Privacy from "./pages/legal/PrivacyPolicy";
 import Terms from "./pages/legal/TermsOfService";
 import Leaderboard from "./pages/Leaderboard";
-import FriendsTest from "./pages/FriendsTest";
+import Friends from "./pages/Friends";
 import NotFound from "./pages/NotFound";
 import BotPage from "./pages/Game/GameBot";
 import OnlineGame from "./pages/OnlineGame";
@@ -33,7 +33,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/friends" element={<FriendsTest />} />
+        <Route path="/friends" element={<Friends />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/game" element={<Game />} />
