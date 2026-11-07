@@ -82,8 +82,8 @@ const GameRoom = ({
         setOpponentName(
           (await getProfileById(token, Number(opponent.id))).username,
         );
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // profile couldn't be loaded: keep "Opponent" as the name
       }
     };
     loadOpponentName();
@@ -102,13 +102,14 @@ const GameRoom = ({
   }, []);
 
   useEffect(() => {
-    if (error && !state) {
+    if (error && state?.status !== "finished") {
       onError(error);
     }
   }, [error]);
 
   useEffect(() => {
-    if (gaveUp && !state) onError("Could not connect to the game server");
+    if (gaveUp && state?.status !== "playing")
+      onError("Could not connect to the game server");
   }, [gaveUp]);
 
   if (!state && joiningScreen) return joiningScreen;

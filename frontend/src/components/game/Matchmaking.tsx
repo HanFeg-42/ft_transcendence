@@ -30,8 +30,12 @@ const Matchmaking = ({
         onMatch(packet.data.gameId);
       if (packet.event === GameServerEvents.ERROR) onError(packet.data.message);
     };
-    return () => ws.close();
-  }, [url]);
+    ws.onclose = () => onError("Lost connection while searching for a match");
+    return () => {
+      ws.onclose = null;
+      ws.close();
+    };
+  }, []);
 
   return (
     <div className="flex flex-col gap-4  items-center">

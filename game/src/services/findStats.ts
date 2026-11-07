@@ -17,9 +17,10 @@ const findStats = async (userId: number) => {
     where: { userId },
     _sum: { pelletsEaten: true, ghostsEaten: true },
   });
-  const ghostsEaten = totals._sum.ghostsEaten;
-  const pelletsEaten = totals._sum.pelletsEaten;
-  const winRate = matchesPlayed ? Math.round((wins / matchesPlayed) * 100) : 0;
+  const ghostsEaten = totals._sum.ghostsEaten ?? 0;
+  const pelletsEaten = totals._sum.pelletsEaten ?? 0;
+  const finished = wins + losses + draws;
+  const winRate = finished ? Math.round((wins / finished) * 100) : 0;
 
   return {
     matchesPlayed,
