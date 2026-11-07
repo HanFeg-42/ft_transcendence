@@ -144,16 +144,23 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   }
   if (packet.event === GameClientEvents.JOIN_GAME) {
     // --- Join a room ---
-    const { gameId, mazeId, timeLimit, difficulty }: JoinGamePayload = packet.data;
-    if (!gameId || typeof gameId !== "string") {
+    const { gameId, mazeId, timeLimit, difficulty, intent }: JoinGamePayload =
+      packet.data;
+    if (
+      !gameId ||
+      typeof gameId !== "string" ||
+      gameId.trim() === "" ||
+      gameId.length > 36
+    ) {
       ws.send(
         JSON.stringify({
           event: GameServerEvents.ERROR,
-          data: { message: "Invalid gameId" },
+          data: { message: "Invalid room name" },
         }),
       );
       return;
     }
+
     for (const sockets of gameRooms.values()) {
       if (sockets.has(ws)) {
         ws.send(
@@ -166,6 +173,21 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       }
     }
     const existing = getSession(gameId);
+
+    let joinError;
+    if (intent === "join" && !existing) joinError = "Room not found";
+    if (intent === "create" && existing)
+      joinError = "Room name is already taken";
+    if (joinError) {
+      ws.send(
+        JSON.stringify({
+          event: GameServerEvents.ERROR,
+          data: { message: joinError },
+        }),
+      );
+      return;
+    }
+
     if (
       existing &&
       existing.players.length >= 2 &&
@@ -180,6 +202,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       return;
     }
     const rejoining = existing?.players.find((p) => p.id === userId);
+
     if (rejoining) {
       rejoining.connected = true;
       const forfeitId = forfeitTimers.get(gameId);
@@ -207,7 +230,13 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     }
     playerSocket.set(userId, ws);
 
-    const state: GameState = joinSession(gameId, userId, mazeId, timeLimit, difficulty);
+    const state: GameState = joinSession(
+      gameId,
+      userId,
+      mazeId,
+      timeLimit,
+      difficulty,
+    );
     broadcast(gameId, GameServerEvents.GAME_STATE, state);
 
     if (state.players.length === 2) {
