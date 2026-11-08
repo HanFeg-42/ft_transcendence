@@ -12,6 +12,7 @@ import {
 import GameRoom from "../components/game/GameRoom";
 import Matchmaking from "../components/game/Matchmaking";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const OnlineGame = () => {
   const [searchParams, setParams] = useSearchParams();
@@ -19,6 +20,7 @@ const OnlineGame = () => {
   const [gameRoom, setGameRoom] = useState<string | null>(
     searchParams.get("gameId"),
   );
+  const { t } = useTranslation();
   const [roomInput, setRoomInput] = useState<string>("");
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
   const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
@@ -72,12 +74,12 @@ const OnlineGame = () => {
     form = (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
         <p className="font-vt323 text-3xl text-pacova-green">
-          ▼ CREATE A ROOM ▼
+          ▼ {t("online_game_create_title")} ▼
         </p>
         <div className="w-80">
           <Input
             maxLength={20}
-            placeholder="Enter room name"
+            placeholder={t("online_game_room_placeholder")}
             value={roomInput}
             onChange={(e) => setRoomInput(e.target.value)}
             className="text-center"
@@ -97,7 +99,7 @@ const OnlineGame = () => {
         />
         <div className="flex gap-4 mt-2">
           <PixelButton variant="danger-red" onClick={backToMenu}>
-            Back to menu
+            {t("online_game_back_to_menu")}
           </PixelButton>
           <PixelButton
             variant="filled-green"
@@ -106,7 +108,7 @@ const OnlineGame = () => {
               changeRoom(roomInput.trim());
             }}
           >
-            Create
+            {t("online_game_create")}
           </PixelButton>
         </div>
       </div>
@@ -115,11 +117,13 @@ const OnlineGame = () => {
   if (screen === "join") {
     form = (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
-        <p className="font-vt323 text-3xl text-pacova-green">▼ JOIN A ROOM ▼</p>
+        <p className="font-vt323 text-3xl text-pacova-green">
+          ▼ {t("online_game_join_title")} ▼
+        </p>
         <div className="w-80">
           <Input
             maxLength={20}
-            placeholder="Enter room name"
+            placeholder={t("online_game_room_placeholder")}
             value={roomInput}
             onChange={(e) => setRoomInput(e.target.value)}
             className="text-center"
@@ -131,7 +135,7 @@ const OnlineGame = () => {
         </div>
         <div className="flex gap-4 mt-2">
           <PixelButton variant="danger-red" onClick={backToMenu}>
-            Back to menu
+            {t("online_game_back_to_menu")}
           </PixelButton>
           <PixelButton
             variant="filled-green"
@@ -140,7 +144,7 @@ const OnlineGame = () => {
               changeRoom(roomInput.trim());
             }}
           >
-            Join
+            {t("online_game_join")}
           </PixelButton>
         </div>
       </div>
@@ -153,7 +157,7 @@ const OnlineGame = () => {
       <Background>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
           <p className="font-vt323 text-3xl text-pacova-green">
-            ▼ PLAY ONLINE ▼
+            ▼ {t("online_game_title")} ▼
           </p>
           {error && <Badge variant="red">{error}</Badge>}
           <div className="w-80 flex flex-col gap-4">
@@ -165,28 +169,28 @@ const OnlineGame = () => {
               }}
               className="w-full"
             >
-              Find an opponent
+              {t("online_game_find_opponent")}
             </PixelButton>
             <PixelButton
               variant="outline-green"
               onClick={() => changeScreen("create")}
               className="w-full"
             >
-              Create a room
+              {t("online_game_create_room")}
             </PixelButton>
             <PixelButton
               variant="outline-green"
               onClick={() => changeScreen("join")}
               className="w-full"
             >
-              Join a room
+              {t("online_game_join_room")}
             </PixelButton>
             <div className="mt-4 flex justify-center">
               <PixelButton
                 variant="danger-red"
                 onClick={() => navigate("/home")}
               >
-                Home
+                {t("home")}
               </PixelButton>
             </div>
           </div>
