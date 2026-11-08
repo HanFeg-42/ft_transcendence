@@ -1,7 +1,6 @@
 import React from 'react';
 import type { GameState } from '../../../../shared/types/game-types';
 import styles from './Hud.module.css';
-// import Card from '../ui/Card'
 
 interface HudTopProps {
     state: GameState;
@@ -16,11 +15,9 @@ const formatTime = (seconds: number): string => {
 const HudTop: React.FC<HudTopProps> = ({ state }) => {
     const { timeRemaining } = state;
     return (
-        // <Card variant='gray' gameCard='true'>
             <div className={styles.timerBlock}>
                 <span className={styles.timer}>{formatTime(timeRemaining)}</span>
             </div>
-        // </Card>
     );
 };
 

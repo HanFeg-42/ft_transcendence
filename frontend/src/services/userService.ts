@@ -17,15 +17,6 @@ export interface ProfileData {
   avatarUrl?: string;
   bio?: string;
   statusText?: string;
-  level?: number;
-  currentXp?: number;
-  maxXp?: number;
-  stats?: {
-    matchesPlayed: number;
-    wins: number;
-    losses: number;
-    winRate: number;
-  };
   achievements?: Achievement[];
 }
 
@@ -84,7 +75,7 @@ export async function getProfile(id: number, token: string): Promise<ProfileData
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
-      // 'Content-Type': 'application/json',
+      'Content-Type': 'application/json',
     },
   });
 

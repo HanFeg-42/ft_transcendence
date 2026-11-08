@@ -245,10 +245,6 @@ router.get('/me', async (req: Request, res: Response) => {
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       statusText: user.statusText || 'Ready to play',
-      level: 1,
-      currentXp: 500,
-      maxXp: 1000,
-      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
       achievements: formattedAchievements,
     });
   } catch (err: any) {
@@ -357,11 +353,6 @@ router.get('/:id', async (req: Request, res: Response) => {
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       statusText: user.statusText || 'Ready to play',
-      level: 1,
-      currentXp: 500,
-      maxXp: 1000,
-      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
-      // achievements: formattedAchievements,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
@@ -425,10 +416,6 @@ router.patch('/me', async (req: Request, res: Response) => {
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
       statusText: updated.statusText || 'Ready to play',
-      level: 1,
-      currentXp: 500,
-      maxXp: 1000,
-      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
       achievements: formattedAchievements,
     });
 
