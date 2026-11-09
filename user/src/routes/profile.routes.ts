@@ -61,7 +61,7 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        // headers: { 'x-user-id': userId.toString() },
+        headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -130,7 +130,7 @@ router.get('/me', async (req: Request, res: Response) => {
 
   try {
     const user = await getOrCreateProfile(userId);
-    const achievements = getUserAchievements(userId);
+    const achievements = await getUserAchievements(userId);
 
     return res.json({
       id: user.userId,
@@ -147,88 +147,40 @@ router.get('/me', async (req: Request, res: Response) => {
 });
 
 
-
-/** GET /profiles?ids=1,2,3 */
+// GET /profile/profiles?ids=1,4,7
+// Returns { id, username, avatarUrl } for each requested user (max 100).
+// Invalid ids are ignored; missing profiles are created.
 router.get('/profiles', async (req: Request, res: Response) => {
-  const rawIds = req.query.ids;
-
-  if (typeof rawIds !== 'string' || !rawIds.trim()) {
-    return res.status(400).json({ error: 'ids query parameter is required' });
-  }
-
-  const ids = [...new Set(
-    rawIds.split(',').map((id) => Number(id.trim()))
-  )];
-
-  if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
-    return res.status(400).json({ error: 'Invalid user ids' });
-  }
-
-  try {
-    const profiles = await prisma.profile.findMany({
-      where: { userId: { in: ids } },
-      select: {
-        userId: true,
-        avatarUrl: true,
-      },
-    });
-
-    return res.json(
-      profiles.map((profile) => ({
-        id: profile.userId,
-        avatarUrl: profile.avatarUrl,
-      }))
-    );
-  } catch (err) {
-    console.error('[USER] getProfiles error:', err);
-    return res.status(500).json({ error: 'Failed to fetch profiles' });
-  }
-});
-
-
-
-// GET /profile/batch?ids=1,4,7 
-/**
- * @route GET /batch
- * @description Retrieves multiple user profiles in a single request.
- *              Duplicate IDs are removed, invalid IDs are ignored,
- *              and a maximum of 100 unique valid IDs are processed.
- *              Missing profiles may be created by getOrCreateProfile.
- *
- * @query {string} ids - Comma-separated list of positive integer user IDs.
- *                       Example: ?ids=12,25,38
- *
- * @returns {200} Array of user profiles containing userId, username,
- *                and avatarUrl.
- * @returns {400} No valid user IDs were provided.
- * @returns {500} Failed to load the requested profiles.
- */
-
-router.get('/batch', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
     const ids = [...new Set(raw.split(',').map(Number))]
-      .filter((id) => Number.isInteger(id) && id > 0)
+      .filter((id) => Number.isSafeInteger(id) && id > 0)
       .slice(0, 100);
 
     if (ids.length === 0) {
       return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
     }
 
-    const profiles = await Promise.all(ids.map((id) => getOrCreateProfile(id)));
+    // One query for existing profiles, then create only the missing ones
+    const existing = await prisma.profile.findMany({ where: { userId: { in: ids } } });
+    const known = new Set(existing.map((p) => p.userId));
+    const created = await Promise.all(
+      ids.filter((id) => !known.has(id)).map((id) => getOrCreateProfile(id)),
+    );
 
     return res.json(
-      profiles.map((p) => ({
-        userId: p.userId,
+      [...existing, ...created].map((p) => ({
+        id: p.userId,
         username: p.displayName,
         avatarUrl: p.avatarUrl,
       })),
     );
   } catch (err) {
-    console.error('[USER] batch profiles failed:', err);
+    console.error('[USER] profiles failed:', err);
     return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
+
 
 // GET /profile/:id
 router.get('/:id', async (req: Request, res: Response) => {
@@ -280,7 +232,7 @@ router.patch('/me', async (req: Request, res: Response) => {
       },
     });
 
-    const achievements = await getUserAch
+    const achievements = await getUserAchievements(userId);
     return res.json({
       id: updated.userId,
       username: updated.displayName,
