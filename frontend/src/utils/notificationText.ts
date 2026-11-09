@@ -82,7 +82,7 @@ export function describeNotification(
       return {
         icon: "+",
         text: t("notif_friendRequest", { name: who }),
-        link: "/chat",
+        link: "/friends?tab=pending",
       };
 
     case NotificationTypes.FRIEND_ACCEPTED:

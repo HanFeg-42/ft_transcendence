@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Background from "../components/ui/Background";
 import Navbar from "../components/ui/Navbar";
@@ -84,7 +84,13 @@ export default function Friends() {
   const [blocked, setBlocked] = useState<User[]>([]);
   const [statuses, setStatuses] = useState<Record<number, BlockStatus>>({});
   const [requests, setRequests] = useState<{ incoming: Req[]; outgoing: Req[] }>({ incoming: [], outgoing: [] });
-  const [tab, setTab] = useState<Tab>("all");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>(
+    initialTab === "pending" || initialTab === "online" || initialTab === "blocked"
+      ? initialTab
+      : "all",
+  );
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [busy, setBusy] = useState("");

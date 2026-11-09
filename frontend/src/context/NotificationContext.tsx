@@ -274,7 +274,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         <Toast
           key={toast.notification.id}
           message={describeNotification(toast.notification, toast.name, t).text}
-          type="info"
+          type="success"
           onClose={() => setToast(null)}
         />
       )}
