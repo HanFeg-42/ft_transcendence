@@ -46,7 +46,7 @@ Everything goes through the gateway, which checks the JWT (`Authorization: Beare
 | Type | Path | Purpose |
 |---|---|---|
 | REST | `GET /api/game/matches/:id?` `?limit=&offset=` | A user's match history (yourself by default), newest first, 5 per page (max 50), each with both players |
-| REST | `GET /api/game/stats/:id?` | `matchesPlayed`, `wins`, `losses`, `draws`, `winRate`, `pelletsEaten`, `ghostsEaten` |
+| REST | `GET /api/game/stats/:id?` | `matchesPlayed`, `wins`, `losses`, `draws`, `winRate`, `pelletsEaten`, `fruitsEaten`, `ghostsEaten` |
 | REST | `GET /api/game/leaderboard?limit=` | `[{ userId, wins }]`, ranked by wins, 10 by default (max 100) |
 | WS | `/api/game/ws?token=` | Matchmaking, rooms, inputs, live state |
 
@@ -172,13 +172,13 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     F["finished: final gameState sent"] --> S["saveMatch: 1 Match + 2 MatchParticipant rows in game_db"]
-    F --> R["reportResult: POST /profile/update-stats on the user service, per player (win, loss or draw)"]
+    F --> R["reportResult: POST /achievements/update-stats on the user service, per player (win/loss/draw, fruitsEaten, ghostsEaten)"]
     A["abandoned (both offline 30 s)"] --> S
     S --> Q["history, stats and leaderboard read MatchParticipant"]
 ```
 
 - **`MatchParticipant.result`:** `WIN`, `LOSS`, `DRAW` or `ABANDONED`.
-- **`reportResult`:** a failure is only logged, and the match is unaffected. Abandoned matches aren't reported.
+- **`reportResult`:** the user service turns it into achievement progress. A failure is only logged, and the match is unaffected. Abandoned matches aren't reported.
 - **Stats:** `matchesPlayed` counts every match, abandoned ones included. `winRate` = wins ÷ (wins + losses + draws), so abandoned matches don't lower it. It's 0 with no finished match, and the totals are 0 with no match at all.
 - **Leaderboard:** the number of `WIN` rows per user.
 
