@@ -278,36 +278,14 @@ router.patch('/me', async (req: Request, res: Response) => {
       },
     });
 
-    const achievements = await prisma.achievement.findMany({
-      include: {
-        users: {
-          where: { userId },
-          select: { unlocked: true, progress: true, unlockedAt: true },
-        },
-      },
-    });
-
-    const formattedAchievements = achievements.map((a) => {
-      const userProgress = a.users[0];
-      return {
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        image: a.image,
-        borderColor: a.borderColor,
-        textColor: a.textColor,
-        unlocked: userProgress?.unlocked ?? false,
-        progress: userProgress?.progress ?? 0,
-      };
-    });
-
+    const achievements = await getUserAch
     return res.json({
       id: updated.userId,
       username: updated.displayName,
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
       statusText: updated.statusText || 'Ready to play',
-      achievements: formattedAchievements,
+      achievements,
     });
 
   } catch (err: any) {
