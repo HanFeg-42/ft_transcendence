@@ -3,6 +3,7 @@ import { prisma } from '../prisma';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { notify } from '../notify';
 
 const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
 if (!fs.existsSync(uploadDir)) {
@@ -314,7 +315,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
  * @returns {400} No valid user IDs were provided.
  * @returns {500} Failed to load the requested profiles.
  */
-
 router.get('/batch', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
@@ -395,6 +395,9 @@ router.patch('/me', async (req: Request, res: Response) => {
         ...(bio !== undefined && { bio }),
       },
     });
+    
+    const fields = (['username', 'avatar', 'bio'] as const).filter((k) => req.body[k] !== undefined);
+    if (fields.length) void notify(userId, 'profile_updated', { fields });
 
     const achievements = await prisma.achievement.findMany({
       include: {
