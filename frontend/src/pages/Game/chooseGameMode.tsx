@@ -40,30 +40,31 @@ export default function SelectMode() {
         </div>
 
         {/* Grille des cartes de jeu */}
-        <GameModeCard
-          title={t('game_mode_local')}
-          description={t('game_mode_local_description')}
-          icon="👻"
-          selected={selectedMode === 'LOCAL'}
-          onClick={() => setSelectedMode('LOCAL')}
-        />
+        <div className="flex gap-x-[10px]">
+          <GameModeCard
+            title={t('game_mode_local')}
+            description={t('game_mode_local_description')}
+            icon="👻"
+            selected={selectedMode === 'LOCAL'}
+            onClick={() => setSelectedMode('LOCAL')}
+          />
 
-        <GameModeCard
-          title={t('game_mode_remote')}
-          description={t('game_mode_remote_description')}
-          icon="🌐"
-          selected={selectedMode === 'REMOTE'}
-          onClick={() => setSelectedMode('REMOTE')}
-        />
+          <GameModeCard
+            title={t('game_mode_remote')}
+            description={t('game_mode_remote_description')}
+            icon="🌐"
+            selected={selectedMode === 'REMOTE'}
+            onClick={() => setSelectedMode('REMOTE')}
+          />
 
-        <GameModeCard
-          title={t('game_mode_bot')}
-          description={t('game_mode_bot_description')}
-          icon="🤖"
-          selected={selectedMode === 'BOT'}
-          onClick={() => setSelectedMode('BOT')}
-        />
-
+          <GameModeCard
+            title={t('game_mode_bot')}
+            description={t('game_mode_bot_description')}
+            icon="🤖"
+            selected={selectedMode === 'BOT'}
+            onClick={() => setSelectedMode('BOT')}
+          />
+        </div>
 
         {/* Bouton de confirmation */}
         <div className="flex flex-wrap justify-center gap-4 mt-4">
