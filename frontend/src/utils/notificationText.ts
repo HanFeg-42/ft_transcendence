@@ -121,13 +121,6 @@ export function describeNotification(
         link: "/profile",
       };
 
-    case NotificationTypes.AVATAR_UPDATED:
-      return {
-        icon: "✎",
-        text: t("notif_avatarUpdated"),
-        link: "/profile",
-      };
-
     case NotificationTypes.MATCH_FINISHED: {
       const result = String(n.payload.result);
       const key =

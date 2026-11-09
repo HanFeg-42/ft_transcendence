@@ -8,14 +8,12 @@ export const NotificationTypes = {
   FRIEND_REQUEST_CANCELLED: 'friend_request_cancelled',
   FRIEND_REMOVED: 'friend_removed',
   PROFILE_UPDATED: 'profile_updated',
-  AVATAR_UPDATED: 'avatar_updated',
   MATCH_FINISHED: 'match_finished',
   TWO_FACTOR_CHANGED: 'two_factor_changed',
 } as const;
 
 export interface UserRefPayload { userId: number }
 export interface ProfileUpdatedPayload { fields: string[] }
-export interface AvatarUpdatedPayload { avatarUrl: string }
 export interface MatchFinishedPayload { result: 'WIN' | 'LOSS' | 'DRAW' | 'ABANDONED' }
 export interface TwoFactorChangedPayload { enabled: boolean }
 
@@ -45,7 +43,6 @@ export type NotificationPayloadMap = {
   [NotificationTypes.FRIEND_REQUEST_CANCELLED]: UserRefPayload;
   [NotificationTypes.FRIEND_REMOVED]: UserRefPayload;
   [NotificationTypes.PROFILE_UPDATED]: ProfileUpdatedPayload;
-  [NotificationTypes.AVATAR_UPDATED]: AvatarUpdatedPayload;
   [NotificationTypes.MATCH_FINISHED]: MatchFinishedPayload;
   [NotificationTypes.TWO_FACTOR_CHANGED]: TwoFactorChangedPayload;
 };
