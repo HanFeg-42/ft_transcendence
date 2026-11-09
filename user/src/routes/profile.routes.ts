@@ -9,12 +9,27 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Keep nginx → user service as it is. One thing is worth fixing, though: 
+// your upload code builds the file extension from the name the client sends, and express.
+// static picks the content type from that extension. 
+// Someone could upload a file called x.html and claim the type is image/png.
+//  The server would store it as .
+// html and serve it as HTML,
+//  which can run scripts on your site. Two small changes close that.
+
+const EXT_BY_MIME: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
     const userId = getUserIdFromHeader(req as Request);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `avatar_${userId}_${Date.now()}${ext}`);
+    // Extension comes from the allowed MIME type, never from the client's filename
+    cb(null, `avatar_${userId}_${Date.now()}${EXT_BY_MIME[file.mimetype]}`);
   },
 });
 
@@ -37,160 +52,36 @@ function getUserIdFromHeader(req: Request): number | null {
   return isNaN(id) ? null : id;
 }
 
-// Download a 42 avatar once and serve it from our own /uploads folder.
-async function cacheRemoteAvatar(userId: number, url: string): Promise<string> {
-  try {
-    const u = new URL(url);
-    if (u.protocol !== 'https:' || u.hostname !== 'cdn.intra.42.fr') return url;
-
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-
-    const type = r.headers.get('content-type') || '';
-    if (!type.startsWith('image/')) throw new Error(`Not an image: ${type}`);
-
-    const buf = Buffer.from(await r.arrayBuffer());
-    if (buf.length > 2 * 1024 * 1024) throw new Error('Image too large');
-
-    const ext = type.includes('png') ? '.png'
-      : type.includes('webp') ? '.webp'
-      : type.includes('gif') ? '.gif'
-      : '.jpg';
-    const filename = `avatar_${userId}_${Date.now()}${ext}`;
-    await fs.promises.writeFile(path.join(uploadDir, filename), buf);
-
-    return `/uploads/avatars/${filename}`;
-  } catch (err) {
-    console.warn('[USER] Could not cache 42 avatar:', err);
-    return url; // keep the remote URL as a fallback
-  }
-}
-
-
-
-// // Helper : récupère ou crée le Profile
-// export async function getOrCreateProfile(userId: number) {
-//   let profile = await prisma.profile.findUnique({
-//     where: { userId },
-//   });
-
-//   // Always retrieve the Auth user, even if the profile already exists.
-//   let authUser: any = null;
-
-//   try {
-//     const authRes = await fetch(
-//       `http://auth:3001/users/${userId}`,
-//       {
-//         headers: {
-//           'x-user-id': userId.toString(),
-//         },
-//       }
-//     );
-
-//     if (authRes.ok) {
-//       authUser = await authRes.json();
-//     } else {
-//       console.warn(
-//         '[USER] Auth service returned:',
-//         authRes.status
-//       );
-//     }
-//   } catch (err) {
-//     console.warn(
-//       '[USER] Could not retrieve Auth user:',
-//       err
-//     );
-//   }
-
-//   const displayName =
-//     authUser?.username || `Player${userId}`;
-
-//   const authAvatar = authUser?.avatar;
-
-//   // Do not replace a custom Pacova avatar with the 42 avatar.
-//   let avatarUrl = profile?.avatarUrl;
-
-//   if (
-//     authAvatar &&
-//     (!avatarUrl || avatarUrl === '/default-avatar.png')
-//   ) {
-//     avatarUrl = await cacheRemoteAvatar(userId, authAvatar);
-//   }
-
-//   if (!profile) {
-//     profile = await prisma.profile.create({
-//       data: {
-//         userId,
-//         displayName,
-//         avatarUrl: avatarUrl || '/default-avatar.png',
-//         bio: '',
-//         statusText: 'Ready to play',
-//       },
-//     });
-
-//     const achievements = await prisma.achievement.findMany();
-
-//     await prisma.userAchievement.createMany({
-//       data: achievements.map((a) => ({
-//         userId,
-//         achievementId: a.id,
-//         progress: 0,
-//         unlocked: false,
-//       })),
-//       skipDuplicates: true,
-//     });
-//   } else if (
-//     avatarUrl &&
-//     avatarUrl !== profile.avatarUrl
-//   ) {
-//     profile = await prisma.profile.update({
-//       where: { userId },
-//       data: { avatarUrl },
-//     });
-//   }
-
-//   return profile;
-// }
-
-
-
 
 // Helper : récupère ou crée le Profile
 export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
-  
+
   if (!profile) {
     let displayName = `Player${userId}`;
-    let avatarUrl = null;  // in case of fail
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
         headers: { 'x-user-id': userId.toString() },
       });
-      
+
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
-        avatarUrl = authUser.avatar
-        ? await cacheRemoteAvatar(userId, authUser.avatar)
-        : '/default-avatar.png';
       }
-      else {
-        avatarUrl = '/default-avatar.png';
-      } 
+    } catch (err) {
+      // console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
     }
-    catch (err) {
-      console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
-    }
-    
+
     profile = await prisma.profile.create({
       data: {
         userId,
         displayName,
-        avatarUrl,
+        avatarUrl: '/default-avatar.png',
         bio: '',
         statusText: 'Ready to play',
       },
     });
+
     const achievements = await prisma.achievement.findMany();
     await prisma.userAchievement.createMany({
       data: achievements.map((a) => ({

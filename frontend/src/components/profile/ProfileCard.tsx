@@ -52,11 +52,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               <img
                 src={avatarUrl}
                 alt={username}
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/default-avatar.png';
-                  }}
+                  // referrerPolicy="no-referrer"
+                  // onError={(e) => {
+                  //   e.currentTarget.onerror = null;
+                  //   e.currentTarget.src = '/default-avatar.png';
+                  // }}
                 className="w-full h-full object-cover"
               />
             ) : (

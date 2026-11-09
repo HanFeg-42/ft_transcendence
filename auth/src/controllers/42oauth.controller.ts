@@ -9,24 +9,6 @@ interface FortyTwoUser {
   id: number;
   login: string;
   email: string;
-  image?: {
-    link?: string | null;
-    versions?: {
-      large?: string | null;
-      medium?: string | null;
-      small?: string | null;
-    };
-  };
-}
-
-// Pick the best usable avatar URL from the 42 profile (always https).
-function pickFortyTwoAvatar(ftData: FortyTwoUser): string {
-  const url =
-    ftData.image?.link ||
-    ftData.image?.versions?.large ||
-    ftData.image?.versions?.medium ||
-    "";
-  return url.startsWith("https://") ? url : "";
 }
 
 // Tickets temporaires pour transmettre le résultat OAuth au frontend.
@@ -241,25 +223,15 @@ export const handle42Callback = async (
         ? `${ftData.login}_${randomBytes(8).toString("hex")}`
         : ftData.login;
 
-      user = await prisma.user.create({
+            user = await prisma.user.create({
         data: {
           username,
           email: ftData.email,
           fortyTwoId: ftData.id,
-          avatar: pickFortyTwoAvatar(ftData),   // <-- changed
         },
       });
-
-    }else if (!user.avatar) {                   // <-- new
-      const avatar = pickFortyTwoAvatar(ftData);
-      if (avatar) {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: { avatar },
-        });
-      }
     }
-
+    
     // E) GÉNÉRATION DU JWT & REDIRECTION
     const jwtSecret = process.env.JWT_SECRET;
 

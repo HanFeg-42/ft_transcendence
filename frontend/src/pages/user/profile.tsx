@@ -79,6 +79,9 @@ export default function ProfilePage() {
     ])
       .then(([profileData, statsData, leaderboardData]) => {
         setProfile(profileData);
+        console.log('[PROFILE] Achievements reçus:', profileData.achievements);
+        console.log('[PROFILE] User ID:', profileData.id);
+        console.log('[PROFILE] Achievements:', profileData.achievements);
         setStats(statsData);
         setLeaderboard(leaderboardData);
         setLoading(false);
