@@ -30,7 +30,7 @@ const Matchmaking = ({
       const packet = JSON.parse(msg.data);
       if (packet.event === GameServerEvents.MATCH_FOUND)
         onMatch(packet.data.gameId);
-      if (packet.event === GameServerEvents.ERROR) onError(packet.data.message);
+      if (packet.event === GameServerEvents.ERROR) onError(t(packet.data.message));
     };
     ws.onclose = () => onError(t("online_game_search_lost"));
     return () => {

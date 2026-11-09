@@ -105,7 +105,7 @@ const GameRoom = ({
 
   useEffect(() => {
     if (error && state?.status !== "finished") {
-      onError(error);
+      onError(t(error));
     }
   }, [error]);
 
@@ -138,11 +138,11 @@ const GameRoom = ({
             <span className="text-pacova-green">
               {t("local_game_difficulty")}
             </span>
-            <span className="uppercase">{state.difficulty}</span>
+            <span className="uppercase">{t(`bot_${state.difficulty}`)}</span>
           </p>
           <p className="flex justify-between">
             <span className="text-pacova-green">{t("local_game_map")}</span>
-            <span className="uppercase">{state.mazeId}</span>
+            <span className="uppercase">{t(`game_map_${state.mazeId}`)}</span>
           </p>
           <p className="flex justify-between">
             <span className="text-pacova-green">{t("local_game_time")}</span>
