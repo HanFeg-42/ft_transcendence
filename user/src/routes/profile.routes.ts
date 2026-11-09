@@ -204,6 +204,7 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
+
 // PATCH /profile/me
 router.patch('/me', async (req: Request, res: Response) => {
   const userId = getUserIdFromHeader(req);
@@ -223,6 +224,28 @@ router.patch('/me', async (req: Request, res: Response) => {
       }
     }
 
+    if (username) {
+      const cleanUsername = username.trim();
+
+      if (cleanUsername.length < 3 || cleanUsername.length > 20) {
+        return res.status(400).json({
+          error: 'Username must be between 3 and 20 characters',
+        });
+      }
+
+      const existing = await prisma.profile.findFirst({
+        where: {
+          displayName: cleanUsername,
+          NOT: { userId },
+        },
+      });
+
+      if (existing) {
+        return res.status(400).json({
+          error: 'Username already taken',
+        });
+      }
+    }
     const updated = await prisma.profile.update({
       where: { userId },
       data: {
