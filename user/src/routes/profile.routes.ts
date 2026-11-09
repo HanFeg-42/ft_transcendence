@@ -61,7 +61,7 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        headers: { 'x-user-id': userId.toString() },
+        // headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -97,6 +97,30 @@ export async function getOrCreateProfile(userId: number) {
   return profile;
 }
 
+
+// Achievements of one user, in the shape the frontend expects
+async function getUserAchievements(userId: number) {
+  const achievements = await prisma.achievement.findMany({
+    include: {
+      users: {
+        where: { userId },
+        select: { unlocked: true, progress: true },
+      },
+    },
+  });
+
+  return achievements.map((a) => ({
+    id: a.id,
+    title: a.title,
+    description: a.description,
+    image: a.image,
+    borderColor: a.borderColor,
+    textColor: a.textColor,
+    unlocked: a.users[0]?.unlocked ?? false,
+    progress: a.users[0]?.progress ?? 0,
+  }));
+}
+
 // GET /profile/me
 router.get('/me', async (req: Request, res: Response) => {
   const userId = getUserIdFromHeader(req);
@@ -106,29 +130,7 @@ router.get('/me', async (req: Request, res: Response) => {
 
   try {
     const user = await getOrCreateProfile(userId);
-
-    const achievements = await prisma.achievement.findMany({
-      include: {
-        users: {
-          where: { userId },
-          select: { unlocked: true, progress: true, unlockedAt: true },
-        },
-      },
-    });
-
-    const formattedAchievements = achievements.map((a) => {
-      const userProgress = a.users[0];
-      return {
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        image: a.image,
-        borderColor: a.borderColor,
-        textColor: a.textColor,
-        unlocked: userProgress?.unlocked ?? false,
-        progress: userProgress?.progress ?? 0,
-      };
-    });
+    const achievements = getUserAchievements(userId);
 
     return res.json({
       id: user.userId,
@@ -136,7 +138,7 @@ router.get('/me', async (req: Request, res: Response) => {
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       statusText: user.statusText || 'Ready to play',
-      achievements: formattedAchievements,
+      achievements,
     });
   } catch (err: any) {
     console.error('[USER] getMyProfile error:', err);
