@@ -6,6 +6,7 @@ import {
 } from "../../../../shared/types/game-types";
 import PixelButton from "../ui/PixelButton";
 import Dots from "./Dots";
+import { useTranslation } from "react-i18next";
 
 const Matchmaking = ({
   onMatch,
@@ -16,6 +17,7 @@ const Matchmaking = ({
   onCancel: () => void;
   onError: (message: string) => void;
 }) => {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const url = `wss://${window.location.host}/api/game/ws?token=${token}`;
 
@@ -28,9 +30,9 @@ const Matchmaking = ({
       const packet = JSON.parse(msg.data);
       if (packet.event === GameServerEvents.MATCH_FOUND)
         onMatch(packet.data.gameId);
-      if (packet.event === GameServerEvents.ERROR) onError(packet.data.message);
+      if (packet.event === GameServerEvents.ERROR) onError(t(packet.data.message));
     };
-    ws.onclose = () => onError("Lost connection while searching for a match");
+    ws.onclose = () => onError(t("online_game_search_lost"));
     return () => {
       ws.onclose = null;
       ws.close();
@@ -40,14 +42,14 @@ const Matchmaking = ({
   return (
     <div className="flex flex-col gap-4  items-center">
       <p className="font-vt323 text-3xl text-pacova-green">
-        ▼ FINDING OPPONENT ▼
+        ▼ {t("online_game_finding_opponent")} ▼
       </p>
       <p className="font-vt323 text-xl text-gray-300">
-        Searching for a player
+        {t("online_game_searching_player")}
         <Dots />
       </p>
       <PixelButton variant="danger-red" onClick={onCancel}>
-        Cancel
+        {t("online_game_cancel")}
       </PixelButton>
     </div>
   );

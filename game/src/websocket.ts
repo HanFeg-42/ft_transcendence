@@ -155,7 +155,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       ws.send(
         JSON.stringify({
           event: GameServerEvents.ERROR,
-          data: { message: "Invalid room name" },
+          data: { message: "online_game_invalid_room_name" },
         }),
       );
       return;
@@ -175,9 +175,9 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     const existing = getSession(gameId);
 
     let joinError;
-    if (intent === "join" && !existing) joinError = "Room not found";
+    if (intent === "join" && !existing) joinError = "online_game_room_not_found";
     if (intent === "create" && existing)
-      joinError = "Room name is already taken";
+      joinError = "online_game_room_taken";
     if (joinError) {
       ws.send(
         JSON.stringify({
@@ -196,7 +196,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       ws.send(
         JSON.stringify({
           event: GameServerEvents.ERROR,
-          data: { message: "This room is full, try another one" },
+          data: { message: "online_game_room_full" },
         }),
       );
       return;
@@ -305,7 +305,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       ws.send(
         JSON.stringify({
           event: GameServerEvents.ERROR,
-          data: { message: "Game not found" },
+          data: { message: "online_game_game_not_found" },
         }),
       );
       return;
@@ -321,7 +321,7 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       ws.send(
         JSON.stringify({
           event: GameServerEvents.ERROR,
-          data: { message: "You're already searching for a match" },
+          data: { message: "online_game_already_searching" },
         }),
       );
       return;
