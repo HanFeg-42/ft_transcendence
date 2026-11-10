@@ -9,12 +9,27 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Keep nginx → user service as it is. One thing is worth fixing, though: 
+// your upload code builds the file extension from the name the client sends, and express.
+// static picks the content type from that extension. 
+// Someone could upload a file called x.html and claim the type is image/png.
+//  The server would store it as .
+// html and serve it as HTML,
+//  which can run scripts on your site. Two small changes close that.
+
+const EXT_BY_MIME: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
     const userId = getUserIdFromHeader(req as Request);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `avatar_${userId}_${Date.now()}${ext}`);
+    // Extension comes from the allowed MIME type, never from the client's filename
+    cb(null, `avatar_${userId}_${Date.now()}${EXT_BY_MIME[file.mimetype]}`);
   },
 });
 
@@ -37,160 +52,35 @@ function getUserIdFromHeader(req: Request): number | null {
   return isNaN(id) ? null : id;
 }
 
-// Download a 42 avatar once and serve it from our own /uploads folder.
-async function cacheRemoteAvatar(userId: number, url: string): Promise<string> {
-  try {
-    const u = new URL(url);
-    if (u.protocol !== 'https:' || u.hostname !== 'cdn.intra.42.fr') return url;
-
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-
-    const type = r.headers.get('content-type') || '';
-    if (!type.startsWith('image/')) throw new Error(`Not an image: ${type}`);
-
-    const buf = Buffer.from(await r.arrayBuffer());
-    if (buf.length > 2 * 1024 * 1024) throw new Error('Image too large');
-
-    const ext = type.includes('png') ? '.png'
-      : type.includes('webp') ? '.webp'
-      : type.includes('gif') ? '.gif'
-      : '.jpg';
-    const filename = `avatar_${userId}_${Date.now()}${ext}`;
-    await fs.promises.writeFile(path.join(uploadDir, filename), buf);
-
-    return `/uploads/avatars/${filename}`;
-  } catch (err) {
-    console.warn('[USER] Could not cache 42 avatar:', err);
-    return url; // keep the remote URL as a fallback
-  }
-}
-
-
-
-// // Helper : récupère ou crée le Profile
-// export async function getOrCreateProfile(userId: number) {
-//   let profile = await prisma.profile.findUnique({
-//     where: { userId },
-//   });
-
-//   // Always retrieve the Auth user, even if the profile already exists.
-//   let authUser: any = null;
-
-//   try {
-//     const authRes = await fetch(
-//       `http://auth:3001/users/${userId}`,
-//       {
-//         headers: {
-//           'x-user-id': userId.toString(),
-//         },
-//       }
-//     );
-
-//     if (authRes.ok) {
-//       authUser = await authRes.json();
-//     } else {
-//       console.warn(
-//         '[USER] Auth service returned:',
-//         authRes.status
-//       );
-//     }
-//   } catch (err) {
-//     console.warn(
-//       '[USER] Could not retrieve Auth user:',
-//       err
-//     );
-//   }
-
-//   const displayName =
-//     authUser?.username || `Player${userId}`;
-
-//   const authAvatar = authUser?.avatar;
-
-//   // Do not replace a custom Pacova avatar with the 42 avatar.
-//   let avatarUrl = profile?.avatarUrl;
-
-//   if (
-//     authAvatar &&
-//     (!avatarUrl || avatarUrl === '/default-avatar.png')
-//   ) {
-//     avatarUrl = await cacheRemoteAvatar(userId, authAvatar);
-//   }
-
-//   if (!profile) {
-//     profile = await prisma.profile.create({
-//       data: {
-//         userId,
-//         displayName,
-//         avatarUrl: avatarUrl || '/default-avatar.png',
-//         bio: '',
-//         statusText: 'Ready to play',
-//       },
-//     });
-
-//     const achievements = await prisma.achievement.findMany();
-
-//     await prisma.userAchievement.createMany({
-//       data: achievements.map((a) => ({
-//         userId,
-//         achievementId: a.id,
-//         progress: 0,
-//         unlocked: false,
-//       })),
-//       skipDuplicates: true,
-//     });
-//   } else if (
-//     avatarUrl &&
-//     avatarUrl !== profile.avatarUrl
-//   ) {
-//     profile = await prisma.profile.update({
-//       where: { userId },
-//       data: { avatarUrl },
-//     });
-//   }
-
-//   return profile;
-// }
-
-
-
 
 // Helper : récupère ou crée le Profile
 export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
-  
+
   if (!profile) {
     let displayName = `Player${userId}`;
-    let avatarUrl = null;  // in case of fail
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        headers: { 'x-user-id': userId.toString() },
+        // headers: { 'x-user-id': userId.toString() },
       });
-      
+
       if (authRes.ok) {
         const authUser = await authRes.json();
         displayName = authUser.username;
-        avatarUrl = authUser.avatar
-        ? await cacheRemoteAvatar(userId, authUser.avatar)
-        : '/default-avatar.png';
       }
-      else {
-        avatarUrl = '/default-avatar.png';
-      } 
+    } catch (err) {
     }
-    catch (err) {
-      console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
-    }
-    
+
     profile = await prisma.profile.create({
       data: {
         userId,
         displayName,
-        avatarUrl,
+        avatarUrl: '/default-avatar.png',
         bio: '',
         statusText: 'Ready to play',
       },
     });
+
     const achievements = await prisma.achievement.findMany();
     await prisma.userAchievement.createMany({
       data: achievements.map((a) => ({
@@ -206,6 +96,30 @@ export async function getOrCreateProfile(userId: number) {
   return profile;
 }
 
+
+// Achievements of one user, in the shape the frontend expects
+async function getUserAchievements(userId: number) {
+  const achievements = await prisma.achievement.findMany({
+    include: {
+      users: {
+        where: { userId },
+        select: { unlocked: true, progress: true },
+      },
+    },
+  });
+
+  return achievements.map((a) => ({
+    id: a.id,
+    title: a.title,
+    description: a.description,
+    image: a.image,
+    borderColor: a.borderColor,
+    textColor: a.textColor,
+    unlocked: a.users[0]?.unlocked ?? false,
+    progress: a.users[0]?.progress ?? 0,
+  }));
+}
+
 // GET /profile/me
 router.get('/me', async (req: Request, res: Response) => {
   const userId = getUserIdFromHeader(req);
@@ -215,29 +129,7 @@ router.get('/me', async (req: Request, res: Response) => {
 
   try {
     const user = await getOrCreateProfile(userId);
-
-    const achievements = await prisma.achievement.findMany({
-      include: {
-        users: {
-          where: { userId },
-          select: { unlocked: true, progress: true, unlockedAt: true },
-        },
-      },
-    });
-
-    const formattedAchievements = achievements.map((a) => {
-      const userProgress = a.users[0];
-      return {
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        image: a.image,
-        borderColor: a.borderColor,
-        textColor: a.textColor,
-        unlocked: userProgress?.unlocked ?? false,
-        progress: userProgress?.progress ?? 0,
-      };
-    });
+    const achievements = await getUserAchievements(userId);
 
     return res.json({
       id: user.userId,
@@ -245,11 +137,7 @@ router.get('/me', async (req: Request, res: Response) => {
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       statusText: user.statusText || 'Ready to play',
-      level: 1,
-      currentXp: 500,
-      maxXp: 1000,
-      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
-      achievements: formattedAchievements,
+      achievements,
     });
   } catch (err: any) {
     console.error('[USER] getMyProfile error:', err);
@@ -258,88 +146,40 @@ router.get('/me', async (req: Request, res: Response) => {
 });
 
 
-
-/** GET /profiles?ids=1,2,3 */
+// GET /profile/profiles?ids=1,4,7
+// Returns { id, username, avatarUrl } for each requested user (max 100).
+// Invalid ids are ignored; missing profiles are created.
 router.get('/profiles', async (req: Request, res: Response) => {
-  const rawIds = req.query.ids;
-
-  if (typeof rawIds !== 'string' || !rawIds.trim()) {
-    return res.status(400).json({ error: 'ids query parameter is required' });
-  }
-
-  const ids = [...new Set(
-    rawIds.split(',').map((id) => Number(id.trim()))
-  )];
-
-  if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
-    return res.status(400).json({ error: 'Invalid user ids' });
-  }
-
-  try {
-    const profiles = await prisma.profile.findMany({
-      where: { userId: { in: ids } },
-      select: {
-        userId: true,
-        avatarUrl: true,
-      },
-    });
-
-    return res.json(
-      profiles.map((profile) => ({
-        id: profile.userId,
-        avatarUrl: profile.avatarUrl,
-      }))
-    );
-  } catch (err) {
-    console.error('[USER] getProfiles error:', err);
-    return res.status(500).json({ error: 'Failed to fetch profiles' });
-  }
-});
-
-
-
-// GET /profile/batch?ids=1,4,7 
-/**
- * @route GET /batch
- * @description Retrieves multiple user profiles in a single request.
- *              Duplicate IDs are removed, invalid IDs are ignored,
- *              and a maximum of 100 unique valid IDs are processed.
- *              Missing profiles may be created by getOrCreateProfile.
- *
- * @query {string} ids - Comma-separated list of positive integer user IDs.
- *                       Example: ?ids=12,25,38
- *
- * @returns {200} Array of user profiles containing userId, username,
- *                and avatarUrl.
- * @returns {400} No valid user IDs were provided.
- * @returns {500} Failed to load the requested profiles.
- */
-
-router.get('/batch', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
     const ids = [...new Set(raw.split(',').map(Number))]
-      .filter((id) => Number.isInteger(id) && id > 0)
+      .filter((id) => Number.isSafeInteger(id) && id > 0)
       .slice(0, 100);
 
     if (ids.length === 0) {
       return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
     }
 
-    const profiles = await Promise.all(ids.map((id) => getOrCreateProfile(id)));
+    // One query for existing profiles, then create only the missing ones
+    const existing = await prisma.profile.findMany({ where: { userId: { in: ids } } });
+    const known = new Set(existing.map((p) => p.userId));
+    const created = await Promise.all(
+      ids.filter((id) => !known.has(id)).map((id) => getOrCreateProfile(id)),
+    );
 
     return res.json(
-      profiles.map((p) => ({
-        userId: p.userId,
+      [...existing, ...created].map((p) => ({
+        id: p.userId,
         username: p.displayName,
         avatarUrl: p.avatarUrl,
       })),
     );
   } catch (err) {
-    console.error('[USER] batch profiles failed:', err);
+    console.error('[USER] profiles failed:', err);
     return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
+
 
 // GET /profile/:id
 router.get('/:id', async (req: Request, res: Response) => {
@@ -357,16 +197,12 @@ router.get('/:id', async (req: Request, res: Response) => {
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       statusText: user.statusText || 'Ready to play',
-      level: 1,
-      currentXp: 500,
-      maxXp: 1000,
-      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
-      // achievements: formattedAchievements,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }
 });
+
 
 // PATCH /profile/me
 router.patch('/me', async (req: Request, res: Response) => {
@@ -387,6 +223,28 @@ router.patch('/me', async (req: Request, res: Response) => {
       }
     }
 
+    if (username) {
+      const cleanUsername = username.trim();
+
+      if (cleanUsername.length < 3 || cleanUsername.length > 20) {
+        return res.status(400).json({
+          error: 'Username must be between 3 and 20 characters',
+        });
+      }
+
+      const existing = await prisma.profile.findFirst({
+        where: {
+          displayName: cleanUsername,
+          NOT: { userId },
+        },
+      });
+
+      if (existing) {
+        return res.status(400).json({
+          error: 'Username already taken',
+        });
+      }
+    }
     const updated = await prisma.profile.update({
       where: { userId },
       data: {
@@ -396,40 +254,14 @@ router.patch('/me', async (req: Request, res: Response) => {
       },
     });
 
-    const achievements = await prisma.achievement.findMany({
-      include: {
-        users: {
-          where: { userId },
-          select: { unlocked: true, progress: true, unlockedAt: true },
-        },
-      },
-    });
-
-    const formattedAchievements = achievements.map((a) => {
-      const userProgress = a.users[0];
-      return {
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        image: a.image,
-        borderColor: a.borderColor,
-        textColor: a.textColor,
-        unlocked: userProgress?.unlocked ?? false,
-        progress: userProgress?.progress ?? 0,
-      };
-    });
-
+    const achievements = await getUserAchievements(userId);
     return res.json({
       id: updated.userId,
       username: updated.displayName,
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
       statusText: updated.statusText || 'Ready to play',
-      level: 1,
-      currentXp: 500,
-      maxXp: 1000,
-      stats: { matchesPlayed: 0, wins: 0, losses: 0, winRate: 0 },
-      achievements: formattedAchievements,
+      achievements,
     });
 
   } catch (err: any) {

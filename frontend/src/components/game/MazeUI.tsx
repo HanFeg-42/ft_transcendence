@@ -66,19 +66,19 @@ const getRotation = (dir: string | null): string => {
 const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
   const { players, chasers, pellets, fruits } = state;
 
-  const currentMazeId = mazeId ?? DEFAULT_MAZE_ID;
-  const maze = MAZES[currentMazeId];
+const currentMazeId = mazeId ?? DEFAULT_MAZE_ID;
+const maze = MAZES[currentMazeId];
 
-  if (!maze) {
-    return (
-      <div style={{ color: "red" }}>Labyrinthe inconnu : {currentMazeId}</div>
-    );
-  }
+const width = maze?.[0].length ?? 0;
+const CELL_SIZE = useCellSize(width);   // always called, every render
 
-  const height = maze.length;
-  const width = maze[0].length;
-  const CELL_SIZE = useCellSize(width);
+if (!maze) {
+  return (
+    <div style={{ color: "red" }}>Labyrinthe inconnu : {currentMazeId}</div>
+  );
+}
 
+const height = maze.length;
   return (
     <div
       className={styles.mazeContainer}
