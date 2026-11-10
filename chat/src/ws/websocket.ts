@@ -104,6 +104,8 @@ async function settleInvite(id: number, status: "accepted" | "declined" | "expir
   sendTo(invite.receiverId, packet);
 }
 
+
+
 async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   const userId = req.headers["x-user-id"] as string | undefined;
   if (!userId) return ws.close(1008, "Missing identity");
@@ -130,6 +132,8 @@ async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   // Only the FIRST socket is a real "came online" transition (a second tab isn't).
   if (wasOffline) broadcastPresenceToPartners(visible, Number(userId), "online");
 }
+
+
 
 async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
   let packet: ChatClientMessage;
@@ -213,8 +217,10 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     }
 
     case ChatEvents.GAME_INVITE_REPLY:
+    {
       await settleInvite(packet.data.message_id, packet.data.accept ? "accepted" : "declined", me);
       break;
+    }
   }
 }
 
