@@ -61,7 +61,7 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        // headers: { 'x-user-id': userId.toString() },
+        headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -147,8 +147,6 @@ router.get('/me', async (req: Request, res: Response) => {
 
 
 // GET /profile/profiles?ids=1,4,7
-// Returns { id, username, avatarUrl } for each requested user (max 100).
-// Invalid ids are ignored; missing profiles are created.
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
@@ -292,17 +290,5 @@ router.post('/avatar', upload.single('avatar'), async (req: Request, res: Respon
     return res.status(500).json({ error: err.message });
   }
 });
-
-
-// Objet créé par Multer :
-
-// {
-//   fieldname: 'avatar',
-//   originalname: 'photo.jpg',
-//   filename: 'avatar_1_1735689600000.jpg',
-//   path: '/app/user/uploads/avatars/avatar_1_xxx.jpg',
-//   size: 12345,
-//   mimetype: 'image/jpeg',
-// }
 
 export default router;

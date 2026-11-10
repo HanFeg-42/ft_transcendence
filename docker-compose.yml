@@ -88,9 +88,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./user/uploads:/app/user/uploads
-      # Development convenience: lets `prisma migrate dev` write new migrations to the host
-      - ./user/prisma/migrations:/app/user/prisma/migrations
+      - ./use/urploads:/app/user/uploads
     networks:
       - pacova
 
