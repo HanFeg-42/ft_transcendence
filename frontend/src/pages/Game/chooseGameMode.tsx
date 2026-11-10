@@ -29,7 +29,6 @@ export default function SelectMode() {
       <Navbar activeTab="HOME" onSelectTab={(tab) => handleSelectTab(tab, navigate)}/>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
-        {/* Titre de sélection */}
         <div className="text-center">
           <h1 className="font-press-start text-3xl text-pacova-pink drop-shadow-glow-pink mb-2 animate-[float_3s_ease-in-out_infinite]">
             {t('game_mode_select_title')}
@@ -39,7 +38,6 @@ export default function SelectMode() {
           </p>
         </div>
 
-        {/* Grille des cartes de jeu */}
         <div className="flex gap-x-[10px]">
           <GameModeCard
             title={t('game_mode_local')}
@@ -66,7 +64,6 @@ export default function SelectMode() {
           />
         </div>
 
-        {/* Bouton de confirmation */}
         <div className="flex flex-wrap justify-center gap-4 mt-4">
           <PixelButton variant="outline-magenta" size="lg" onClick={() => navigate('/how-to-play')}>
             {t('game_mode_how_to_play')}

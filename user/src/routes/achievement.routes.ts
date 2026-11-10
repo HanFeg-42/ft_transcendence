@@ -31,14 +31,12 @@ router.post("/update-stats", async (req: Request, res: Response) => {
   }
 
   try {
-    // Ensure that the player's profile exists.
     await prisma.profile.upsert({
       where: { userId },
       create: { userId },
       update: {},
     });
 
-    // Calculate and save achievement progress.
     const achievements = await updateUserAchievements(userId, {
       result,
       fruitsEaten,

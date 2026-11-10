@@ -75,7 +75,7 @@ export async function getProfile(id: number, token: string): Promise<ProfileData
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
-      // 'Content-Type': 'application/json',
+      'Content-Type': 'application/json',
     },
   });
 

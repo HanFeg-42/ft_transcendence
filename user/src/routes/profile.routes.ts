@@ -61,7 +61,7 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        headers: { 'x-user-id': userId.toString() },
+        // headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -69,7 +69,6 @@ export async function getOrCreateProfile(userId: number) {
         displayName = authUser.username;
       }
     } catch (err) {
-      // console.warn('[USER] Impossible de récupérer le username depuis auth:', err);
     }
 
     profile = await prisma.profile.create({
