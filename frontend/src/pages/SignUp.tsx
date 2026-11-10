@@ -10,11 +10,10 @@ import PixelButton from "../components/ui/PixelButton";
 import { validateSignUp } from "../utils/validation";
 import type { SignUpFormData } from "../types/auth";
 
-/** Renders the account registration form and handles sign-up. */
+
 export default function SignUp() {
   const { t } = useTranslation();
 
-  // validation returns translation keys: turn them into text
   const te = (key?: string) => (key ? t(key) : undefined);
 
   const [formData, setFormData] = useState<SignUpFormData>({
@@ -24,13 +23,11 @@ export default function SignUp() {
     confirmPassword: "",
   });
 
-  // Validation errors for individual form fields
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // General error coming from the backend
   const [apiError, setApiError] = useState("");
 
-  // Used to disable the button while waiting for the backend response
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -89,7 +86,6 @@ export default function SignUp() {
   return (
     <Background>
       <div className="flex-1 flex items-center justify-center p-4">
-        {/* 💡 Card size updated to be compact and fluid (w-[92%] sm:w-full max-w-[360px]) */}
         <Card
           variant="green"
           className="w-[92%] sm:w-full max-w-[460px] mx-auto"
@@ -99,14 +95,12 @@ export default function SignUp() {
             className="flex flex-col gap-3" // 💡 Reduced gap from 4 to 3 to keep layout short
             noValidate
           >
-            {/* Retro Header */}
             <div className="text-center mb-1">
               <h1 className="font-pixelify text-pacova-green text-xl tracking-wider uppercase">
                 ▼ {t("signup_title")} ▼
               </h1>
             </div>
 
-            {/* Form Fields */}
             <Input
               label={t("signup_username")}
               type="text"
@@ -147,14 +141,12 @@ export default function SignUp() {
               error={te(errors.confirmPassword)}
             />
 
-            {/* Backend Error Message */}
             {apiError && (
               <p className="text-center font-vt323 text-red-500 text-base uppercase tracking-wide">
                 ⚠️ {apiError}
               </p>
             )}
 
-            {/* Centered Pixel Submit Button */}
             <PixelButton
               type="submit"
               variant="filled-green"
@@ -189,10 +181,8 @@ export default function SignUp() {
               />
             </p>
 
-            {/* Footer Navigation Link */}
             <div className="text-center border-t border-pacova-green/30 pt-3 mt-1 font-vt323 text-sm">
               {" "}
-              {/* 💡 Reduced text size to text-sm and compact padding */}
               <span className="text-gray-400">{t("signup_alreadyHave")} </span>
               <Link
                 to="/login"

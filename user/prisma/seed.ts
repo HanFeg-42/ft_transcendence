@@ -65,8 +65,6 @@ async function main() {
       create: achievement,
     });
   }
-
-  console.log('Successfully seeded the 4 active achievements.');
 }
 
 main()

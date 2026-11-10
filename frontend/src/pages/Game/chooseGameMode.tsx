@@ -29,7 +29,6 @@ export default function SelectMode() {
       <Navbar activeTab="HOME" onSelectTab={(tab) => handleSelectTab(tab, navigate)}/>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
-        {/* Titre de sélection */}
         <div className="text-center">
           <h1 className="font-press-start text-3xl text-pacova-pink drop-shadow-glow-pink mb-2 animate-[float_3s_ease-in-out_infinite]">
             {t('game_mode_select_title')}
@@ -39,33 +38,32 @@ export default function SelectMode() {
           </p>
         </div>
 
-        {/* Grille des cartes de jeu */}
-        <GameModeCard
-          title={t('game_mode_local')}
-          description={t('game_mode_local_description')}
-          icon="👻"
-          selected={selectedMode === 'LOCAL'}
-          onClick={() => setSelectedMode('LOCAL')}
-        />
+        <div className="flex gap-x-[10px]">
+          <GameModeCard
+            title={t('game_mode_local')}
+            description={t('game_mode_local_description')}
+            icon="👻"
+            selected={selectedMode === 'LOCAL'}
+            onClick={() => setSelectedMode('LOCAL')}
+          />
 
-        <GameModeCard
-          title={t('game_mode_remote')}
-          description={t('game_mode_remote_description')}
-          icon="🌐"
-          selected={selectedMode === 'REMOTE'}
-          onClick={() => setSelectedMode('REMOTE')}
-        />
+          <GameModeCard
+            title={t('game_mode_remote')}
+            description={t('game_mode_remote_description')}
+            icon="🌐"
+            selected={selectedMode === 'REMOTE'}
+            onClick={() => setSelectedMode('REMOTE')}
+          />
 
-        <GameModeCard
-          title={t('game_mode_bot')}
-          description={t('game_mode_bot_description')}
-          icon="🤖"
-          selected={selectedMode === 'BOT'}
-          onClick={() => setSelectedMode('BOT')}
-        />
+          <GameModeCard
+            title={t('game_mode_bot')}
+            description={t('game_mode_bot_description')}
+            icon="🤖"
+            selected={selectedMode === 'BOT'}
+            onClick={() => setSelectedMode('BOT')}
+          />
+        </div>
 
-
-        {/* Bouton de confirmation */}
         <div className="flex flex-wrap justify-center gap-4 mt-4">
           <PixelButton variant="outline-magenta" size="lg" onClick={() => navigate('/how-to-play')}>
             {t('game_mode_how_to_play')}
