@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../types/auth";
 import { verify } from "otplib";
 import { prisma } from "../prisma";
+import { notify } from "../notify";
 import {
   setupTwoFactor as setupTwoFactorService,
   confirmTwoFactor as confirmTwoFactorService,
@@ -43,6 +44,8 @@ export async function confirmTwoFactor(req: Request, res: Response) {
   try {
     await confirmTwoFactorService(userId, code);
 
+    void notify(userId, "two_factor_changed", { enabled: true });
+
     return res.status(200).json({
       message: "2FA enabled successfully",
     });
@@ -80,6 +83,8 @@ export async function disableTwoFactor(req: Request, res: Response) {
 
   try {
     await disableTwoFactorService(userId);
+
+    void notify(userId, "two_factor_changed", { enabled: false });
 
     return res.status(200).json({
       message: "2FA disabled successfully",

@@ -3,6 +3,7 @@ import { prisma } from '../prisma';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { notify } from '../notify';
 
 const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
 if (!fs.existsSync(uploadDir)) {
@@ -253,6 +254,9 @@ router.patch('/me', async (req: Request, res: Response) => {
         ...(bio !== undefined && { bio }),
       },
     });
+    
+    const fields = (['username', 'avatar', 'bio'] as const).filter((k) => req.body[k] !== undefined);
+    if (fields.length) void notify(userId, 'profile_updated', { fields });
 
     const achievements = await getUserAchievements(userId);
     return res.json({
