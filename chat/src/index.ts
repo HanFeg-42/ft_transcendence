@@ -10,17 +10,25 @@ import notificationsRouter from './routes/notifications';
 const app = express();
 const PORT = process.env.PORT || 3003;
 
+
 app.use(express.json());
+
+
+// REST routes
 app.use(messagesRouter);
 app.use(blocksRouter);
 app.use(notificationsRouter);
 app.use(friendsRouter);
 
+
+// Health check
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', service: 'chat' });
 });
 
+
+// HTTP and WebSocket share the same server and the same port
 const server = http.createServer(app);
-setupWebSocket(server); // websocket shares the same port
+setupWebSocket(server);
 
 server.listen(PORT);
