@@ -34,8 +34,7 @@ export default function TwoFactorSetup() {
       }
 
       setQrCode(data.qrCode);
-    } catch (error) {
-      console.error("2FA setup failed:", error);
+    } catch {
       setError(t("connectionError"));
     } finally {
       setLoading(false);
@@ -78,8 +77,7 @@ export default function TwoFactorSetup() {
 
       setQrCode("");
       setCode("");
-    } catch (error) {
-      console.error("2FA confirmation failed:", error);
+    } catch {
       setError(t("connectionError"));
     } finally {
       setLoading(false);
@@ -111,8 +109,7 @@ export default function TwoFactorSetup() {
         setError(t("disableRefreshError"));
         return;
       }
-    } catch (error) {
-      console.error(t("disableFailed"), error);
+    } catch {
       setError(t("connectionError"));
     } finally {
       setLoading(false);
@@ -164,7 +161,7 @@ export default function TwoFactorSetup() {
         </div>
       ) : !qrCode ? (
         <>
-          <div className="font-vt323 text-gray-300 text-lg leading-6 mb-4">
+          <div className="font-vt323 pacova-text-primary text-lg leading-6 mb-4">
             <p>{t("step1")}</p>
             <p>{t("step2")}</p>
             <p>{t("step3")}</p>
