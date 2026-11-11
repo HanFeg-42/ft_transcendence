@@ -44,13 +44,13 @@ function notifyBlockUpdate(blockerId: number, blockedId: number, blocked: boolea
       try {
         socket.send(event);
       } catch (error) {
-        console.warn('[CHAT] Failed to send block update:', error);
+        // socket closed while sending: nothing to do
       }
     }
   }
 }
 
-// 1. Blocking a user (POST /blocks/:blockedId)
+// Blocking a user (POST /blocks/:blockedId)
 router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
   const blockerId = currentUserId(req);
   const blockedId = parsePositiveId(req.params.blockedId);
@@ -70,12 +70,11 @@ router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
     notifyBlockUpdate(blockerId, blockedId, true);
     return res.status(201).json({ blocked: true });
   } catch (error) {
-    console.error('[CHAT] Failed to block user:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// 2. Unblocking a user (DELETE /blocks/:blockedId)
+// Unblocking a user (DELETE /blocks/:blockedId)
 router.delete('/blocks/:blockedId', async (req: Request, res: Response) => {
   const blockerId = currentUserId(req);
   const blockedId = parsePositiveId(req.params.blockedId);
@@ -90,12 +89,11 @@ router.delete('/blocks/:blockedId', async (req: Request, res: Response) => {
     notifyBlockUpdate(blockerId, blockedId, false);
     return res.json({ blocked: false });
   } catch (error) {
-    console.error('[CHAT] Failed to unblock user:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// 3. Check block status (GET /blocks/status/:friendId)
+// Check block status (GET /blocks/status/:friendId)
 router.get('/blocks/status/:friendId', async (req: Request, res: Response) => {
   const userId = currentUserId(req);
   const friendId = parsePositiveId(req.params.friendId);
@@ -117,12 +115,11 @@ router.get('/blocks/status/:friendId', async (req: Request, res: Response) => {
 
     return res.json({ iBlockedThem: !!iBlockedThem, theyBlockedMe: !!theyBlockedMe });
   } catch (error) {
-    console.error('[CHAT] Failed to check block status:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// 4. List users blocked by the current user (GET /blocks)
+// List users blocked by the current user (GET /blocks)
 router.get('/blocks', async (req: Request, res: Response) => {
   const blockerId = Number(req.headers['x-user-id']);
 
@@ -185,7 +182,6 @@ router.get('/blocks', async (req: Request, res: Response) => {
 
     return res.json(users);
   } catch (error) {
-    console.error('[CHAT] Failed to list blocked users:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

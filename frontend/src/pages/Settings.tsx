@@ -47,7 +47,6 @@ export default function Settings() {
   );
   const [showTwoFactor, setShowTwoFactor] = useState(false);
 
-  // Read the theme that is already used by Background.tsx.
   const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
     try {
       return localStorage.getItem("pacova-theme") === "light"
@@ -60,12 +59,7 @@ export default function Settings() {
 
   useEffect(() => {
     if (!token) return;
-
-    getMyProfile(token)
-      .then(setProfile)
-      .catch((error) => {
-        console.error("Failed to load profile:", error);
-      });
+    getMyProfile(token).then(setProfile).catch(() => {});
   }, [token]);
 
   const handleSelectTab = (tab: string) => {
@@ -78,8 +72,8 @@ export default function Settings() {
     try {
       await logout();
       navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
+    } catch {
+      // Logout failed: stay on the page, the session is still valid.
     }
   };
 
@@ -94,7 +88,7 @@ const handleThemeChange = (selectedTheme: "dark" | "light") => {
   try {
     localStorage.setItem("pacova-theme", selectedTheme);
   } catch {
-    // Theme can still change for this session.
+    //
   }
 
   window.dispatchEvent(new Event("pacova-theme-change"));
@@ -178,7 +172,7 @@ const sectiontext: Record<string, string> = {
                 {t("settings")}
               </p>
 
-              <p className="mt-2 font-vt323 text-lg text-gray-500">
+              <p className="mt-2 font-vt323 text-lg text-gray-600">
                 {t("pacovaSystem")}
               </p>
             </div>
@@ -202,8 +196,8 @@ const sectiontext: Record<string, string> = {
                       sm:gap-3 sm:px-3
                       ${
                         isActive
-                          ? "rounded border-pacova-green bg-pacova-green/10 text-white shadow-[3px_3px_0_#333A0E,0_0_12px_rgba(142,214,3,0.2)]"
-                          : "rounded border-transparent text-gray-400 hover:border-pacova-green/50 hover:bg-pacova-green/5 hover:text-white"
+                          ? "rounded border-pacova-green bg-pacova-green/10 pacova-text-primary"
+                          : "rounded border-transparent text-gray-500 hover:border-pacova-green/50 hover:bg-pacova-green/5 hover:text-white"
                       }
                     `}
                   >
@@ -314,7 +308,6 @@ const sectiontext: Record<string, string> = {
               )}
             </div>
 
-
             {/* ACCOUNT */}
             {activeSection === "ACCOUNT" && (
               <section id="account" className="min-w-0">
@@ -322,7 +315,7 @@ const sectiontext: Record<string, string> = {
 
                 {/* PROFILE INFORMATION */}
                 <div className="relative min-w-0 p-2 sm:p-4">
-                  <p className="pb-6 font-vt323 text-xl text-gray-400">
+                  <p className="pb-6 font-vt323 text-xl text-gray-600">
                     {t("accountDescription")}
                   </p>
 
@@ -355,7 +348,7 @@ const sectiontext: Record<string, string> = {
 
                     {/* ACCOUNT DETAILS */}
                     <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <h3 className="break-words font-pixelify text-xl uppercase text-white sm:text-2xl">
+                      <h3 className="break-words font-pixelify text-xl uppercase pacova-text-primary sm:text-2xl">
                         {t("yourProfile")}
                       </h3>
 
@@ -364,7 +357,7 @@ const sectiontext: Record<string, string> = {
                           {t("username")}
                         </p>
 
-                        <p className="break-words font-vt323 text-2xl text-white">
+                        <p className="break-words font-vt323 text-2xl pacova-text-primary">
                           {profile?.username ?? user?.username ?? "PLAYER"}
                         </p>
                       </div>
@@ -374,7 +367,7 @@ const sectiontext: Record<string, string> = {
                           {t("email")}
                         </p>
 
-                        <p className="break-all font-vt323 text-xl text-white">
+                        <p className="break-all font-vt323 text-xl pacova-text-primary">
                           {user?.email ?? t("noEmail")}
                         </p>
                       </div>
@@ -401,7 +394,7 @@ const sectiontext: Record<string, string> = {
                 {renderSectionHeader()}
 
                 <div className="relative min-w-0 p-2 sm:p-4">
-                  <p className="pb-6 font-vt323 text-xl text-gray-400">
+                  <p className="pb-6 font-vt323 text-xl text-gray-600">
                     {t("manageSecurity")}
                   </p>
 
@@ -429,7 +422,7 @@ const sectiontext: Record<string, string> = {
                 {renderSectionHeader()}
 
                 <div className="relative min-w-0 p-2 sm:p-4">
-                  <p className="pb-6 font-vt323 text-xl text-gray-400">
+                  <p className="pb-6 font-vt323 text-xl text-gray-600">
                     {t("customizeInterface")}
                   </p>
 
@@ -448,7 +441,7 @@ const sectiontext: Record<string, string> = {
                       }`}
                     >
                       <div className="mb-4 flex items-center justify-between gap-2">
-                        <span className="font-pixelify text-sm text-white">
+                        <span className="font-pixelify text-sm pacova-text-primary">
                           {t("darkMode")}
                         </span>
 
@@ -482,7 +475,7 @@ const sectiontext: Record<string, string> = {
                       }`}
                     >
                       <div className="mb-4 flex items-center justify-between gap-2">
-                        <span className="font-pixelify text-sm text-white">
+                        <span className="font-pixelify text-sm pacova-text-primary">
                           {t("lightMode")}
                         </span>
 
@@ -513,7 +506,7 @@ const sectiontext: Record<string, string> = {
                 {renderSectionHeader()}
 
                 <div className="relative min-w-0 p-2 sm:p-4">
-                  <p className="font-vt323 text-xl text-gray-400">
+                  <p className="font-vt323 text-xl text-gray-600">
                     {t("chooseLanguage")}
                   </p>
 
