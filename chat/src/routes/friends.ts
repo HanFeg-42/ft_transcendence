@@ -31,13 +31,11 @@ const route = (fn: (userId: number, req: Request, res: Response) => unknown) =>
     if (!userId) return fail(res, 401, 'Missing identity');
     try {
       await fn(userId, req, res);
-    } catch (error) {
-      console.error('[CHAT] Friends route error:', error);
+    } catch {
       fail(res, 500, 'Internal server error');
     }
   };
 
-// Same, for routes with a :id friend-request param.
 const requestRoute = (fn: (userId: number, id: bigint, res: Response) => unknown) =>
   route((userId, req, res) =>
     /^\d+$/.test(req.params.id) && BigInt(req.params.id) > 0n
@@ -45,7 +43,7 @@ const requestRoute = (fn: (userId: number, id: bigint, res: Response) => unknown
       : fail(res, 400, 'Invalid request id'));
 
 async function notifySafe(...args: Parameters<typeof notifyUser>) {
-  try { await notifyUser(...args); } catch (e) { console.error('[CHAT] Notification failed:', e); }
+  try { await notifyUser(...args); } catch { /* a failed notification must not fail the request */ }
 }
 
 async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
@@ -76,7 +74,6 @@ async function fetchArray(url: string, label: string): Promise<unknown[]> {
   }
 }
 
-// Public users (optionally only `ids`) with avatars taken from the user service.
 async function getPublicUsers(ids?: number[]): Promise<PublicUser[]> {
   const wanted = ids && new Set(ids);
   const users = (await fetchArray(`${AUTH_URL}/users`, 'Auth service')).flatMap((u): PublicUser[] =>
@@ -99,12 +96,10 @@ function sendToUser(userId: number, event: string, data: Record<string, unknown>
   const sockets = onlineUsers.get(String(userId));
   for (const socket of sockets ?? []) {
     if (socket.readyState !== WebSocket.OPEN) { sockets!.delete(socket); continue; }
-    try { socket.send(JSON.stringify({ event, data })); }
-    catch (e) { console.warn('[CHAT] Failed to send friend event:', e); }
+      socket.send(JSON.stringify({ event, data }));
   }
 }
 
-// New friends may already have open sockets with stale partner lists: push current presence now.
 function emitAccepted(a: number, b: number) {
   sendToUser(a, 'friend_accepted', { userId: b });
   sendToUser(b, 'friend_accepted', { userId: a });
@@ -113,7 +108,6 @@ function emitAccepted(a: number, b: number) {
 }
 
 async function getRelation(userId: number, otherId: number) {
-  if (userId === otherId) return 'self';
   const pendingFrom = (requesterId: number, addresseeId: number) =>
     prisma.friendRequest.findFirst({ where: { requesterId, addresseeId, status: PENDING } });
   const [friendship, blocked, incoming, outgoing] = await Promise.all([
@@ -236,8 +230,8 @@ router.post('/friends/requests/:id/accept', requestRoute(async (userId, id, res)
   return res.json({ accepted: true, friendId: result.friendId });
 }));
 
+// POST /friends/requests/:id/decline — decline an incoming request.
 router.post('/friends/requests/:id/decline', requestRoute(async (userId, id, res) => {
-  // Read the sender first so they can be notified afterwards.
   const request = await prisma.friendRequest.findFirst({ where: { id, addresseeId: userId, status: PENDING }, select: { requesterId: true } });
   const done = request && (await prisma.friendRequest.updateMany({
     where: { id, addresseeId: userId, status: PENDING },
@@ -251,7 +245,6 @@ router.post('/friends/requests/:id/decline', requestRoute(async (userId, id, res
 
 // DELETE /friends/requests/:id — cancel our outgoing request.
 router.delete('/friends/requests/:id', requestRoute(async (userId, id, res) => {
-  // Read the recipient first so their pending list refreshes immediately.
   const request = await prisma.friendRequest.findFirst({ where: { id, requesterId: userId, status: PENDING }, select: { addresseeId: true } });
   const done = request && (await prisma.friendRequest.deleteMany({ where: { id, requesterId: userId, status: PENDING } })).count;
   if (!request || !done) return fail(res, 404, 'Outgoing pending request not found');

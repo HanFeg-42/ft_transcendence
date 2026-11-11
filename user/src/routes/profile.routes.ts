@@ -3,6 +3,7 @@ import { prisma } from '../prisma';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { notify } from '../notify';
 
 const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
 if (!fs.existsSync(uploadDir)) {
@@ -61,7 +62,7 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        headers: { 'x-user-id': userId.toString() },
+        // headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -249,6 +250,9 @@ router.patch('/me', async (req: Request, res: Response) => {
         ...(bio !== undefined && { bio }),
       },
     });
+    
+    const fields = (['username', 'avatar', 'bio'] as const).filter((k) => req.body[k] !== undefined);
+    if (fields.length) void notify(userId, 'profile_updated', { fields });
 
     const achievements = await getUserAchievements(userId);
     return res.json({
