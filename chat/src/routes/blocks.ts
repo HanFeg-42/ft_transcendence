@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../prisma';
 import { onlineUsers } from '../ws/presence';
 import { WebSocket } from 'ws';
+import { ChatEvents } from '../../../shared/types/chat-types';
 
 const router = Router();
 
@@ -28,7 +29,7 @@ async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response
 
 function notifyBlockUpdate(blockerId: number, blockedId: number, blocked: boolean) {
   const event = JSON.stringify({
-    event: 'block_updated',
+    event: ChatEvents.BLOCK_UPDATED,
     data: { blockerId, blockedId, blocked },
   });
 
