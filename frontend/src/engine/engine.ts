@@ -14,9 +14,18 @@ import {
   type Tile,
   type Direction,
 } from "../../../shared/types/game-types";
-import { findChaserSpawns, findSpawn, parsePellets, isWall } from "./maze";
+import { findChaserSpawns, findSpawn, parseCollectibles, isWall } from "./maze";
 
 import { stepPlayer, stepChaser, ahead } from "./movement";
+
+const DIRECTIONS: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
+
+const OPPOSITE: Record<Direction, Direction> = {
+  UP: "DOWN",
+  DOWN: "UP",
+  LEFT: "RIGHT",
+  RIGHT: "LEFT",
+};
 
 export const createGame = (
   playerId: string,
@@ -54,6 +63,7 @@ export const createGame = (
       lives: 3,
       score: 0,
       pelletsEaten: 0,
+      fruitsEaten: 0,
       ghostsEaten: 0,
       connected: true,
     },
@@ -74,7 +84,8 @@ export const createGame = (
     status: "playing",
     players,
     chasers,
-    pellets: parsePellets(maze),
+    pellets: parseCollectibles(maze, [".", "o"]),
+    fruits: parseCollectibles(maze, ["F"]),
     timeRemaining: timeLimit,
     vulnerableTimer: 0,
     mazeId,
@@ -118,12 +129,17 @@ const nearestPlayerDistance = (target: Tile, players: Player[]) => {
 const pickChaserDirection = (chaser: Chaser, state: GameState) => {
   const isFrightened = state.vulnerableTimer && !chaser.isEaten;
   let bestDistance = isFrightened ? -Infinity : Infinity;
-  let bestDir = null;
+  let bestDirs: Direction[] = [];
 
-  const directions: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
-  const validDirections = directions.filter((dir) =>
+  const freeDirections = DIRECTIONS.filter((dir) =>
     isTileFree(state, ahead(chaser.tile, dir), chaser),
   );
+  const forwardDirections = freeDirections.filter(
+    (dir) => !chaser.dir || dir !== OPPOSITE[chaser.dir],
+  );
+
+  const validDirections =
+    forwardDirections.length > 0 ? forwardDirections : freeDirections;
 
   for (const dir of validDirections) {
     const distance = nearestPlayerDistance(
@@ -131,11 +147,14 @@ const pickChaserDirection = (chaser: Chaser, state: GameState) => {
       state.players,
     );
     if (isFrightened ? distance > bestDistance : distance < bestDistance) {
-      bestDir = dir;
+      bestDirs = [dir];
       bestDistance = distance;
-    }
+    } else if (distance === bestDistance) bestDirs.push(dir);
   }
-  chaser.dir = bestDir;
+  chaser.dir =
+    bestDirs.length > 0
+      ? bestDirs[Math.floor(Math.random() * bestDirs.length)]
+      : null;
 };
 
 const handlePlayerDeath = (player: Player, state: GameState) => {
@@ -159,6 +178,7 @@ export const tick = (state: GameState) => {
   const maze = MAZES[state.mazeId];
 
   state.tick++;
+
   state.players.forEach((player) => {
     stepPlayer(maze, player);
 
@@ -170,29 +190,46 @@ export const tick = (state: GameState) => {
         state.vulnerableTimer = 300;
         state.chasers.forEach((c) => (c.isEaten = false));
       }
+    } else if (state.fruits[player.tile.y][player.tile.x]) {
+      player.score += 100;
+      player.fruitsEaten++;
+      state.fruits[player.tile.y][player.tile.x] = false;
     }
+  });
+  
+  const deadPlayers: Player[] = [];
+  const deadChasers: Chaser[] = [];
+
+  state.players.forEach((player) => {
     const touchedChaser = state.chasers.find(
       (chaser) =>
         tilesAreEqual(player.tile, chaser.tile) ||
         (chaser.dir &&
-          tilesAreEqual(player.tile, ahead(chaser.tile, chaser.dir))) ||
-        (player.dir &&
+          player.dir &&
+          tilesAreEqual(ahead(chaser.tile, chaser.dir), player.tile) &&
           tilesAreEqual(ahead(player.tile, player.dir), chaser.tile)),
     );
+
     if (touchedChaser) {
       if (state.vulnerableTimer && !touchedChaser.isEaten) {
-        touchedChaser.isEaten = true;
-        touchedChaser.dir = null;
-        touchedChaser.tile = touchedChaser.spawn;
-        touchedChaser.step = 0;
+        deadChasers.push(touchedChaser);
         player.score += 200;
-      } else handlePlayerDeath(player, state);
+      } else deadPlayers.push(player);
     }
   });
+  deadPlayers.forEach((p) => handlePlayerDeath(p, state));
+  deadChasers.forEach((c) => {
+    c.isEaten = true;
+    c.dir = null;
+    c.tile = c.spawn;
+    c.step = 0;
+  });
+
   state.chasers.forEach((chaser) => {
     if (chaser.step == 0) pickChaserDirection(chaser, state);
     stepChaser(chaser, DIFFICULTIES[state.difficulty]);
   });
+
   if (!state.pellets.flat().some((hasPellet) => hasPellet))
     state.status = "won";
   else if (
@@ -200,8 +237,7 @@ export const tick = (state: GameState) => {
     state.timeRemaining <= 0
   )
     state.status = "lost";
-  else if (state.tick % TICKS_PER_SECOND == 0) {
-    state.timeRemaining--;
-  }
+  else if (state.tick % TICKS_PER_SECOND == 0) state.timeRemaining--;
+
   if (state.vulnerableTimer) state.vulnerableTimer--;
 };

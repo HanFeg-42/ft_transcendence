@@ -9,9 +9,6 @@ interface FortyTwoUser {
   id: number;
   login: string;
   email: string;
-  image?: {
-    link?: string;
-  };
 }
 
 // Tickets temporaires pour transmettre le résultat OAuth au frontend.
@@ -225,16 +222,15 @@ export const handle42Callback = async (
         ? `${ftData.login}_${randomBytes(8).toString("hex")}`
         : ftData.login;
 
-      user = await prisma.user.create({
+            user = await prisma.user.create({
         data: {
           username,
           email: ftData.email,
           fortyTwoId: ftData.id,
-          avatar: ftData.image?.link || "",
         },
       });
     }
-
+    
     // E) GÉNÉRATION DU JWT & REDIRECTION
     const jwtSecret = process.env.JWT_SECRET;
 

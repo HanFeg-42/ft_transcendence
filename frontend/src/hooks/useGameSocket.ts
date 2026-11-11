@@ -21,9 +21,12 @@ export function useGameSocket(
   mazeId?: string,
   timeLimit?: number,
   difficulty?: string,
+  intent?: "create" | "join",
 ) {
   const socketRef = useRef<WebSocket | null>(null);
   const gameOverRef = useRef<boolean>(false);
+  const firstJoinRef = useRef<boolean>(true);
+  const urlRef = useRef<string>(url);
   const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
   const [gaveUp, setGaveUp] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -35,11 +38,7 @@ export function useGameSocket(
     let packet;
     try {
       packet = JSON.parse(event.data);
-    } catch (err) {
-      console.warn(
-        "[GAME-CLIENT] Invalid JSON received, ignoring:",
-        event.data,
-      );
+    } catch {
       return; // drop the bad message, keep the connection alive
     }
     // Check if incoming packet matches game state update
@@ -58,10 +57,10 @@ export function useGameSocket(
     console.log(`[GAME-CLIENT] Connection closed (Code: ${event.code})`);
   }
 
-  // Handle socket errors
-  function handleError() {
-    console.error("[GAME-CLIENT] Socket error observed");
-  }
+  useEffect(() => {
+    urlRef.current = url;
+  }, [url]);
+  
   useEffect(() => {
     // 1. Establish connection to the backend server
     let stopped = false;
@@ -69,7 +68,7 @@ export function useGameSocket(
     let retryId: number | undefined;
 
     const connect = () => {
-      const ws = new WebSocket(url);
+      const ws = new WebSocket(urlRef.current);
       socketRef.current = ws;
       window.setTimeout(() => {
         if (ws.readyState === WebSocket.CONNECTING) ws.close();
@@ -81,9 +80,17 @@ export function useGameSocket(
         ws.send(
           JSON.stringify({
             event: GameClientEvents.JOIN_GAME,
-            data: { gameId, username, mazeId, timeLimit, difficulty },
+            data: {
+              gameId,
+              username,
+              mazeId,
+              timeLimit,
+              difficulty,
+              intent: firstJoinRef.current ? intent : "join",
+            },
           }),
         );
+        firstJoinRef.current = false;
       };
 
       // Listen for incoming messages from the backend
@@ -107,10 +114,6 @@ export function useGameSocket(
         }, RECONNECT_DELAY_MS);
       };
 
-      // Listen for socket errors
-      ws.onerror = () => {
-        handleError();
-      };
     };
     connect();
 
@@ -120,12 +123,11 @@ export function useGameSocket(
       clearTimeout(retryId);
       stopped = true;
     };
-  }, [url]);
+  }, []);
 
   // Send player movement input to the backend
   function sendPlayerInput(direction: Direction) {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      console.warn("[GAME-CLIENT] Cannot send input, socket not connected");
       return;
     }
 

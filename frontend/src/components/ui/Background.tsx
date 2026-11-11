@@ -16,14 +16,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
   useEffect(() => {
     const syncTheme = () => {
       try {
-        setTheme(
-          localStorage.getItem('pacova-theme') === 'light' ? 'light' : 'dark'
-        );
-      } catch {
-        // Keep the current theme.
-      }
-    };
-
+        setTheme(localStorage.getItem('pacova-theme') === 'light' ? 'light' : 'dark');} catch {}};
     window.addEventListener('pacova-theme-change', syncTheme);
 
     return () => {
@@ -93,7 +86,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
       <div className={`absolute inset-0 pixel-scanlines pointer-events-none z-20 ${isLight ? 'opacity-[0.08]' : 'opacity-30'}`} />
 
       {/* Page Content */}
-      <div className="relative z-10 w-full flex-1 flex flex-col justify-center">
+      <div className="relative z-10 w-full flex-1 flex flex-col">
         {children}
       </div>
         <Footer />

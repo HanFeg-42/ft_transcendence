@@ -34,6 +34,7 @@ export interface JoinGamePayload {
   mazeId?: string;
   timeLimit?: number;
   difficulty?: string;
+  intent?: "create" | "join";
 }
 //2.Data sent when a player presses an arrow key
 export interface PlayerInputPayload {
@@ -91,6 +92,7 @@ export interface Player {
   lives: number;
   score: number;
   pelletsEaten: number;
+  fruitsEaten: number;
   ghostsEaten: number;
   connected: boolean;
   joinedAt?: number;
@@ -108,7 +110,9 @@ export interface GameState {
   status: GameStatus;
   players: Player[];
   chasers: Chaser[];
+  matchId?: string;
   pellets: boolean[][];
+  fruits: boolean[][];
   timeRemaining: number;
   timeLimit?: number;
   startedAt?: number;

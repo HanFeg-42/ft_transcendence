@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Background from "../../components/ui/Background";
 import Navbar from "../../components/ui/Navbar";
@@ -25,7 +25,7 @@ const SOCKET_REFRESH = ["friend_request", "friend_request_cancelled", "friend_re
 const btn = (color: string) =>
   `rounded-lg px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm font-medium
     transition disabled:cursor-not-allowed disabled:opacity-40 ${color}`;
-const primary = btn("bg-pacova-pink text-white hover:brightness-110");
+const primary = btn("bg-pacova-pink pacova-text-primary hover:brightness-110");
 const green = btn("bg-pacova-green text-[#0D0914] hover:brightness-110");
 const danger = btn("border border-red-500/40 text-red-400 hover:bg-red-500/10");
 const iconBtn = "rounded-lg p-2 sm:px-2 sm:py-2 sm:text-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
@@ -46,25 +46,15 @@ async function api<T>(path: string, token: string, init: RequestInit = {}): Prom
   return data as T;
 }
 
-function Avatar({ user }: { user: Pick<User, "username" | "avatar" | "online"> }) {
+function Avatar({ user }: { user: Pick<User, "username" | "avatar"> }) {
   const { t } = useTranslation();
-  const [failed, setFailed] = useState(false);
   return (
-    <div
-      className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-[#211027] font-pixelify text-lg text-pacova-pink ${
-        user.online ? "border-pacova-green" : "border-pacova-gray/50"
-      }`}
-    >
-      {user.avatar && !failed ? (
-        <img
-          src={user.avatar}
-          alt={t("friends_avatarAlt", { username: user.username })}
-          className="h-full w-full object-cover"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        user.username.slice(0, 1).toUpperCase() || "?"
-      )}
+    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#211027]">
+      <img
+        src={user.avatar ?? undefined}
+        alt={t("friends_avatarAlt", { username: user.username })}
+        className="h-full w-full object-cover"
+      />
     </div>
   );
 }
@@ -84,7 +74,13 @@ export default function Friends() {
   const [blocked, setBlocked] = useState<User[]>([]);
   const [statuses, setStatuses] = useState<Record<number, BlockStatus>>({});
   const [requests, setRequests] = useState<{ incoming: Req[]; outgoing: Req[] }>({ incoming: [], outgoing: [] });
-  const [tab, setTab] = useState<Tab>("all");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>(
+    initialTab === "pending" || initialTab === "online" || initialTab === "blocked"
+      ? initialTab
+      : "all",
+  );
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [busy, setBusy] = useState("");
@@ -128,7 +124,6 @@ export default function Friends() {
     }
   }, [token, call, t]);
 
-  // Throws on failure; callers decide whether to show an error.
   const search = useCallback(async () => {
     if (!token) return;
     const q = queryRef.current.trim();
@@ -184,6 +179,8 @@ export default function Friends() {
         }
         const name = p.event ?? p.type ?? "";
         if (SOCKET_REFRESH.includes(name) || name === "block_updated") {
+          delete presence.current[p.data?.blockerId];
+          delete presence.current[p.data?.blockedId];
           void loadLists(false);
           void search().catch(() => {});
           if (name === "block_updated") void loadBlocked();
@@ -237,7 +234,6 @@ export default function Friends() {
     }
   };
 
-  // Shared runner: busy flag, notice/error, then refresh everything.
   const run = async (key: string, task: () => Promise<string>, errorText: string) => {
     if (!token) return;
     setBusy(key);
@@ -305,7 +301,6 @@ export default function Friends() {
           : undefined;
     const needsReq = u.relation === "incoming_request" || u.relation === "outgoing_request";
 
-    // [class, path, method, success message, label key, body]
     const cfg: Record<string, [string, string, string, string, string, unknown?]> = {
       friend: [danger, `/friends/${u.id}`, "DELETE", t("friends_messages_removed", p), "remove"],
       incoming_request: [green, `/friends/requests/${req?.id}/accept`, "POST", t("friends_messages_accepted", p), "accept"],
@@ -329,9 +324,9 @@ export default function Friends() {
     <div key={u.id} className="flex min-w-0 items-center gap-3 border-b border-white/[0.06] px-3 py-3 last:border-b-0 hover:bg-white/[0.025]">
       <Avatar user={u} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white">{u.username}</p>
+        <p className="truncate text-sm font-semibold pacova-text-primary">{u.username}</p>
         {showPresence && u.online !== undefined && (
-          <p className={`mt-0.5 text-xs ${u.online ? "text-pacova-green" : "text-gray-500"}`}>
+          <p className={`mt-0.5 text-xs ${u.online ? "text-pacova-green" : "text-gray-600"}`}>
             <span className="mr-1">●</span>
             {u.online ? t("friends_status_online") : t("friends_status_offline")}
           </p>
@@ -349,8 +344,8 @@ export default function Friends() {
       <div key={r.id} className="flex min-w-0 items-center gap-3 border-b border-white/[0.06] px-3 py-3 last:border-b-0">
         <Avatar user={r} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">{r.username}</p>
-          <p className="mt-0.5 text-xs text-gray-500">{t("friends_requests_wantsToBeFriend")}</p>
+          <p className="truncate text-sm font-semibold pacova-text-primary">{r.username}</p>
+          <p className="mt-0.5 text-xs text-gray-600">{t("friends_requests_wantsToBeFriend")}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -440,8 +435,8 @@ export default function Friends() {
           <div className="p-4 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="font-pixelify text-2xl text-white">👤 {t("friends_title")}</h1>
-                <p className="mt-1 text-xs text-gray-400 sm:text-sm">{t("friends_subtitle")}</p>
+                <h1 className="font-pixelify text-2xl pacova-text-primary">👤 {t("friends_title")}</h1>
+                <p className="mt-1 text-xs text-gray-600 sm:text-sm">{t("friends_subtitle")}</p>
               </div>
 
               <form onSubmit={submitSearch} className="flex w-full gap-2 sm:w-auto">
@@ -450,12 +445,12 @@ export default function Friends() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("friends_searchPlaceholder")}
                   aria-label={t("friends_searchAriaLabel")}
-                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#171120] px-3 py-2 text-sm text-white outline-none placeholder:text-gray-500 focus:border-pacova-green/30 sm:w-48"
+                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#171120] px-3 py-2 text-sm text-white outline-none placeholder:text-gray-300 focus:border-pacova-green/30 sm:w-48"
                 />
                 <button
                   type="submit"
                   aria-label={t("friends_searchButtonAriaLabel")}
-                  className="rounded-lg bg-white/[0.06] px-3 text-gray-300 hover:bg-white/10"
+                  className="rounded-lg bg-white/[0.06] px-3 text-gray-100 hover:bg-white/10"
                   disabled={searching}
                 >
                   {searching ? "..." : "🔍︎"}
@@ -482,7 +477,7 @@ export default function Friends() {
                   key={id}
                   onClick={() => setTab(id)}
                   className={`rounded-lg px-4 py-2 text-xs font-medium transition sm:text-sm ${
-                    tab === id ? "bg-pacova-pink text-white" : "bg-white/[0.045] text-gray-400 hover:bg-white/[0.08]"
+                    tab === id ? "bg-pacova-pink pacova-text-primary" : "bg-white/[0.045] text-gray-500 hover:bg-white/[0.08]"
                   }`}
                 >
                   {t(`friends_tabs_${id}`)}
@@ -497,8 +492,8 @@ export default function Friends() {
               role={msg.kind === "error" ? "alert" : "status"}
               className={`mx-4 mb-3 rounded-lg border px-3 py-2 text-sm sm:mx-6 ${
                 msg.kind === "error"
-                  ? "border-red-500/30 bg-red-950/20 text-red-300"
-                  : "border-pacova-green/20 bg-pacova-green/5 text-pacova-green"
+                  ? "border-red-500 bg-red-950/40 text-red-400"
+                  : "border-pacova-green/40 bg-pacova-green/5 text-pacova-green"
               }`}
             >
               {msg.text}

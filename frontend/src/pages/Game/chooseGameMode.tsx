@@ -7,10 +7,11 @@ import GameModeCard from '../../components/ui/GameModeCard';
 import PixelButton from '../../components/ui/PixelButton';
 // import { routeMap } from '../Chat/helpers';
 import { handleSelectTab } from '../user/profile';
-
+import { useTranslation } from 'react-i18next';
 
 
 export default function SelectMode() {
+  const { t } = useTranslation();
   const [selectedMode, setSelectedMode] = useState('LOCAL');
 
   const navigate = useNavigate();
@@ -28,49 +29,47 @@ export default function SelectMode() {
       <Navbar activeTab="HOME" onSelectTab={(tab) => handleSelectTab(tab, navigate)}/>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
-        {/* Titre de sélection */}
         <div className="text-center">
           <h1 className="font-press-start text-3xl text-pacova-pink drop-shadow-glow-pink mb-2 animate-[float_3s_ease-in-out_infinite]">
-            SELECT MODE
+            {t('game_mode_select_title')}
           </h1>
           <p className="font-vt323 text-xl text-pacova-green">
-            ▼ CHOOSE YOUR GAME MODE ▼
+            {t('game_mode_choose')}
           </p>
         </div>
 
-        {/* Grille des cartes de jeu */}
-        <div className="flex flex-wrap justify-center gap-6">
+        <div className="flex gap-x-[10px]">
           <GameModeCard
-            title="LOCAL"
-            description="Play with friends on the same screen"
+            title={t('game_mode_local')}
+            description={t('game_mode_local_description')}
             icon="👻"
             selected={selectedMode === 'LOCAL'}
             onClick={() => setSelectedMode('LOCAL')}
           />
+
           <GameModeCard
-            title="REMOTE"
-            description="Challenge players online worldwide"
+            title={t('game_mode_remote')}
+            description={t('game_mode_remote_description')}
             icon="🌐"
             selected={selectedMode === 'REMOTE'}
             onClick={() => setSelectedMode('REMOTE')}
           />
+
           <GameModeCard
-            title="BOT"
-            description="Practice against artificial intelligence"
+            title={t('game_mode_bot')}
+            description={t('game_mode_bot_description')}
             icon="🤖"
             selected={selectedMode === 'BOT'}
             onClick={() => setSelectedMode('BOT')}
           />
         </div>
 
-
-        {/* Bouton de confirmation */}
         <div className="flex flex-wrap justify-center gap-4 mt-4">
           <PixelButton variant="outline-magenta" size="lg" onClick={() => navigate('/how-to-play')}>
-            HOW TO PLAY
+            {t('game_mode_how_to_play')}
           </PixelButton>
           <PixelButton variant="outline-green" size="lg" onClick={handleContinue}>
-            CONTINUE
+            {t('game_mode_continue')}
           </PixelButton>
         </div>
       </main>

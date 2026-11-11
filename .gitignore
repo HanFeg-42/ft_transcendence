@@ -24,3 +24,6 @@ coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+generated/
+
+test-achievments.md

@@ -103,20 +103,6 @@ app.use(
   })
 );
 
-app.use(
-  '/user',
-  authenticateToken,
-  createProxyMiddleware({
-    target: process.env.USER_SERVICE_URL || 'http://user:3004',
-    changeOrigin: true,
-    on: {
-      error: (res) => {
-        if (!res.headersSent) res.status(502).json({ error: 'User service unreachable' });
-      }
-    }
-  })
-);
-
 // ws-only proxy instances, only ever used via .upgrade() below
 const gameWsProxy = createProxyMiddleware({
   target: process.env.GAME_SERVICE_URL || 'http://game:3002',

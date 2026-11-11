@@ -5,6 +5,7 @@ import { setupWebSocket } from './ws/websocket';
 import messagesRouter from './routes/messages';
 import blocksRouter from './routes/blocks';
 import notificationsRouter from './routes/notifications';
+import internalRouter from './routes/internal';
 
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(messagesRouter);
 app.use(blocksRouter);
 app.use(notificationsRouter);
 app.use(friendsRouter);
+app.use(internalRouter);
 
 
 // Health check

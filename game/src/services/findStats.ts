@@ -15,16 +15,19 @@ const findStats = async (userId: number) => {
   });
   const totals = await prisma.matchParticipant.aggregate({
     where: { userId },
-    _sum: { pelletsEaten: true, ghostsEaten: true },
+    _sum: { pelletsEaten: true, fruitsEaten: true, ghostsEaten: true },
   });
-  const ghostsEaten = totals._sum.ghostsEaten;
-  const pelletsEaten = totals._sum.pelletsEaten;
-  const winRate = matchesPlayed ? Math.round((wins / matchesPlayed) * 100) : 0;
+  const pelletsEaten = totals._sum.pelletsEaten ?? 0;
+  const fruitsEaten = totals._sum.fruitsEaten ?? 0;
+  const ghostsEaten = totals._sum.ghostsEaten ?? 0;
+  const finishedMatches = wins + losses + draws;
+  const winRate = finishedMatches ? Math.round((wins / finishedMatches) * 100) : 0;
 
   return {
     matchesPlayed,
-    ghostsEaten,
     pelletsEaten,
+    fruitsEaten,
+    ghostsEaten,
     wins,
     losses,
     draws,
