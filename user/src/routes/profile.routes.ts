@@ -141,15 +141,12 @@ router.get('/me', async (req: Request, res: Response) => {
       achievements,
     });
   } catch (err: any) {
-    console.error('[USER] getMyProfile error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
 
 
 // GET /profile/profiles?ids=1,4,7
-// Returns { id, username, avatarUrl } for each requested user (max 100).
-// Invalid ids are ignored; missing profiles are created.
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
@@ -176,7 +173,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       })),
     );
   } catch (err) {
-    console.error('[USER] profiles failed:', err);
     return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
@@ -292,21 +288,8 @@ router.post('/avatar', upload.single('avatar'), async (req: Request, res: Respon
 
     return res.json({ avatarUrl });
   } catch (err: any) {
-    console.error('[USER] uploadAvatar error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
-
-
-// Objet créé par Multer :
-
-// {
-//   fieldname: 'avatar',
-//   originalname: 'photo.jpg',
-//   filename: 'avatar_1_1735689600000.jpg',
-//   path: '/app/user/uploads/avatars/avatar_1_xxx.jpg',
-//   size: 12345,
-//   mimetype: 'image/jpeg',
-// }
 
 export default router;
