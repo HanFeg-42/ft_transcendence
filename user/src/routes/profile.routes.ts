@@ -140,7 +140,6 @@ router.get('/me', async (req: Request, res: Response) => {
       achievements,
     });
   } catch (err: any) {
-    console.error('[USER] getMyProfile error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -173,7 +172,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       })),
     );
   } catch (err) {
-    console.error('[USER] profiles failed:', err);
     return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
@@ -286,7 +284,6 @@ router.post('/avatar', upload.single('avatar'), async (req: Request, res: Respon
 
     return res.json({ avatarUrl });
   } catch (err: any) {
-    console.error('[USER] uploadAvatar error:', err);
     return res.status(500).json({ error: err.message });
   }
 });

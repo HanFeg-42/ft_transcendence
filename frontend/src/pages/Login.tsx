@@ -143,7 +143,6 @@ export default function Login() {
       login(loginData.user, loginData.token);
       navigate("/home");
     } catch (error) {
-      console.error("Login request failed:", error);
       setError(t("login_errServer"));
     } finally {
       setLoading(false);
@@ -190,7 +189,6 @@ export default function Login() {
 
       navigate("/home");
     } catch (error) {
-      console.error("2FA verification request failed:", error);
       setError(t("login_errServer"));
     } finally {
       setLoading(false);
