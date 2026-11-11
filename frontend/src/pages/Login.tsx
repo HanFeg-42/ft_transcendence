@@ -9,6 +9,8 @@ import PixelButton from "../components/ui/PixelButton";
 import type { LoginFormData, LoginResponse } from "../types/auth";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { validateLogin } from "../utils/validation";
+
 /** Renders the login form and handles user authentication. */
 export default function Login() {
   const { t } = useTranslation();
@@ -20,6 +22,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // 2FA state
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
@@ -94,10 +97,17 @@ export default function Login() {
   }, [login, navigate, t]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -105,6 +115,14 @@ export default function Login() {
 
     setError("");
     setSuccess("");
+
+    const validationErrors = validateLogin(formData);
+    setFieldErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -237,6 +255,7 @@ export default function Login() {
                 placeholder={t("login_emailPlaceholder")}
                 value={formData.email}
                 onChange={handleChange}
+                error={fieldErrors.email ? t(fieldErrors.email) : undefined}
               />
 
               {/* Password */}
@@ -247,6 +266,7 @@ export default function Login() {
                 placeholder={t("login_passwordPlaceholder")}
                 value={formData.password}
                 onChange={handleChange}
+                error={fieldErrors.password ? t(fieldErrors.password) : undefined}
               />
 
               {/* Error */}
