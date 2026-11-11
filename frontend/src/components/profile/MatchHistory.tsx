@@ -1,21 +1,20 @@
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-
-import Card from '../ui/Card';
-import { useAuth } from '../../context/AuthContext';
+import Card from "../ui/Card";
+import { useAuth } from "../../context/AuthContext";
 import {
   getMatchHistory,
   type MatchHistoryItem,
-} from '../../services/matchService';
-import { getProfileById } from '../../services/userService';
+} from "../../services/matchService";
+import { getProfileById } from "../../services/userService";
 
-import packman3d from '../../assets/icons/packman3d.png';
-import gostRed from '../../assets/icons/gost-red.png';
-import gostBlue from '../../assets/icons/gost-blue.png';
-import gostOrange from '../../assets/icons/gost-orange.png';
-import gostPurple from '../../assets/icons/gost-purple.png';
-import gostPink from '../../assets/icons/gost-pink.png';
+import packman3d from "../../assets/icons/packman3d.png";
+import gostRed from "../../assets/icons/gost-red.png";
+import gostBlue from "../../assets/icons/gost-blue.png";
+import gostOrange from "../../assets/icons/gost-orange.png";
+import gostPurple from "../../assets/icons/gost-purple.png";
+import gostPink from "../../assets/icons/gost-pink.png";
 
 interface Match {
   id: string;
@@ -23,16 +22,21 @@ interface Match {
   score: string;
   opponent: string;
   time: string;
-  opponentColor?: 'red' | 'blue' | 'orange' | 'purple' | 'pink';
+  opponentColor?: "red" | "blue" | "orange" | "purple" | "pink";
 }
 
 interface MatchHistoryProps {
   userId?: string;
 }
 
-export const MatchHistory: React.FC<MatchHistoryProps> = ({
-  userId,
-}) => {
+const resultColors: Record<string, string> = {
+  WIN: "text-pacova-green",
+  LOSS: "text-red-500",
+  DRAW: "text-yellow-400",
+  ABANDONED: "text-gray-500",
+};
+
+export const MatchHistory: React.FC<MatchHistoryProps> = ({ userId }) => {
   const { t, i18n } = useTranslation();
   const { token } = useAuth();
 
@@ -52,46 +56,38 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({
 
       try {
         const list: Match[] = [];
-        const rows: MatchHistoryItem[] = await getMatchHistory(
-          token,
-          userId
-        );
+        const rows: MatchHistoryItem[] = await getMatchHistory(token, userId);
 
         for (const row of rows) {
           const opponent = row.match.participants.find(
-            (p) => p.userId !== row.userId
+            (p) => p.userId !== row.userId,
           );
 
           if (!opponent) continue;
 
-          const opponentProfile = await getProfileById(
-            token,
-            opponent.userId
-          );
+          const opponentProfile = await getProfileById(token, opponent.userId);
 
           const locale =
-            i18n.language === 'fr'
-              ? 'fr-FR'
-              : i18n.language === 'ar'
-                ? 'ar'
-                : 'en-US';
+            i18n.language === "fr"
+              ? "fr-FR"
+              : i18n.language === "ar"
+                ? "ar"
+                : "en-US";
 
           list.push({
             id: row.id,
-            result: row.result ?? '',
+            result: row.result ?? "",
             score: `${row.score} - ${opponent.score}`,
             opponent: opponentProfile.username,
-            time: new Date(row.match.startedAt).toLocaleDateString(
-              locale
-            ),
+            time: new Date(row.match.startedAt).toLocaleDateString(locale),
           });
         }
 
         if (!cancelled) {
           setMatches(list);
         }
-      } catch (error) {
-        console.error('[MATCH-HISTORY] Failed to load:', error);
+      } catch {
+        // ignore the error
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -107,36 +103,36 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({
   }, [token, userId, i18n.language]);
 
   const getMatchIcon = (match: Match) => {
-    if (match.result === 'WIN') return packman3d;
+    if (match.result === "WIN") return packman3d;
 
     switch (match.opponentColor) {
-      case 'red':
+      case "red":
         return gostRed;
-      case 'blue':
+      case "blue":
         return gostBlue;
-      case 'orange':
+      case "orange":
         return gostOrange;
-      case 'purple':
+      case "purple":
         return gostPurple;
-      case 'pink':
+      case "pink":
         return gostPink;
       default:
         return gostRed;
     }
   };
 
-  const getTranslatedResult = (result: string) => {
-    if (result === 'WIN') {
-      return t('userProfile_matchWin');
-    }
+  // const getTranslatedResult = (result: string) => {
+  //   if (result === "WIN") {
+  //     return t("userProfile_matchWin");
+  //   }
 
-    if (result === 'LOSS' || result === 'LOSE') {
-      return t('userProfile_matchLoss');
-    }
+  //   if (result === "LOSS" || result === "LOSE") {
+  //     return t("userProfile_matchLoss");
+  //   }
 
-    // Préserve les résultats inconnus au lieu de les masquer.
-    return result;
-  };
+  //   // Préserve les résultats inconnus au lieu de les masquer.
+  //   return result;
+  // };
 
   return (
     <Card
@@ -145,18 +141,18 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({
     >
       <div className="w-full mb-4">
         <span className="font-pixelify text-xl text-pacova-green uppercase tracking-widest block pl-1">
-          {t('userProfile_matchHistory')}
+          {t("userProfile_matchHistory")}
         </span>
       </div>
 
       <div className="flex-1 flex flex-col justify-between font-vt323 text-xl tracking-wider text-gray-300">
         {loading ? (
           <span className="text-gray-500 text-sm">
-            {t('userProfile_loadingMatches')}
+            {t("userProfile_loadingMatches")}
           </span>
         ) : matches.length === 0 ? (
           <span className="text-gray-500 text-sm">
-            {t('userProfile_noMatches')}
+            {t("userProfile_noMatches")}
           </span>
         ) : (
           matches.map((match) => (
@@ -166,30 +162,27 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({
             >
               <div className="w-16 sm:w-20">
                 <span
-                  className={`font-bold uppercase ${
-                    match.result === 'WIN'
-                      ? 'text-pacova-green'
-                      : 'text-red-500'
-                  }`}
+                  className={`font-bold uppercase ${resultColors[match.result]}`}
                 >
-                  {getTranslatedResult(match.result)}
+                  {t(`userProfile_match_${match.result}`)}
                 </span>
               </div>
 
               <div className="flex items-center justify-center w-12">
                 <img
                   src={getMatchIcon(match)}
-                  alt={getTranslatedResult(match.result)}
+                  alt={t(`userProfile_match_${match.result}`)}
                   className="w-9 h-9 object-contain"
                 />
               </div>
 
-              <div className="w-20 text-center font-bold text-white text-2xl">
+              <div className="w-30 text-center font-bold text-white text-xl">
                 {match.score}
               </div>
 
-              <div className="w-28 sm:w-36 text-left text-gray-400 font-sans text-xs uppercase">
-                {t('userProfile_vs', { opponent: match.opponent })}
+              <div className="w-28 sm:w-36 text-left text-lg uppercase truncate">
+                <span className="text-pacova-pink">{t("userProfile_vs")}</span>{" "}
+                {match.opponent}
               </div>
 
               <div className="text-right text-gray-500 text-sm font-sans min-w-[70px]">

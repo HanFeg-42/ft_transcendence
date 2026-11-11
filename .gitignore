@@ -18,3 +18,5 @@ user/uploads
 docker-compose.override.yml
 
 generated/
+
+test-achievments.md

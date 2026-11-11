@@ -26,13 +26,13 @@ export interface LeaderboardRow {
 }
 
 interface BatchProfile {
-  userId: number;
+  id: number;
   username: string;
   avatarUrl: string | null;
 }
 
 async function getProfilesBatch(token: string, ids: number[]): Promise<BatchProfile[]> {
-  const response = await fetch(`/api/users/profile/batch?ids=${ids.join(',')}`, {
+  const response = await fetch(`/api/users/profile/profiles?ids=${ids.join(',')}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) {
@@ -51,7 +51,7 @@ export async function getLeaderboardRows(token: string, limit: number): Promise<
   } catch {
     // names are nice to have: still show the ranking if profiles fail
   }
-  const byId = new Map(profiles.map((p) => [p.userId, p]));
+  const byId = new Map(profiles.map((p) => [p.id, p]));
 
   let lastWins = -1;
   let lastRank = 0;

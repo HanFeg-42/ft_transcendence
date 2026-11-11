@@ -5,6 +5,7 @@ import {
   DEFAULT_MAZE_ID,
   DIFFICULTIES,
 } from "../../../../shared/data/game-data";
+import cherryImg from '../../assets/icons/cherry3d.png';
 import { TICKS_PER_TILE } from "../../../../shared/data/game-data";
 import styles from "./MazeUI.module.css";
 import { useCellSize } from "../../hooks/useCellSize";
@@ -63,21 +64,21 @@ const getRotation = (dir: string | null): string => {
 };
 
 const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
-  const { players, chasers, pellets } = state;
+  const { players, chasers, pellets, fruits } = state;
 
-  const currentMazeId = mazeId ?? DEFAULT_MAZE_ID;
-  const maze = MAZES[currentMazeId];
+const currentMazeId = mazeId ?? DEFAULT_MAZE_ID;
+const maze = MAZES[currentMazeId];
 
-  if (!maze) {
-    return (
-      <div style={{ color: "red" }}>Labyrinthe inconnu : {currentMazeId}</div>
-    );
-  }
+const width = maze?.[0].length ?? 0;
+const CELL_SIZE = useCellSize(width);   // always called, every render
 
-  const height = maze.length;
-  const width = maze[0].length;
-  const CELL_SIZE = useCellSize(width);
+if (!maze) {
+  return (
+    <div style={{ color: "red" }}>Labyrinthe inconnu : {currentMazeId}</div>
+  );
+}
 
+const height = maze.length;
   return (
     <div
       className={styles.mazeContainer}
@@ -147,6 +148,35 @@ const MazeUI: React.FC<MazeUIProps> = ({ state, mazeId }) => {
           />
         );
       })}
+
+      {/* FRUITS */}
+      {fruits.map((row, y) =>
+        row.map((hasFruit, x) => {
+          if (!hasFruit) return null;
+
+          return (
+            <img
+              key={`fruit-${x}-${y}`}
+              src={cherryImg}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              style={{
+                position: 'absolute',
+                left: `${x * CELL_SIZE + CELL_SIZE / 2}px`,
+                top: `${y * CELL_SIZE + CELL_SIZE / 2}px`,
+                width: `${CELL_SIZE * 0.75}px`,
+                height: `${CELL_SIZE * 0.75}px`,
+                objectFit: 'contain',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+                zIndex: 2,
+                imageRendering: 'pixelated',
+              }}
+            />
+          );
+        })
+      )}
 
       {/* 4. CHASERS */}
       {chasers.map((chaser) => {

@@ -32,7 +32,7 @@ export function useLocalGame(
       const spawn = state.players[0].spawn;
       const player2: Player = {
         id: "player-2",
-        spawn: { x: spawn.x + 4, y: spawn.y }, // Décalé de 4 cases
+        spawn: { x: spawn.x + 4, y: spawn.y },
         tile: { x: spawn.x + 4, y: spawn.y },
         dir: null,
         nextDir: null,
@@ -41,6 +41,7 @@ export function useLocalGame(
         score: 0,
         connected: true,
         pelletsEaten: 0,
+        fruitsEaten: 0,
         ghostsEaten: 0,
       };
       state.players.push(player2);
@@ -50,7 +51,6 @@ export function useLocalGame(
 
   useEffect(() => {
     const interval = setInterval(() => {
-      //funct deja existante en js execute une fonction en boucle
       const state = stateRef.current;
 
       if (state.status === "playing") {
@@ -71,36 +71,3 @@ export function useLocalGame(
     sendInput,
   };
 }
-
-// import { useEffect, useRef, useState } from 'react';
-// import type { GameState, Direction } from '../../../shared/types/game-types';
-// import { createGame, tick, applyInput } from '../engine/engine';
-
-// const TICK_INTERVAL_MS = 1000 / 30; // 30 ticks/seconde
-
-// export function useLocalGame(playerId: string = 'player-1') {
-//     // ⚠️ useRef car la logique MUTE le state directement
-//     const stateRef = useRef<GameState>(createGame(playerId));
-//     const [, setFrame] = useState(0);
-
-//     useEffect(() => {
-//         // addPlayer('player-2', stateRef.current);
-//         //     setFrame(f => f + 1);
-//         const interval = setInterval(() => {
-//             tick(stateRef.current);   // Fait avancer la logique
-//             setFrame((f) => f + 1);   // Force le re-render React
-//         }, TICK_INTERVAL_MS);
-
-//         return () => clearInterval(interval);
-//     }, []);
-
-//     // Fonction pour envoyer un input clavier
-//     const sendInput = (dir: Direction) => {
-//         applyInput(stateRef.current, playerId, dir);
-//     };
-
-//     return {
-//         state: stateRef.current,
-//         sendInput,
-//     };
-// }
