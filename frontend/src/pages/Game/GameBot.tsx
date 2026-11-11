@@ -21,13 +21,15 @@ import styles from "./GamePage.module.css";
 import Background from "../../components/ui/Background";
 import ghostImg from "../../assets/icons/ghost.png";
 
-const TICK_INTERVAL_MS = 1000 / 30;
+
+const TICK_INTERVAL_MS = 1000 / 30; // game runs at 30 ticks per second
 const MATCH_TIME = 360; // seconds
-const CENTER_OFFSET = 4;
+const CENTER_OFFSET = 4; // how far each player spawns from the maze center
 const HUMAN_ID = "player-1";
 const BOT_ID = "ai";
 
-// Same setup as BotTest: human on the left of the spawn, bot on the right.
+
+// Creates the game: the human spawns left of the center, the bot right of it
 function createBotGame(mazeId: string): GameState {
   const state = createGame(HUMAN_ID, MATCH_TIME, mazeId);
   const spawn = findSpawn(MAZES[state.mazeId]);
@@ -54,7 +56,9 @@ function createBotGame(mazeId: string): GameState {
   return state;
 }
 
-// Same winner rules as BotTest / backend.
+
+// Decides the winner when the match ends (same rules as the backend):
+// 1) the one who still has lives  2) the higher score  3) otherwise a draw
 function finishLocalMatch(state: GameState): void {
   const [human, bot] = state.players;
   if (!human || !bot) return;
@@ -68,23 +72,30 @@ function finishLocalMatch(state: GameState): void {
   state.status = "finished";
 }
 
+
+// Seconds -> "MM:SS"
 const fmt = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
+
+// The match itself: game loop, human input, bot input, and the result popup
 const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
   mazeId,
   difficulty,
 }) => {
   const { t } = useTranslation();
+
+  // The game state lives in a ref (changes every tick); `setFrame` only forces a re-render
   const stateRef = useRef<GameState>(createBotGame(mazeId));
   const [, setFrame] = useState(0);
 
+  // Game loop: bot decision -> engine tick -> redraw
   useEffect(() => {
     const interval = setInterval(() => {
       const state = stateRef.current;
       if (state.status !== "playing") return;
 
-      // The bot only decides at tile centers.
+      // The bot only decides at tile centers
       const bot = state.players.find((p) => p.id === BOT_ID);
       if (bot && bot.step === 0) {
         const dir = chooseDirection(state, BOT_ID, difficulty);
@@ -93,27 +104,32 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
 
       tick(state);
 
-      // Engine ends with "won"/"lost" -> convert to the 2-player "finished".
+      // The engine ends with "won" / "lost" (solo game): convert to the 2-player "finished"
       if (state.status !== "playing") finishLocalMatch(state);
 
       setFrame((f) => f + 1);
     }, TICK_INTERVAL_MS);
+
     return () => clearInterval(interval);
   }, [difficulty]);
 
+
+  // Human input (keyboard or mobile buttons)
   const sendInput = (dir: Direction) => {
     const state = stateRef.current;
     if (state.status !== "playing") return;
     applyInput(state, HUMAN_ID, dir);
   };
 
-  // Human can use arrows or WASD.
+  // The human can use arrows or WASD
   useKeyboard(sendInput, "arrows");
   useKeyboard(sendInput, "wasd");
+
 
   const state = stateRef.current;
   const [human, bot] = state.players;
 
+  // Result popup texts
   const won = state.winnerId === HUMAN_ID;
   const lost = state.winnerId === BOT_ID;
   const title = won ? t("bot_youWin") : lost ? t("bot_botWins") : t("bot_draw");
@@ -126,6 +142,7 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
       <RotDev />
       {state.status === "playing" && <MobileControls onInput={sendInput} />}
 
+      {/* Game screen: top bar, human on the left, maze, bot on the right */}
       <div className={styles.page}>
         <div className={styles.topBar}>
           <HudTop state={state} />
@@ -144,6 +161,7 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
         </div>
       </div>
 
+      {/* Result popup, shown when the match is over */}
       {state.status !== "playing" && (
         <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
           <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
@@ -188,6 +206,8 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
   );
 };
 
+
+// Page: first a setup screen (map + difficulty), then the match
 const BotPage: React.FC = () => {
   const { t } = useTranslation();
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
@@ -196,6 +216,7 @@ const BotPage: React.FC = () => {
 
   const navigate = useNavigate();
 
+  // Setup screen
   if (!started) {
     return (
       <Background>

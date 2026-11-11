@@ -9,9 +9,9 @@ services:
       - ./postgres-db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
+      interval: 5s  # run the test every 5 seconds
+      timeout: 5s   # the test has 5 seconds to answer
+      retries: 12   # after 12 failures in a row, mark it unhealthy
     networks:
       - pacova
 
@@ -58,7 +58,7 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: frontend
     ports:
-      - "8443:443"
+      - "443:443"
     depends_on:
       - api-gateway
     networks:
@@ -78,9 +78,7 @@ services:
       - pacova
 
   user:
-    build:
-      context: .
-      dockerfile: user/Dockerfile
+    build: ./user
     container_name: user
     env_file:
       - .env
@@ -88,7 +86,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./use/urploads:/app/user/uploads
+      - uploads_data:/app/uploads
     networks:
       - pacova
 
@@ -100,3 +98,5 @@ networks:
 volumes:
   postgres_data:
     name: postgres_data
+  uploads_data:
+    name: uploads_data

@@ -9,6 +9,7 @@ export const ChatEvents = {
   GAME_INVITE: "gameInvite",
   GAME_INVITE_REPLY: "gameInviteReply",
   NOTIFICATION: "notification",
+  BLOCK_UPDATED: "block_updated",
   ERROR: "error",
 } as const;
 
@@ -46,4 +47,5 @@ export type ChatServerMessage =
   | { event: typeof ChatEvents.TYPING; data: { sender_id: number } }
   | { event: typeof ChatEvents.READ; data: { reader_id: number; read_at: string } }
   | { event: typeof ChatEvents.NOTIFICATION; data: NotificationSocketData }
+  | { event: typeof ChatEvents.BLOCK_UPDATED; data: { blockerId: number; blockedId: number; blocked: boolean } } // sent to both users on block / unblock
   | { event: typeof ChatEvents.ERROR; data: { message: string } };
