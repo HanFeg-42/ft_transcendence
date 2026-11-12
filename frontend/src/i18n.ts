@@ -1993,11 +1993,18 @@ i18n.use(initReactI18next).init({
   },
 });
 
-i18n.on("languageChanged", (language) => {
-  localStorage.setItem("language", language);
-
+const applyLanguage = (language: string) => {
   document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
   document.documentElement.lang = language;
+};
+
+if (i18n.language) {
+  applyLanguage(i18n.language);
+}
+
+i18n.on("languageChanged", (language) => {
+  localStorage.setItem("language", language);
+  applyLanguage(language);
 });
 
 export default i18n;
