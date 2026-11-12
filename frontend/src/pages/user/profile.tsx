@@ -83,8 +83,7 @@ export default function ProfilePage() {
         setLeaderboard(leaderboardData);
         setLoading(false);
       })
-      .catch((err: unknown) => {
-        console.error('[PROFILE] Failed to load:', err);
+      .catch(() => {
         setError(t('userProfile_loadError'));
         setLoading(false);
       });

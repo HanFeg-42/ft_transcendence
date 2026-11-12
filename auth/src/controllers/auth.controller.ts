@@ -3,7 +3,15 @@ import type { Request, Response } from "express";
 import { loginUser } from "../services/auth.service";
 
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
+  const body = req.body;
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return res.status(400).json({
+      error: "Invalid request body",
+    });
+  }
+
+  const { email, password } = body;
 
   // 1. Validate input types and required fields.
   if (
@@ -19,7 +27,24 @@ export async function login(req: Request, res: Response) {
 
   // 2. Normalize email to match registration behavior.
   const normalizedEmail = email.trim().toLowerCase();
+  // 3. Validate email format and maximum length.
+  if (
+    normalizedEmail.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+  ) {
+    return res.status(400).json({
+      error: "Invalid email format",
+    });
+  }
 
+  // 4. Validate password maximum byte length (bcrypt limit).
+  if (Buffer.byteLength(password, "utf8") > 72) {
+    //Because JavaScript .length counts UTF-16 code units, not UTF-8 bytes.
+    return res.status(400).json({
+      error: "Password exceeds maximum allowed length",
+    });
+  }
+  
   try {
     const result = await loginUser(normalizedEmail, password, res);
 
