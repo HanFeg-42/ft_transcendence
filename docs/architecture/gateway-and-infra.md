@@ -1,5 +1,7 @@
 # Gateway and infrastructure
 
+Owner: `machaouk`.
+
 ## NGINX (container `frontend`)
 
 - Built in two stages: Node builds the React app, then NGINX serves `dist/`.
@@ -47,4 +49,3 @@ flowchart LR
     A & U & C & M --> G[api-gateway] --> F[frontend :443]
 ```
 
-Owner: `machaouk`.
