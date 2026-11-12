@@ -260,6 +260,7 @@ const resources = {
       bot_time: "TIME {{time}}",
       bot_restart: "RESTART",
       bot_quit: "QUIT",
+      game_setup_title: "GAME SETTINGS",
 
         // ===== HOW TO PLAY =====
       howToPlay_title: "HOW TO PLAY",
@@ -668,6 +669,7 @@ friends_avatarAlt: "{{username}} avatar",
   fr: {
     translation: {
       settings: "Paramètres",
+      game_setup_title: "PARAMÈTRES DE LA PARTIE",
 
       ////////////////////
       home: "ACCUEIL",
@@ -1333,6 +1335,7 @@ friends_avatarAlt: "Avatar de {{username}}",
   ar: {
     translation: {
       settings: "الإعدادات",
+      game_setup_title: "إعدادات اللعبة",
       home: "الرئيسية",
       profile: "الملف الشخصي",
       chat: "الدردشة",

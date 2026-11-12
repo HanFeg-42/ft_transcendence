@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
-import { Avatar } from '../../components/ui/Avatar';
+import pacman from "../../assets/icons/packmann.png";
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import PixelButton from '../../components/ui/PixelButton';
@@ -23,8 +23,11 @@ export const routeMap: Record<string, string> = {
 };
 
 
-// Shared style of the two main panels (friends list + conversation)
-const PANEL = 'bg-pacova-surface border-2 border-pacova-green-dark rounded-lg';
+// Same gray Card as Profile / Settings. No padding, and its content wrapper fills the card
+const CARD = '!p-0 [&>div:last-child]:flex [&>div:last-child]:flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0';
+// Readable on both themes (same trick as Notifications)
+const TEXT = 'text-white in-[.pacova-light]:text-[#30213f]';
+const LINE = 'border-pacova-gray';
 
 
 // Round avatar of a friend (default Pac-Man icon if they have none)
@@ -33,13 +36,10 @@ function FriendAvatar({ friend }: { friend: Friend }) {
 
   return (
     <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-      {friend.avatar ? (
-        <img
-          src={friend.avatar}
+      <img
+          src={friend.avatar?? pacman}
           alt={t('chat_avatarAlt', { username: friend.username })}
-          className="w-10 h-10 object-cover" />) : (
-        <Avatar iconName="packmann" size="sm" />
-      )}
+          className="w-10 h-10 object-cover" />
     </span>
   );
 }
@@ -141,8 +141,9 @@ export default function Chat() {
     <main className="flex-1 h-[calc(100dvh-152px)] max-h-[calc(100dvh-152px)] sm:h-[calc(100dvh-128px)] sm:max-h-[calc(100dvh-128px)] max-w-[1320px] mx-auto w-full p-2 md:px-4 md:py-5 flex gap-5 overflow-hidden">
 
       {/* ---------- Friends list (a slide-over panel on mobile) ---------- */}
-      <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0 flex-col overflow-hidden ${PANEL}`}>
-        <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
+      <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0`}>
+        <Card variant="gray" className={CARD}>
+        <h2 className={`font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 ${LINE}`}>
           <PacManIcon className="w-7 h-7 shrink-0" />
           {t('chat_friends')}
           <PacManIcon className="w-7 h-7 shrink-0" flip />
@@ -158,19 +159,21 @@ export default function Chat() {
               }`}
             >
               <FriendAvatar friend={f} />
-              <span className="font-vt323 text-white text-lg uppercase truncate flex-1">{f.username}</span>
+              <span className={`font-vt323 ${TEXT} text-lg uppercase truncate flex-1`}>{f.username}</span>
               <span className={`w-3 h-3 rounded-full shrink-0 ${f.online ? 'bg-pacova-green' : 'bg-gray-500'}`} aria-label={f.online ? 'online' : 'offline'} />
             </button>
           ))}
         </div>
+        </Card>
       </aside>
 
 
       {/* ---------- Conversation ---------- */}
-      <section className={`flex-1 flex flex-col overflow-hidden ${PANEL}`}>
+      <section className="flex-1 min-w-0 flex">
+        <Card variant="gray" className={CARD}>
 
         {/* Header: friend info + invite / block buttons */}
-        <div className="flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 border-pacova-green-dark">
+        <div className={`flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 ${LINE}`}>
 
           {/* Burger button (mobile only): opens the friends list */}
           <button
@@ -189,7 +192,7 @@ export default function Chat() {
             onClick={() => navigate(`/profile/${friend.id}`)}
             className="flex items-center gap-3 min-w-0 disabled:cursor-not-allowed">
             <FriendAvatar friend={friend} />
-            <span className="font-pixelify text-white text-lg uppercase truncate">{friend.username}</span>
+            <span className={`font-pixelify ${TEXT} text-lg uppercase truncate`}>{friend.username}</span>
           </button>
 
           <div className="ms-auto flex items-center gap-2 shrink-0">
@@ -235,9 +238,9 @@ export default function Chat() {
         {chat.error && <p className="px-4 font-vt323 text-lg text-pacova-pink">{chat.error}</p>}
 
 
-        <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
+        <div className={`h-[76px] px-4 flex items-center gap-3 border-t-2 ${LINE}`}>
           <Input
-            className="!border-pacova-pink !bg-[#080B1A] text-lg sm:!text-xl !py-3 disabled:opacity-40"
+            className="!border-pacova-gray !bg-transparent text-lg sm:!text-xl !py-3 disabled:opacity-40"
             value={draft}
             type="text"
             maxLength={1000}
@@ -252,6 +255,7 @@ export default function Chat() {
             {t('chat_send')}
           </PixelButton>
         </div>
+        </Card>
       </section>
     </main>,
   );

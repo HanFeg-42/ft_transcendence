@@ -23,7 +23,7 @@ const formatTime = (iso: string) =>
 
 // Style helpers: pink for my messages, green for the friend's
 const bubble = (own: boolean) =>
-  `px-4 py-2 pixel-corners-3step font-vt323 text-lg break-words [overflow-wrap:anywhere] max-w-full text-white ${own ? 'bg-pacova-pink-dark/40' : 'bg-pacova-green-dark/40'}`;
+  `px-4 py-2 pixel-corners-3step font-vt323 text-lg break-words [overflow-wrap:anywhere] max-w-full text-white in-[.pacova-light]:text-[#30213f] ${own ? 'bg-pacova-pink-dark/40' : 'bg-pacova-green-dark/40'}`;
 const row = (own: boolean) => `flex flex-col max-w-[80%] min-w-0 ${own ? 'self-end items-end' : 'self-start items-start'}`;
 const label = (own: boolean) => `font-vt323 text-sm uppercase tracking-wide mb-1 ${own ? 'text-pacova-pink' : 'text-pacova-green'}`;
 
