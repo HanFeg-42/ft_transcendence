@@ -39,7 +39,15 @@ make
 
 Open **https://localhost:443** (self-signed certificate: accept the browser warning once).
 
-**`.env` variables:** PostgreSQL credentials (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`), one `*_DATABASE_URL` per service (auth, user, chat, game), token secrets (`JWT_SECRET`, `REFRESH_TOKEN_SECRET`, `TWO_FACTOR_CHALLENGE_SECRET` — generate with `openssl rand -hex 32`), 42 OAuth app (`FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET`), and the URLs `FORTYTWO_CALLBACK_URL=https://localhost:443/api/auth/42/callback`, `FRONTEND_URL=https://localhost:443`.
+**`.env` variables:** 
+
+| Variable | Meaning |
+|---|---|
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | PostgreSQL credentials |
+| `AUTH_/USER_/CHAT_/GAME_DATABASE_URL` | One connection string per service |
+| `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, `TWO_FACTOR_CHALLENGE_SECRET` | Token secrets (`openssl rand -hex 32`) |
+| `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET` | 42 OAuth app credentials |
+| `FORTYTWO_CALLBACK_URL`, `FRONTEND_URL` | `https://localhost:443/api/auth/42/callback` and `https://localhost:443` |
 
 Databases are created by `postgres-db/init.sql`; Prisma migrations run automatically at start. Make targets: `make`, `make down`, `make logs`, `make status`, `make migrate`, `make clean` (wipes volumes), `make re`.
 
@@ -144,8 +152,8 @@ Each member also made their own pages responsive.
 
 | Login | Contributions | Challenge and solution |
 |---|---|---|
-| `hfegrach` | Database schemas, auth (register, login, JWT / refresh), 2FA, 42 OAuth, notifications, leaderboard, legal pages | Keeping schemas consistent as they evolved: one Prisma schema per service |
 | `machaouk` | Microservices, API gateway, Docker / NGINX, chat, AI bot and bot page, shared WebSocket types | Authenticating WebSockets behind NGINX: JWT checked at the upgrade, user id forwarded to the service |
+| `hfegrach` | Database schemas, auth (register, login, JWT / refresh), 2FA, 42 OAuth, notifications, leaderboard, legal pages | Keeping schemas consistent as they evolved: one Prisma schema per service |
 | `nel-khad` | Profile pages, design system, auth pages UI, game assets and components | One consistent retro look: shared components built first |
 | `ynadime` | Game backend and engine, remote multiplayer, matchmaking, game database, local game | Syncing two clients and drops: authoritative server state, forfeit timers |
 | `oelmanso` | Settings page, friends system (backend + frontend) | Duplicate friendships on simultaneous actions: unique constraints on pairs |
@@ -158,3 +166,14 @@ Each member also made their own pages responsive.
 - [Depth Limited Search for AI — GeeksforGeeks](https://www.geeksforgeeks.org/artificial-intelligence/depth-limited-search-for-ai/) (bot look-ahead)
 
 **Use of AI:** used to explain concepts (microservices, WebSocket proxying, JWT / 2FA), read error messages, get code-review second opinions, and help with FR / AR translations.
+
+
+ 
+## Credits
+ 
+
+- `machaouk`: MALIKA CHAOUKI
+- `hfegrach`: Hanane Fegrachi
+- `nel-khad`: Noussaiba El khadar 
+- `ynadime` : Yazid Nadime 
+- `oelmanso`: Oumaima Elmansoum 
