@@ -3,12 +3,12 @@ import http from 'http';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
-import { authenticateToken } from './middleware/authenticateToken.js'
+import { authenticateToken } from './middleware/authenticateToken.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// fail fast if secret isn't set — no silent fallback
+// fail fast if the secret is missing
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is not set');
@@ -16,7 +16,6 @@ if (!JWT_SECRET) {
 
 app.set('trust proxy', 1);
 
-// rate limiter
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -29,18 +28,26 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', service: 'api-gateway' });
 });
 
+// proxy calls handlers as (err, req, res); for ws upgrades `res` is a raw socket
+const onProxyError = (serviceName) => (_err, _req, res) => {
+  if (typeof res.status !== 'function') {
+    res.destroy?.();
+    return;
+  }
+
+  if (!res.headersSent) {
+    res.status(502).json({ error: `${serviceName} service unreachable` });
+  }
+};
+
 // REST proxies
 app.use(
   '/auth',
   authLimiter,
   createProxyMiddleware({
     target: process.env.AUTH_SERVICE_URL || 'http://auth:3001',
-    changeOrigin: true, //Changes HTTP host header of outgoing request to match target URL host
-    on: {
-      error: (res) => {
-        if (!res.headersSent) res.status(502).json({ error: 'Auth service unreachable' });
-      }
-    }
+    changeOrigin: true,
+    on: { error: onProxyError('Auth') }
   })
 );
 
@@ -51,27 +58,17 @@ app.use(
     target: process.env.AUTH_SERVICE_URL || 'http://auth:3001',
     changeOrigin: true,
     pathRewrite: (path) => `/users${path}`,
-    on: {
-      error: (res) => {
-        if (!res.headersSent) {
-          res.status(502).json({ error: 'Auth service unreachable' });
-        }
-      }
-    }
+    on: { error: onProxyError('Auth') }
   })
 );
 
 app.use(
-  '/users', 
+  '/users',
   authenticateToken,
   createProxyMiddleware({
     target: process.env.USER_SERVICE_URL || 'http://user:3004',
     changeOrigin: true,
-    on: {
-      error: (res) => {
-        if (!res.headersSent) res.status(502).json({ error: 'User service unreachable' });
-      }
-    }
+    on: { error: onProxyError('User') }
   })
 );
 
@@ -81,39 +78,36 @@ app.use(
   createProxyMiddleware({
     target: process.env.GAME_SERVICE_URL || 'http://game:3002',
     changeOrigin: true,
-    on: {
-      error: (res) => {
-        if (!res.headersSent) res.status(502).json({ error: 'Game service unreachable' });
-      }
-    }
+    on: { error: onProxyError('Game') }
   })
 );
-  app.use('/chat/internal', (_req, res) => res.status(404).end());
+
+// internal chat routes are never exposed
+app.use('/chat/internal', (_req, res) => res.status(404).end());
+
 app.use(
   '/chat',
   authenticateToken,
   createProxyMiddleware({
     target: process.env.CHAT_SERVICE_URL || 'http://chat:3003',
     changeOrigin: true,
-    on: {
-      error: (res) => {
-        if (!res.headersSent) res.status(502).json({ error: 'Chat service unreachable' });
-      }
-    }
+    on: { error: onProxyError('Chat') }
   })
 );
 
-// ws-only proxy instances, only ever used via .upgrade() below
+// ws-only proxies, used through .upgrade() below
 const gameWsProxy = createProxyMiddleware({
   target: process.env.GAME_SERVICE_URL || 'http://game:3002',
   changeOrigin: true,
-  ws: true
+  ws: true,
+  on: { error: onProxyError('Game') }
 });
 
 const chatWsProxy = createProxyMiddleware({
   target: process.env.CHAT_SERVICE_URL || 'http://chat:3003',
   changeOrigin: true,
-  ws: true
+  ws: true,
+  on: { error: onProxyError('Chat') }
 });
 
 // REST 404 fallback
@@ -121,42 +115,42 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found on API Gateway' });
 });
 
-// pulls ?token=... off the upgrade request URL
+// reads ?token=... from the upgrade request url
 function extractToken(req) {
   const url = new URL(req.url, 'http://localhost');
   return url.searchParams.get('token') || null;
 }
 
+function rejectUpgrade(socket, status) {
+  socket.write(`HTTP/1.1 ${status}\r\n\r\n`);
+  socket.destroy();
+}
+
 const server = http.createServer(app);
 
-// gatekeeper for every WebSocket upgrade attempt
+// auth gate for every WebSocket upgrade
 server.on('upgrade', (req, socket, head) => {
+  // a client dropping mid-handshake must not crash the process
+  socket.on('error', () => socket.destroy());
+
   const token = extractToken(req);
 
   if (!token) {
-    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-    socket.destroy();
+    rejectUpgrade(socket, '401 Unauthorized');
     return;
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, {
-      algorithms: ['HS256'],
-    });
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
 
-    if (
-      typeof decoded === 'string' ||
-      typeof decoded.userId !== 'number'
-    ) {
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
+    if (typeof decoded === 'string' || typeof decoded.userId !== 'number') {
+      rejectUpgrade(socket, '401 Unauthorized');
       return;
     }
 
     req.headers['x-user-id'] = String(decoded.userId);
-  } catch (err) {
-    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-    socket.destroy();
+  } catch {
+    rejectUpgrade(socket, '401 Unauthorized');
     return;
   }
 
@@ -165,10 +159,8 @@ server.on('upgrade', (req, socket, head) => {
   } else if (req.url.startsWith('/chat/ws')) {
     chatWsProxy.upgrade(req, socket, head);
   } else {
-    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
-    socket.destroy();
+    rejectUpgrade(socket, '404 Not Found');
   }
 });
 
 server.listen(PORT);
-

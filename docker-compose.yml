@@ -18,6 +18,7 @@ services:
   auth:
     build: ./auth
     container_name: auth
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
@@ -31,6 +32,7 @@ services:
       context: .
       dockerfile: game/Dockerfile
     container_name: game
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
@@ -42,6 +44,7 @@ services:
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
@@ -57,6 +60,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     container_name: frontend
+    restart: unless-stopped
     ports:
       - "443:443"
     depends_on:
@@ -69,6 +73,7 @@ services:
       context: .
       dockerfile: chat/Dockerfile
     container_name: chat
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
@@ -80,6 +85,7 @@ services:
   user:
     build: ./user
     container_name: user
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
