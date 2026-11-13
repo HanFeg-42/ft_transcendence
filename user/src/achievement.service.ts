@@ -2,7 +2,7 @@ import { prisma } from "./prisma";
 
 const ACHIEVEMENT_TARGETS = {
   champion: 2,
-  "ghost-hunter": 50,
+  "ghost-hunter": 0,
   "cherry-collector": 200,
   "pac-maniac": 500,
 } as const;

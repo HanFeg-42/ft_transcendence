@@ -16,7 +16,7 @@ const ACHIEVEMENT_IMAGES: Record<string, string> = {
 
 const ACHIEVEMENT_TARGETS: Record<string, number> = {
   champion: 1,
-  'ghost-hunter': 50,
+  'ghost-hunter': 0,
   'cherry-collector': 200,
   'pac-maniac': 500,
 };

@@ -22,15 +22,6 @@ model Profile {
   achievements UserAchievement[]
 }
 
-model ProcessedOnlineMatch {
-  userId    Int
-  matchId   String
-  createdAt DateTime @default(now())
-
-  @@id([userId, matchId])
-  @@index([createdAt])
-}
-
 model Achievement {
   id          String   @id
   title       String

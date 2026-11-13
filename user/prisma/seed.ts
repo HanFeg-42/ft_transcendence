@@ -15,7 +15,7 @@ const ACHIEVEMENTS = [
     title: 'GHOST HUNTER',
     description: '--',
     image: 'ghost-hanter.png',
-    borderColor: 'border-pink-500',
+    borderColor: 'border-pink',
     textColor: 'text-pink-500',
   },
   {
