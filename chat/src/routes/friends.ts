@@ -251,7 +251,7 @@ router.delete('/friends/requests/:id', requestRoute(async (userId, id, res) => {
   if (!request || !done) return fail(res, 404, 'Outgoing pending request not found');
 
   sendToUser(request.addresseeId, 'friend_request_cancelled', { requestId: id.toString(), userId });
-  await notifySafe(request.requesterId, NotificationTypes.FRIEND_DECLINED, { userId });
+  await notifySafe(request.addresseeId, NotificationTypes.FRIEND_REQUEST_CANCELLED, { userId });
   return res.json({ cancelled: true });
 }));
 
