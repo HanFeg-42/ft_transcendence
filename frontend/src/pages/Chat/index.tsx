@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
-import { Avatar } from '../../components/ui/Avatar';
+import pacman from "../../assets/icons/packmann.png";
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import PixelButton from '../../components/ui/PixelButton';
@@ -24,8 +24,7 @@ export const routeMap: Record<string, string> = {
 
 
 // Shared style of the two main panels (friends list + conversation)
-const PANEL = 'bg-pacova-surface border-2 border-pacova-green-dark rounded-lg';
-
+const PANEL = 'bg-pacova-surface backdrop-blur-md border border-pacova-gray rounded-xl drop-shadow-[0_0_12px_#00000080]';
 
 // Round avatar of a friend (default Pac-Man icon if they have none)
 function FriendAvatar({ friend }: { friend: Friend }) {
@@ -33,13 +32,10 @@ function FriendAvatar({ friend }: { friend: Friend }) {
 
   return (
     <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-      {friend.avatar ? (
-        <img
-          src={friend.avatar}
+      <img
+          src={friend.avatar?? pacman}
           alt={t('chat_avatarAlt', { username: friend.username })}
-          className="w-10 h-10 object-cover" />) : (
-        <Avatar iconName="packmann" size="sm" />
-      )}
+          className="w-10 h-10 object-cover" />
     </span>
   );
 }
@@ -142,7 +138,7 @@ export default function Chat() {
 
       {/* ---------- Friends list (a slide-over panel on mobile) ---------- */}
       <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0 flex-col overflow-hidden ${PANEL}`}>
-        <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
+        <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-gray">
           <PacManIcon className="w-7 h-7 shrink-0" />
           {t('chat_friends')}
           <PacManIcon className="w-7 h-7 shrink-0" flip />
@@ -170,7 +166,7 @@ export default function Chat() {
       <section className={`flex-1 flex flex-col overflow-hidden ${PANEL}`}>
 
         {/* Header: friend info + invite / block buttons */}
-        <div className="flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 border-pacova-green-dark">
+        <div className="flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 border-pacova-gray">
 
           {/* Burger button (mobile only): opens the friends list */}
           <button
@@ -235,7 +231,7 @@ export default function Chat() {
         {chat.error && <p className="px-4 font-vt323 text-lg text-pacova-pink">{chat.error}</p>}
 
 
-        <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
+        <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-gray">
           <Input
             className="!border-pacova-pink !bg-[#080B1A] text-lg sm:!text-xl !py-3 disabled:opacity-40"
             value={draft}
