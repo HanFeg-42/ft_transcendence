@@ -12,9 +12,10 @@ export const Toast: React.FC<ToastProps> = ({
   onClose,
 }) => {
   const typeStyles = {
-    success: 'border-pacova-green/40 text-pacova-green shadow-neon-green',
+    // success: 'border-pacova-green text-pacova-green shadow-neon-green',
     error: 'border-red-500 text-red-500 drop-shadow-glow-red',
     info: 'border-pacova-pink/40 text-pacova-pink shadow-neon-pink',
+    success: 'border-pacova-pink text-pacova-pink shadow-neon-pink',
   };
 
   return (
