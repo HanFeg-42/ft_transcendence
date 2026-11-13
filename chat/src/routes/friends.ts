@@ -240,6 +240,7 @@ router.post('/friends/requests/:id/decline', requestRoute(async (userId, id, res
   if (!request || !done) return fail(res, 404, 'Pending friend request not found');
 
   sendToUser(request.requesterId, 'friend_request_declined', { requestId: id.toString(), userId });
+  await notifySafe(request.requesterId, NotificationTypes.FRIEND_DECLINED, { userId });
   return res.json({ declined: true });
 }));
 
@@ -250,6 +251,7 @@ router.delete('/friends/requests/:id', requestRoute(async (userId, id, res) => {
   if (!request || !done) return fail(res, 404, 'Outgoing pending request not found');
 
   sendToUser(request.addresseeId, 'friend_request_cancelled', { requestId: id.toString(), userId });
+  await notifySafe(request.requesterId, NotificationTypes.FRIEND_DECLINED, { userId });
   return res.json({ cancelled: true });
 }));
 
@@ -261,6 +263,7 @@ router.delete('/friends/:userId', route(async (userId, req, res) => {
 
   sendToUser(userId, 'friend_removed', { userId: friendId });
   sendToUser(friendId, 'friend_removed', { userId });
+  await notifySafe(friendId, NotificationTypes.FRIEND_REMOVED, { userId });
   return res.json({ removed: true });
 }));
 
