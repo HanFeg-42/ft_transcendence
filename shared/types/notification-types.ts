@@ -4,6 +4,9 @@ export const NotificationTypes = {
   MESSAGE: 'message',
   FRIEND_REQUEST: 'friend_request',
   FRIEND_ACCEPTED: 'friend_accepted',
+  FRIEND_DECLINED: 'friend_declined',
+  FRIEND_REQUEST_CANCELLED: 'friend_request_cancelled',
+  FRIEND_REMOVED: 'friend_removed',
   PROFILE_UPDATED: 'profile_updated',
   MATCH_FINISHED: 'match_finished',
   TWO_FACTOR_CHANGED: 'two_factor_changed',
@@ -36,6 +39,9 @@ export type NotificationPayloadMap = {
   [NotificationTypes.MESSAGE]: MessageNotificationPayload;
   [NotificationTypes.FRIEND_REQUEST]: FriendRequestNotificationPayload;
   [NotificationTypes.FRIEND_ACCEPTED]: FriendAcceptedNotificationPayload;
+  [NotificationTypes.FRIEND_DECLINED]: UserRefPayload;
+  [NotificationTypes.FRIEND_REQUEST_CANCELLED]: UserRefPayload;
+  [NotificationTypes.FRIEND_REMOVED]: UserRefPayload;
   [NotificationTypes.PROFILE_UPDATED]: ProfileUpdatedPayload;
   [NotificationTypes.MATCH_FINISHED]: MatchFinishedPayload;
   [NotificationTypes.TWO_FACTOR_CHANGED]: TwoFactorChangedPayload;

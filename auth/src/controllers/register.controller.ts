@@ -2,7 +2,15 @@ import type { Request, Response } from "express";
 import { registerUser } from "../services/auth.service";
 
 export async function register(req: Request, res: Response) {
-  const { username, email, password } = req.body;
+  const body = req.body;
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return res.status(400).json({
+      error: "Invalid request body",
+    });
+  }
+  // to test nobody: curl -k -X POST https://localhost/api/auth/register
+  const { username, email, password } = body;
 
   if (
     typeof username !== "string" ||
