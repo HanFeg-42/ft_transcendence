@@ -14,11 +14,11 @@ const ACHIEVEMENT_IMAGES: Record<string, string> = {
   'pac-maniac': pacManiacImg,
 };
 
-const ACHIEVEMENT_TARGETS: Record<string, number> = {
-  champion: 1,
-  'ghost-hunter': 0,
-  'cherry-collector': 200,
-  'pac-maniac': 500,
+const ACHIEVEMENT_STYLES: Record<string, { border: string; text: string }> = {
+  champion: { border: 'border-yellow-400!', text: 'text-amber-400' },
+  'ghost-hunter': { border: 'border-pink-500!', text: 'text-pink-500' },
+  'cherry-collector': { border: 'border-red-500!', text: 'text-red-500' },
+  'pac-maniac': { border: 'border-cyan-400!', text: 'text-cyan-400' },
 };
 
 export interface Achievement {
@@ -59,14 +59,9 @@ export default function Achievements({
             { defaultValue: item.description }
           );
 
-          const target = ACHIEVEMENT_TARGETS[item.id] ?? 1;
-
-          const progressPercent = item.unlocked
-            ? 100
-            : Math.max(
-                0,
-                Math.min(100, (item.progress / target) * 100)
-              );
+          const style = ACHIEVEMENT_STYLES[item.id];
+        const borderColor = style?.border ?? item.borderColor;
+        const textColor = style?.text ?? item.textColor;
 
           return (
             <Card
@@ -74,7 +69,7 @@ export default function Achievements({
               variant="gray"
               className={`group flex flex-col items-center justify-between text-center p-4
                 bg-pacova-surface/80 border
-                ${item.unlocked ? item.borderColor : 'border-white/5 opacity-60'}
+                ${item.unlocked ? borderColor : 'border-white/5 opacity-60'}
                 transform hover:scale-105 transition-all duration-300 ease-out
                 min-h-[190px] cursor-pointer`}
             >
@@ -91,7 +86,7 @@ export default function Achievements({
               <div className="w-full space-y-1.5 mt-auto">
                 <h4
                   className={`font-pixelify text-xs sm:text-sm font-bold uppercase tracking-wider
-                    ${item.unlocked ? item.textColor : 'text-gray-500'}`}
+                    ${item.unlocked ? textColor : 'text-gray-500'}`}
                 >
                   {title}
                 </h4>
@@ -102,12 +97,6 @@ export default function Achievements({
 
                 {!item.unlocked && (
                   <div className="w-full bg-black/60 rounded-full h-1.5 mt-2">
-                    <div
-                      className="h-full bg-pacova-green rounded-full transition-all duration-500"
-                      style={{
-                        width: `${progressPercent}%`,
-                      }}
-                    />
                   </div>
                 )}
               </div>

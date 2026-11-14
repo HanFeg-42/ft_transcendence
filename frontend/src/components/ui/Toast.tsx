@@ -36,7 +36,7 @@ export const Toast: React.FC<ToastProps> = ({
           onClick={onClose} 
           className="relative z-10 text-gray-400 hover:text-white cursor-pointer ml-2"
         >
-          [X]
+          X
         </button>
       )}
     </div>

@@ -42,7 +42,7 @@ export default function Home() {
         </section>
 
         {/* Pac-Man artwork */}
-        <div className="order-2 flex min-w-0 items-center justify-center lg:col-start-2 lg:row-start-1 lg:row-span-2">
+        <div className="order-2 flex min-w-0 items-center justify-center lg:col-start-2 lg:row-start-1 lg:row-span-2 animate-[float_3s_ease-in-out_infinite]">
           <img
             src="/images/pacova-hero.png"
             alt="Pac-Man and colorful ghosts inside a neon arcade maze"
