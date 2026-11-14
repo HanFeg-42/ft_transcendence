@@ -54,7 +54,6 @@ function getUserIdFromHeader(req: Request): number | null {
 }
 
 
-// Helper : récupère ou crée le Profile
 export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
 
@@ -62,7 +61,6 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        // headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -98,7 +96,6 @@ export async function getOrCreateProfile(userId: number) {
 }
 
 
-// Achievements of one user, in the shape the frontend expects
 async function getUserAchievements(userId: number) {
   const achievements = await prisma.achievement.findMany({
     include: {
@@ -146,10 +143,6 @@ router.get('/me', async (req: Request, res: Response) => {
   }
 });
 
-
-// GET /profile/profiles?ids=1,4,7
-// Returns { id, username, avatarUrl } for each requested user (max 100).
-// Invalid ids are ignored; missing profiles are created.
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
@@ -161,7 +154,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
     }
 
-    // One query for existing profiles, then create only the missing ones
     const existing = await prisma.profile.findMany({ where: { userId: { in: ids } } });
     const known = new Set(existing.map((p) => p.userId));
     const created = await Promise.all(

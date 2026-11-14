@@ -26,9 +26,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem('pacova-theme', theme);
-    } catch {
-      // Theme still works for this session if storage is unavailable.
-    }
+    } catch {}
   }, [theme]);
 
   const isLight = theme === 'light';
@@ -51,13 +49,11 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
           }}
         />
 
-        {/* Twinkling and Moving Pixel Stars */}
         <div className="pixel-stars-small" />
         <div className="pixel-stars-medium" />
         <div className="pixel-cross-stars" />
       </div>
 
-      {/* 2. Infinite Animated 3D Grid (Bottom Half) */}
       <div className="absolute bottom-0 left-0 right-0 h-[45vh] overflow-hidden pointer-events-none z-0">
         <div 
           className="w-[200%] h-[200%] -ml-[50%] grid-animation"
@@ -71,7 +67,6 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
             transformOrigin: 'top center'
           }}
         />
-        {/* Horizon Shadow Gradient */}
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -82,10 +77,8 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
         />
       </div>
 
-      {/* 3. CRT Scanlines Overlay */}
       <div className={`absolute inset-0 pixel-scanlines pointer-events-none z-20 ${isLight ? 'opacity-[0.08]' : 'opacity-30'}`} />
 
-      {/* Page Content */}
       <div className="relative z-10 w-full flex-1 flex flex-col">
         {children}
       </div>
