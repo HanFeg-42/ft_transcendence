@@ -56,6 +56,3 @@ export const Input: React.FC<InputProps> = ({
 };
 
 export default Input;
-
-            // pixel-corners-3step
-// after 9

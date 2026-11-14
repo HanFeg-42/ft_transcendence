@@ -12,17 +12,17 @@ export const Toast: React.FC<ToastProps> = ({
   onClose,
 }) => {
   const typeStyles = {
-    success: 'border-pacova-green text-pacova-green shadow-neon-green',
+    // success: 'border-pacova-green text-pacova-green shadow-neon-green',
     error: 'border-red-500 text-red-500 drop-shadow-glow-red',
-    info: 'border-pacova-pink text-pacova-pink shadow-neon-pink',
+    info: 'border-pacova-pink/40 text-pacova-pink shadow-neon-pink',
+    success: 'border-pacova-pink text-pacova-pink shadow-neon-pink',
   };
 
   return (
     <div className={`
       fixed bottom-6 right-6 z-50
       bg-pacova-surface 
-      border-2 
-      pixel-corners-3step 
+      border-2 rounded-[12px] 
       px-6 py-3 
       flex items-center gap-4 
       font-pixelify text-xl uppercase tracking-wide 
