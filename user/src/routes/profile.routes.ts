@@ -134,11 +134,9 @@ router.get('/me', async (req: Request, res: Response) => {
   }
 });
 
-<<<<<<< HEAD
-=======
+
 
 // GET /profile/profiles?ids=1,4,7
->>>>>>> origin/dev
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
