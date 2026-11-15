@@ -68,8 +68,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
-    console.error('Failed to seed achievements:', error);
+  .catch(() => {
     process.exitCode = 1;
   })
   .finally(async () => {

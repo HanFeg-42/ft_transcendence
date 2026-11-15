@@ -48,8 +48,6 @@ router.post("/update-stats", async (req: Request, res: Response) => {
       achievements,
     });
   } catch (error) {
-    console.error("[USER] Achievement update failed:", error);
-
     return res.status(500).json({
       error: "Failed to update achievements",
     });

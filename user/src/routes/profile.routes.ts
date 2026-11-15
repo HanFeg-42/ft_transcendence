@@ -10,14 +10,6 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Keep nginx → user service as it is. One thing is worth fixing, though: 
-// your upload code builds the file extension from the name the client sends, and express.
-// static picks the content type from that extension. 
-// Someone could upload a file called x.html and claim the type is image/png.
-//  The server would store it as .
-// html and serve it as HTML,
-//  which can run scripts on your site. Two small changes close that.
-
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
@@ -138,11 +130,15 @@ router.get('/me', async (req: Request, res: Response) => {
       achievements,
     });
   } catch (err: any) {
-    console.error('[USER] getMyProfile error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
 
+<<<<<<< HEAD
+=======
+
+// GET /profile/profiles?ids=1,4,7
+>>>>>>> origin/dev
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
@@ -168,7 +164,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       })),
     );
   } catch (err) {
-    console.error('[USER] profiles failed:', err);
     return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
@@ -284,21 +279,8 @@ router.post('/avatar', upload.single('avatar'), async (req: Request, res: Respon
 
     return res.json({ avatarUrl });
   } catch (err: any) {
-    console.error('[USER] uploadAvatar error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
-
-
-// Objet créé par Multer :
-
-// {
-//   fieldname: 'avatar',
-//   originalname: 'photo.jpg',
-//   filename: 'avatar_1_1735689600000.jpg',
-//   path: '/app/user/uploads/avatars/avatar_1_xxx.jpg',
-//   size: 12345,
-//   mimetype: 'image/jpeg',
-// }
 
 export default router;

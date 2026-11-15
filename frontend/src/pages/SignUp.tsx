@@ -76,7 +76,6 @@ export default function SignUp() {
 
       navigate("/login");
     } catch (error) {
-      console.error("Registration request failed:", error);
       setApiError(t("signup_errServer"));
     } finally {
       setLoading(false);

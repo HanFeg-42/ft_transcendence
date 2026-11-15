@@ -51,6 +51,9 @@ const ACTOR_FIELD: Record<string, string> = {
   [NotificationTypes.MESSAGE]: "senderId",
   [NotificationTypes.FRIEND_REQUEST]: "userId",
   [NotificationTypes.FRIEND_ACCEPTED]: "userId",
+  [NotificationTypes.FRIEND_DECLINED]: "userId",
+  [NotificationTypes.FRIEND_REQUEST_CANCELLED]: "userId",
+  [NotificationTypes.FRIEND_REMOVED]: "userId",
 };
 
 export function getActorId(n: Notification): number | undefined {
@@ -89,6 +92,25 @@ export function describeNotification(
       return {
         icon: "✓",
         text: t("notif_friendAccepted", { name: who }),
+        link: "/chat",
+      };
+
+    case NotificationTypes.FRIEND_DECLINED:
+      return {
+        icon: "✕",
+        text: t("notif_friendDeclined", { name: who }),
+      };
+
+    case NotificationTypes.FRIEND_REQUEST_CANCELLED:
+      return {
+        icon: "✕",
+        text: t("notif_friendRequestCancelled", { name: who }),
+      };
+
+    case NotificationTypes.FRIEND_REMOVED:
+      return {
+        icon: "−",
+        text: t("notif_friendRemoved", { name: who }),
         link: "/chat",
       };
 
