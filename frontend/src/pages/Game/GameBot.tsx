@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import Picker from "../../components/game/Picker";
+import GameSetup from "../../components/game/GameSetup";
 import { createGame, applyInput, tick } from "../../engine/engine";
 import { findSpawn } from "../../engine/maze";
-import { DEFAULT_MAZE_ID, MAZES } from "../../../../shared/data/game-data";
+import { DEFAULT_MAZE_ID, DEFAULT_TIME_LIMIT, MAZES } from "../../../../shared/data/game-data";
 import { chooseDirection } from '../../engine/bot';
 import type { BotDifficulty } from '../../engine/bot';
 import type { GameState, Direction } from "../../../../shared/types/game-types";
@@ -18,20 +17,17 @@ import { RotDev } from "../../components/game/RotateDevice";
 import PixelButton from "../../components/ui/PixelButton";
 import { useKeyboard } from "../../hooks/useKeyboard";
 import styles from "./GamePage.module.css";
-import Background from "../../components/ui/Background";
-import ghostImg from "../../assets/icons/ghost.png";
 
 
 const TICK_INTERVAL_MS = 1000 / 30; // game runs at 30 ticks per second
-const MATCH_TIME = 360; // seconds
 const CENTER_OFFSET = 4; // how far each player spawns from the maze center
 const HUMAN_ID = "player-1";
 const BOT_ID = "ai";
 
 
 // Creates the game: the human spawns left of the center, the bot right of it
-function createBotGame(mazeId: string): GameState {
-  const state = createGame(HUMAN_ID, MATCH_TIME, mazeId);
+function createBotGame(mazeId: string, matchTime: number): GameState {
+  const state = createGame(HUMAN_ID, matchTime, mazeId);
   const spawn = findSpawn(MAZES[state.mazeId]);
 
   state.players[0].spawn = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
@@ -79,14 +75,15 @@ const fmt = (s: number) =>
 
 
 // The match itself: game loop, human input, bot input, and the result popup
-const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
+const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty; timeLimit: number }> = ({
   mazeId,
   difficulty,
+  timeLimit,
 }) => {
   const { t } = useTranslation();
 
   // The game state lives in a ref (changes every tick); `setFrame` only forces a re-render
-  const stateRef = useRef<GameState>(createBotGame(mazeId));
+  const stateRef = useRef<GameState>(createBotGame(mazeId, timeLimit));
   const [, setFrame] = useState(0);
 
   // Game loop: bot decision -> engine tick -> redraw
@@ -183,7 +180,7 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty }> = ({
               />
             </div>
             <p className="font-vt323 text-xl text-white/70">
-              {t("bot_time", { time: fmt(MATCH_TIME - state.timeRemaining) })}
+              {t("bot_time", { time: fmt(timeLimit - state.timeRemaining) })}
             </p>
             <div className="flex gap-6">
               <PixelButton
@@ -212,58 +209,26 @@ const BotPage: React.FC = () => {
   const { t } = useTranslation();
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
   const [difficulty, setDifficulty] = useState<BotDifficulty>("hard");
+  const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
   const [started, setStarted] = useState(false);
-
-  const navigate = useNavigate();
 
   // Setup screen
   if (!started) {
     return (
-      <Background>
-        <div className="flex-1 flex flex-col items-center justify-center gap-5">
-          <RotDev />
-          <p className="font-vt323 text-3xl text-pacova-green">
-            {t("bot_chooseTitle")}
-          </p>
-
-          <Picker
-            icon="🗺️"
-            label={t("bot_map")}
-            value={mazeId}
-            options={Object.keys(MAZES)}
-            onChange={setMazeId}
-          />
-          <Picker
-            icon={<img src={ghostImg} alt="" className="w-8 h-8" />}
-            label={t("bot_level")}
-            value={difficulty}
-            options={["easy", "normal", "hard"]}
-            onChange={(v) => setDifficulty(v as BotDifficulty)}
-            format={(d) => t(`bot_${d}`)}
-          />
-
-          <div className="flex gap-4 mt-2">
-            <PixelButton
-              variant="danger-red"
-              size="md"
-              onClick={() => navigate("/home")}
-            >
-              {t("bot_home")}
-            </PixelButton>
-            <PixelButton
-              variant="filled-green"
-              size="md"
-              onClick={() => setStarted(true)}
-            >
-              {t("bot_start")}
-            </PixelButton>
-          </div>
-        </div>
-      </Background>
+      <GameSetup
+        difficulty={difficulty}
+        mazeId={mazeId}
+        timeLimit={timeLimit}
+        onDifficultyChange={(d) => setDifficulty(d as BotDifficulty)}
+        onMazeIdChange={setMazeId}
+        onTimeLimitChange={setTimeLimit}
+        onStart={() => setStarted(true)}
+        startLabel={t("bot_start")}
+      />
     );
   }
 
-  return <BotSession mazeId={mazeId} difficulty={difficulty} />;
+  return <BotSession mazeId={mazeId} difficulty={difficulty} timeLimit={timeLimit} />;
 };
 
 export default BotPage;

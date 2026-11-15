@@ -11,14 +11,15 @@ import HudPlayer from "../../components/game/HudPlayer";
 import styles from "./GamePage.module.css";
 import { RotDev } from "../../components/game/RotateDevice";
 import MobileControls from "../../components/game/MobileControls";
-import GameSettings from "../../components/game/GameSettings";
+// import GameSettings from "../../components/game/GameSettings";
 import {
   DEFAULT_TIME_LIMIT,
   DEFAULT_MAZE_ID,
   DEFAULT_DIFFICULTY,
 } from "../../../../shared/data/game-data";
-import Background from "../../components/ui/Background";
+// import Background from "../../components/ui/Background";
 import { useTranslation } from 'react-i18next';
+import GameSetup from "../../components/game/GameSetup";
 
 
 
@@ -98,7 +99,7 @@ const GameSession: React.FC<{
 };
 
 const GamePage: React.FC = () => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   const [gameMode, setGameMode] = useState<null | 1 | 2>(null);
   const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
@@ -126,25 +127,38 @@ const GamePage: React.FC = () => {
     );
   }
 
-  if (!started)
-    return (
-      <Background>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <RotDev />
-          <GameSettings
-            difficulty={difficulty}
-            timeLimit={timeLimit}
-            mazeId={mazeId}
-            onDifficultyChange={setDifficulty}
-            onTimeLimitChange={setTimeLimit}
-            onMazeIdChange={setMazeId}
-          />
-          <PixelButton variant="filled-green" onClick={() => setStarted(true)}>
-            {t('local_game_start')}
-          </PixelButton>
-        </div>
-      </Background>
-    );
+  // if (!started)
+  //   return (
+  //     <Background>
+  //       <div className="flex-1 flex flex-col items-center justify-center gap-4">
+  //         <RotDev />
+  //         <GameSettings
+  //           difficulty={difficulty}
+  //           timeLimit={timeLimit}
+  //           mazeId={mazeId}
+  //           onDifficultyChange={setDifficulty}
+  //           onTimeLimitChange={setTimeLimit}
+  //           onMazeIdChange={setMazeId}
+  //         />
+  //         <PixelButton variant="filled-green" onClick={() => setStarted(true)}>
+  //           {t('local_game_start')}
+  //         </PixelButton>
+  //       </div>
+  //     </Background>
+  //   );
+
+if (!started)
+  return (
+    <GameSetup
+      difficulty={difficulty}
+      mazeId={mazeId}
+      timeLimit={timeLimit}
+      onDifficultyChange={setDifficulty}
+      onMazeIdChange={setMazeId}
+      onTimeLimitChange={setTimeLimit}
+      onStart={() => setStarted(true)}
+    />
+  );
 
   return (
     <GameSession
