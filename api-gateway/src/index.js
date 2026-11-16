@@ -19,6 +19,8 @@ app.set('trust proxy', 1);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+    skipSuccessfulRequests: true,// only failed attempts
+  skip: (req) => req.path === '/refresh', // refresh never counts
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' }
