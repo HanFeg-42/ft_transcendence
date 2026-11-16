@@ -286,7 +286,7 @@ const resources = {
       howToPlay_dot: "Dot: 10",
       howToPlay_powerPellet: "Power pellet: 50",
       howToPlay_ghostPoints: "Ghost: 200",
-      howToPlay_fruit: "Fruit: bonus",
+      howToPlay_fruit: "Fruit: 100",
       howToPlay_tips: "TIPS",
       howToPlay_tip1:
         "Each maze has only 4 power pellets. Save them for real danger.",
@@ -981,7 +981,7 @@ const resources = {
       howToPlay_dot: "Point : 10",
       howToPlay_powerPellet: "Super pastille : 50",
       howToPlay_ghostPoints: "Fantôme : 200",
-      howToPlay_fruit: "Fruit : bonus",
+      howToPlay_fruit: "Fruit : 100",
       howToPlay_tips: "CONSEILS",
       howToPlay_tip1:
         "Chaque labyrinthe n'a que 4 super pastilles. Garde-les pour les vrais dangers.",
@@ -1667,7 +1667,7 @@ const resources = {
       howToPlay_dot: "النقطة: 10",
       howToPlay_powerPellet: "حبة القوة: 50",
       howToPlay_ghostPoints: "الشبح: 200",
-      howToPlay_fruit: "الفاكهة: نقاط إضافية",
+      howToPlay_fruit: "الفاكهة: 100",
       howToPlay_tips: "نصائح",
       howToPlay_tip1:
         "في كل متاهة 4 حبات قوة فقط. احتفظ بها للحظات الخطر الحقيقي.",
