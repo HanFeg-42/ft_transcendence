@@ -202,6 +202,17 @@ const GameRoom = ({
       {state.status === "playing" && (
         <MobileControls onInput={sendPlayerInput} />
       )}
+      {state.status === "playing" && !showMenu && (
+        <div className="fixed top-4 right-4 z-50">
+          <PixelButton
+            variant="outline-green"
+            size="sm"
+            onClick={() => setShowMenu(true)}
+          >
+            {t("online_game_menu")}
+          </PixelButton>
+        </div>
+      )}
       <div className={styles.page}>
         <div className={styles.topBar}>
           <HudTop state={state} />
@@ -286,7 +297,7 @@ const GameRoom = ({
               <PixelButton
                 variant="outline-green"
                 size="lg"
-                onClick={() => setShowMenu((menu) => !menu)}
+                onClick={() => setShowMenu(false)}
               >
                 {t("local_game_resume")}
               </PixelButton>

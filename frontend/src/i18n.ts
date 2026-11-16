@@ -128,6 +128,7 @@ const resources = {
       online_game_join_title: "JOIN A ROOM",
       online_game_room_placeholder: "Enter room name",
       online_game_back_to_menu: "Back to menu",
+      online_game_menu: "MENU",
       online_game_create: "Create",
       online_game_join: "Join",
       online_game_search_lost: "Lost connection while searching for a match",
@@ -818,6 +819,7 @@ const resources = {
       online_game_join_title: "REJOINDRE UNE SALLE",
       online_game_room_placeholder: "Nom de la salle",
       online_game_back_to_menu: "Retour au menu",
+      online_game_menu: "MENU",
       online_game_create: "Créer",
       online_game_join: "Rejoindre",
       online_game_search_lost:
@@ -1569,6 +1571,7 @@ const resources = {
       online_game_join_title: "الانضمام إلى غرفة",
       online_game_room_placeholder: "أدخل اسم الغرفة",
       online_game_back_to_menu: "العودة إلى القائمة",
+      online_game_menu: "القائمة",
       online_game_create: "إنشاء",
       online_game_join: "انضمام",
       online_game_search_lost: "انقطع الاتصال أثناء البحث عن مباراة",
