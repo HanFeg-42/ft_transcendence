@@ -7,9 +7,9 @@ import type { Friend } from '../../hooks/useChat';
 
 
 // Pac-Man SVG icon (`flip` mirrors it horizontally)
-export function PacManIcon({ className = '', flip = false }: { className?: string; flip?: boolean }) {
+export function PacManIcon({ className = ''}: { className?: string; flip?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} style={flip ? { transform: 'scaleX(-1)' } : undefined} fill="#FFD400" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="#8ED603" aria-hidden="true">
       <path d="M12 12 L20.66 7 A10 10 0 1 0 20.66 17 Z" />
     </svg>
   );
@@ -17,8 +17,8 @@ export function PacManIcon({ className = '', flip = false }: { className?: strin
 
 
 // "Oct 9, 03:15 PM"
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+const formatTime = (iso: string, locale: string) =>
+  new Date(iso).toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 
 // Style helpers: pink for my messages, green for the friend's
@@ -27,20 +27,24 @@ const bubble = (own: boolean) =>
 const row = (own: boolean) => `flex flex-col max-w-[80%] min-w-0 ${own ? 'self-end items-end' : 'self-start items-start'}`;
 const label = (own: boolean) => `font-vt323 text-sm uppercase tracking-wide mb-1 ${own ? 'text-pacova-pink' : 'text-pacova-green'}`;
 
-
-// Scrollable list of the conversation: text bubbles, game invites, typing indicator.
-export default function MessageList({ conversation, friend, myId, status, isTyping, friendReadAt }: {
+interface MessageListProps {
   conversation: Message[];
   friend: Friend;
   myId: number;
   status: 'loading' | 'error' | 'ok';
   isTyping: boolean;
   friendReadAt: string | null;
-}) {
+}
+
+// Scrollable list of the conversation: text bubbles, game invites, typing indicator.
+export default function MessageList({ 
+  conversation, friend, myId, status, isTyping, friendReadAt }: MessageListProps) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const endRef = useRef<HTMLDivElement>(null);
 
+
+  const locale = i18n.resolvedLanguage || 'en';
   // Keep the view at the bottom
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -96,7 +100,7 @@ export default function MessageList({ conversation, friend, myId, status, isTypi
             <div className={bubble(own)}>{m.content}</div>
             <span className="font-vt323 text-gray-500 text-sm mt-1 flex items-center gap-1.5">
               {own && <span className="tracking-[-2px]">{read ? '✓✓' : '✓'}</span>}
-              {formatTime(m.created_at)}
+              {formatTime(m.created_at, locale)}
             </span>
           </div>
         );

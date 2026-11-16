@@ -26,8 +26,8 @@ export const routeMap: Record<string, string> = {
 // Same gray Card as Profile / Settings. No padding, and its content wrapper fills the card
 const CARD = '!p-0 [&>div:last-child]:flex [&>div:last-child]:flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0';
 // Readable on both themes (same trick as Notifications)
-const TEXT = 'text-white in-[.pacova-light]:text-[#30213f]';
-const LINE = 'border-pacova-gray';
+const TEXT = 'text-white';
+const LINE = 'border-pacova-gray';   //The gray border color
 
 
 // Round avatar of a friend (default Pac-Man icon if they have none)
@@ -44,9 +44,13 @@ function FriendAvatar({ friend }: { friend: Friend }) {
   );
 }
 
-
+interface GameInviteModalProps {
+  name: string;
+  receiver: boolean;
+  onAnswer: (yes: boolean) => void;
+}
 // Popup for a game invite: `receiver` = I was invited (accept/decline), otherwise I'm inviting (send/cancel)
-function GameInviteModal({ name, receiver, onAnswer }: { name: string; receiver: boolean; onAnswer: (yes: boolean) => void }) {
+function GameInviteModal({ name, receiver, onAnswer }: GameInviteModalProps) {
   const { t } = useTranslation();
 
   return (
@@ -92,6 +96,7 @@ export default function Chat() {
 
 
   // Page layout (background + navbar) around any content
+  //React.ReactNode: any kind of elements
   const page = (children: React.ReactNode) => (
     <Background>
       <Navbar activeTab="CHAT" onSelectTab={(tab) => routeMap[tab] && navigate(routeMap[tab])} />
@@ -121,7 +126,7 @@ export default function Chat() {
 
   // Send the typed message (ignores empty text)
   function send() {
-    const text = draft.trim();
+    const text = draft.trim(); //removes spaces and line breaks from both ends
     if (!text) return;
     chat.sendMessage(text);
     setDraft('');
@@ -129,7 +134,10 @@ export default function Chat() {
 
   // Popup answer: reply to the invite I received, or send / cancel my own invite
   function answerInvite(yes: boolean) {
-    if (incomingInvite) chat.replyInvite(incomingInvite.id, yes);
+    if (incomingInvite) {
+      chat.replyInvite(incomingInvite.id, yes);
+      setInviteOpen(false);
+    }
     else {
       if (yes) chat.sendInvite();
       setInviteOpen(false);
@@ -144,9 +152,7 @@ export default function Chat() {
       <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0`}>
         <Card variant="gray" className={CARD}>
         <h2 className={`font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 ${LINE}`}>
-          <PacManIcon className="w-7 h-7 shrink-0" />
           {t('chat_friends')}
-          <PacManIcon className="w-7 h-7 shrink-0" flip />
         </h2>
 
         <div className="flex-1 flex flex-col gap-3 overflow-y-auto p-4 [scrollbar-color:var(--color-pacova-gray)_transparent]">
@@ -160,7 +166,6 @@ export default function Chat() {
             >
               <FriendAvatar friend={f} />
               <span className={`font-vt323 ${TEXT} text-lg uppercase truncate flex-1`}>{f.username}</span>
-              <span className={`w-3 h-3 rounded-full shrink-0 ${f.online ? 'bg-pacova-green' : 'bg-gray-500'}`} aria-label={f.online ? 'online' : 'offline'} />
             </button>
           ))}
         </div>
@@ -192,7 +197,12 @@ export default function Chat() {
             onClick={() => navigate(`/profile/${friend.id}`)}
             className="flex items-center gap-3 min-w-0 disabled:cursor-not-allowed">
             <FriendAvatar friend={friend} />
-            <span className={`font-pixelify ${TEXT} text-lg uppercase truncate`}>{friend.username}</span>
+            <span className="flex flex-col items-start min-w-0">
+              <span className={`font-pixelify ${TEXT} text-lg uppercase truncate max-w-full`}>{friend.username}</span>
+              <span className={`font-vt323 text-sm uppercase ${friend.online ? 'text-pacova-green' : 'text-gray-500'}`}>
+                {friend.online ? t('chat_online') : t('chat_offline')}
+              </span>
+          </span>
           </button>
 
           <div className="ms-auto flex items-center gap-2 shrink-0">
@@ -251,7 +261,8 @@ export default function Chat() {
             placeholder={t('chat_typePlaceholder')}
             onKeyDown={(e) => e.key === 'Enter' && send()}
           />
-          <PixelButton type="button" variant="outline-green" size="lg" onClick={send}>
+          <PixelButton type="button" variant="outline-green" size="lg"
+             disabled={blocked} onClick={send}>
             {t('chat_send')}
           </PixelButton>
         </div>
