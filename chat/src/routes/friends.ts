@@ -4,6 +4,7 @@ import { prisma } from '../prisma';
 import { onlineUsers, sendPresence } from '../ws/presence';
 import { notifyUser } from '../notifications/notifyUser';
 import { NotificationTypes } from '../../../shared/types/notification-types';
+import { ChatEvents } from '../../../shared/types/chat-types';
 
 const router = Router();
 const AUTH_URL = process.env.AUTH_SERVICE_URL || 'http://auth:3001';
@@ -259,8 +260,8 @@ router.delete('/friends/:userId', route(async (userId, req, res) => {
   if (!friendId || friendId === userId) return fail(res, 400, 'Invalid userId');
   if (!(await prisma.friendship.deleteMany({ where: pair(userId, friendId) })).count) return fail(res, 404, 'Friendship not found');
 
-  sendToUser(userId, 'friend_removed', { userId: friendId });
-  sendToUser(friendId, 'friend_removed', { userId });
+  sendToUser(userId, ChatEvents.FRIEND_REMOVED, { userId: friendId });
+  sendToUser(friendId, ChatEvents.FRIEND_REMOVED, { userId });
   return res.json({ removed: true });
 }));
 

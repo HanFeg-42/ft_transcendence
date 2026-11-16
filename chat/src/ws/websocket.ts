@@ -115,6 +115,13 @@ async function isBlocked(a: number, b: number): Promise<boolean> {
   return !!row;
 }
 
+// True if the two users are friends
+async function areFriends(a: number, b: number): Promise<boolean> {
+  const row = await prisma.friendship.findUnique({
+    where: { userLowId_userHighId: { userLowId: Math.min(a, b), userHighId: Math.max(a, b) } },
+  });
+  return !!row;
+}
 
 // Partners who haven't blocked us (and we haven't blocked): the only ones who may see our status.
 async function visiblePartners(userId: string, partners: number[]) {
@@ -200,6 +207,7 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const { receiver_id, content } = packet.data;
 
       if (await isBlocked(receiver_id, me)) return sendError(ws, "You can't message this user");
+      if (!(await areFriends(receiver_id, me))) return sendError(ws, "You can only message friends");
 
       const saved = await prisma.message.create({ data: { senderId: me, receiverId: receiver_id, content } });
 
@@ -225,6 +233,7 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const friendId = packet.data.sender_id;
 
       if (await isBlocked(friendId, me)) break;
+      if (!(await areFriends(friendId, me))) break;
 
       const now = new Date();
 
@@ -249,6 +258,7 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       lastTyping.set(ws, Date.now());
 
       if (await isBlocked(receiver_id, me)) break;
+      if (!(await areFriends(receiver_id, me))) break;
 
       sendTo(receiver_id, { event: ChatEvents.TYPING, data: { sender_id: me } });
       break;
@@ -259,7 +269,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     case ChatEvents.GAME_INVITE: {
       const { receiver_id } = packet.data;
 
-      if ((await isBlocked(receiver_id, me)) || !onlineUsers.has(String(receiver_id)))
+      if ((await isBlocked(receiver_id, me)) || !(await areFriends(receiver_id, me))
+         || !onlineUsers.has(String(receiver_id)))
         return sendError(ws, "User is not available to play");
 
       const saved = await prisma.message.create({

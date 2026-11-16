@@ -62,6 +62,7 @@ export default function useChat(token: string | null) {
   const [readAt, setReadAt] = useState<Record<number, string>>({});
   const [error, setError] = useState('');
   const [reconnecting, setReconnecting] = useState(false); // websocket is down and being retried
+  const tokenRef = useRef(token);
 
   const socket = useRef<WebSocket | null>(null);
   const typedAt = useRef<Record<number, number>>({}); // when we last sent "typing", per friend
@@ -99,13 +100,15 @@ export default function useChat(token: string | null) {
 
   /* ---------------- Loading data (REST) ---------------- */
 
+  useEffect(() => { tokenRef.current = token; }, [token]);
+  const loggedIn = !!token;
   // Friends list (once, when we have a token)
   useEffect(() => {
-    if (!token) return;
+    if (!loggedIn) return;
 
     async function loadFriends() {
       try {
-        const res = await callApi(token!, 'friends');
+        const res = await callApi(tokenRef.current!, 'friends');
         setFriendList(res.ok ? await res.json() : []);
       } catch {
         // ignore errors
@@ -113,18 +116,18 @@ export default function useChat(token: string | null) {
     }
 
     loadFriends();
-  }, [token]);
+  }, [loggedIn]);
 
 
   // History + block status: when the friend changes and after a reconnect (to catch up on missed messages)
   useEffect(() => {
-    if (!token || !friendId || reconnecting) return;
+    if (!loggedIn || !friendId || reconnecting) return;
 
     let stale = false; // true if the user already switched to another friend
 
     async function loadHistory() {
       try {
-        const res = await callApi(token!, `messages/${friendId}`);
+        const res = await callApi(tokenRef.current!, `messages/${friendId}`);
         if (!res.ok) throw false;
         const data: Message[] = await res.json();
         if (stale) return;
@@ -137,7 +140,7 @@ export default function useChat(token: string | null) {
 
     async function loadBlockStatus() {
       try {
-        const res = await callApi(token!, `blocks/status/${friendId}`);
+        const res = await callApi(tokenRef.current!, `blocks/status/${friendId}`);
         if (!res.ok) return;
         const data = await res.json();
         if (stale || !data) return;
@@ -154,14 +157,14 @@ export default function useChat(token: string | null) {
     return () => {
       stale = true;
     };
-  }, [token, friendId, reconnecting]);
+  }, [loggedIn, friendId, reconnecting]);
 
 
   /* ---------------- WebSocket (live events) ---------------- */
 
   // One WebSocket connection for the page, with automatic reconnects
   useEffect(() => {
-    if (!token) return;
+    if (!loggedIn) return;
 
     let ws: WebSocket;
     let closed = false; // true when the page is leaving (do not reconnect)
@@ -218,6 +221,14 @@ export default function useChat(token: string | null) {
           break;
         }
 
+        // A friendship ended (either side removed it): drop the friend, leave their chat
+        case E.FRIEND_REMOVED: {
+          const { userId } = packet.data;
+          setFriendList((old) => old.filter((f) => f.id !== userId));
+          setSelectedId((old) => (old === userId ? 0 : old)); // 0 = fall back to the first friend
+          break;
+        }
+
         // Server-side error, shown for 3s
         case E.ERROR:
           setError(packet.data.message);
@@ -227,7 +238,7 @@ export default function useChat(token: string | null) {
     }
 
     function connect() {
-      ws = new WebSocket(`wss://${window.location.host}/api/chat/ws?token=${token}`);
+      ws = new WebSocket(`wss://${window.location.host}/api/chat/ws?token=${tokenRef.current}`);
       socket.current = ws;
 
       ws.onopen = () => {
@@ -262,7 +273,7 @@ export default function useChat(token: string | null) {
       Object.values(typingTimers).forEach(clearTimeout);
       ws.close();
     };
-  }, [token]);
+  }, [loggedIn]);
 
 
   /* ---------------- Conversation ---------------- */
@@ -317,7 +328,7 @@ export default function useChat(token: string | null) {
 
     try {
       const method = iBlockedThem ? 'DELETE' : 'POST';
-      const res = await callApi(token, `blocks/${friendId}`, method);
+      const res = await callApi(tokenRef.current!, `blocks/${friendId}`, method);
       if (res.ok) setBlocked((old) => ({ ...old, [friendId]: !iBlockedThem }));
     } catch {
       // ignore errors
