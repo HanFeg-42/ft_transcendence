@@ -27,7 +27,7 @@ export function useGameSocket(
   const gameOverRef = useRef<boolean>(false);
   const firstJoinRef = useRef<boolean>(true);
   const urlRef = useRef<string>(url);
-  const [isConnected, setIsConnected] = useState<boolean>(false); //creates a tracked state variable re-render "Connected: ?" everytime calling setIsConnected(?)
+  const [isConnected, setIsConnected] = useState<boolean>(false);
   const [gaveUp, setGaveUp] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +138,7 @@ export function useGameSocket(
     };
 
     // 2. Wrap into envelope & convert to string:
-    // Result sent over wire: '{"event":"playerInput","data":{"gameId":"game-1","direction":"up"}}'
+    // Result sent over wire: '{"event":"playerInput","data":{"gameId":"game-1","direction":"UP"}}'
     socketRef.current.send(
       JSON.stringify({
         event: GameClientEvents.PLAYER_INPUT,
