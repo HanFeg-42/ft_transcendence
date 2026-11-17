@@ -62,7 +62,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
               linear-gradient(to right, rgba(243, 32, 119, ${isLight ? 0.22 : 0.4}) 1px, transparent 1px),
               linear-gradient(to bottom, rgba(243, 32, 119, ${isLight ? 0.22 : 0.4}) 1px, transparent 1px)
             `,
-            backgroundSize: '40px 40px',
+            backgroundSize: '40px 40px',//rerender the line every 40px
             transform: 'perspective(180px) rotateX(65deg)',
             transformOrigin: 'top center'
           }}
