@@ -46,47 +46,45 @@ function getUserIdFromHeader(req: Request): number | null {
 }
 
 
-export async function getOrCreateProfile(userId: number) {
-  let profile = await prisma.profile.findUnique({ where: { userId } });
-
-  if (!profile) {
-    let displayName = `Player${userId}`;
-    try {
-      const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-      });
-
-      if (authRes.ok) {
-        const authUser = await authRes.json();
-        displayName = authUser.username;
-      }
-    } catch (err) {
-    }
-
-    profile = await prisma.profile.create({
-      data: {
-        userId,
-        displayName,
-        avatarUrl: '/default-avatar.png',
-        bio: '',
-        statusText: 'Ready to play',
-      },
-    });
-
-    const achievements = await prisma.achievement.findMany();
-    await prisma.userAchievement.createMany({
-      data: achievements.map((a) => ({
-        userId,
-        achievementId: a.id,
-        progress: 0,
-        unlocked: false,
-      })),
-      skipDuplicates: true,
-    });
+export class UserNotFoundError extends Error {
+  constructor() {
+    super('User not found');
   }
+}
+
+export async function getOrCreateProfile(userId: number) {
+  const existing = await prisma.profile.findUnique({ where: { userId } });
+  if (existing) return existing;
+
+  // No profile yet: the user must exist in the auth service first
+  const authRes = await fetch(`http://auth:3001/users/${userId}`);
+  if (authRes.status === 404) throw new UserNotFoundError();
+  if (!authRes.ok) throw new Error('Auth service unavailable');
+  const authUser = await authRes.json();
+
+  const profile = await prisma.profile.create({
+    data: {
+      userId,
+      displayName: authUser.username,
+      avatarUrl: '/default-avatar.png',
+      bio: '',
+      statusText: 'Ready to play',
+    },
+  });
+
+  const achievements = await prisma.achievement.findMany();
+  await prisma.userAchievement.createMany({
+    data: achievements.map((a) => ({
+      userId,
+      achievementId: a.id,
+      progress: 0,
+      unlocked: false,
+    })),
+    skipDuplicates: true,
+  });
 
   return profile;
 }
-
 
 async function getUserAchievements(userId: number) {
   const achievements = await prisma.achievement.findMany({
@@ -185,6 +183,9 @@ router.get('/:id', async (req: Request, res: Response) => {
       statusText: user.statusText || 'Ready to play',
     });
   } catch (err: any) {
+    if (err instanceof UserNotFoundError) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     return res.status(500).json({ error: err.message });
   }
 });
@@ -196,10 +197,17 @@ router.patch('/me', async (req: Request, res: Response) => {
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
   try {
-    const { username, avatar, bio } = req.body;
-
+    const { username, avatar, bio } = req.body ?? {};
+    if (username !== undefined && (typeof username !== 'string' || !/^[\w-]{3,30}$/.test(username.trim()))) {
+      return res.status(400).json({ error: 'Invalid username' });
+    }
+    if (bio !== undefined && (typeof bio !== 'string' || bio.length > 200)) {
+      return res.status(400).json({ error: 'Invalid bio' });
+    }
+    if (avatar && !/^\/(uploads\/avatars\/[\w.-]+|default-avatar\.png)$/.test(avatar)) {
+      return res.status(400).json({ error: 'Invalid avatar' });
+    }
     if (username) {
       const existing = await prisma.profile.findFirst({
         where: { displayName: username, NOT: { userId } },
