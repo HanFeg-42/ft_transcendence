@@ -20,8 +20,8 @@
 | `DELETE /friends/:userId` | Remove a friend |
 | `GET /users/search?q=` | Find users (max 20, never returns the email) with their `relation` to me |
 | `GET /blocks`, `POST` / `DELETE /blocks/:id`, `GET /blocks/status/:id` | Blocked list, block, unblock, and who blocked whom |
-| `GET /notifications`, `/notifications/unread-count`, `PATCH /notifications/:id/read`, `POST /notifications/read-all`, `DELETE /notifications[/:id]` | Notifications |
-| `POST /internal/notifications` | Used by other services only (needs the `x-internal-key` header) |
+| `GET /notifications?cursor=&limit=&unread=`, `/notifications/unread-count`, `PATCH /notifications/:id/read`, `POST /notifications/read-all`, `DELETE /notifications[/:id]` | Notifications (`limit` default 20, max 50; `unread=true` keeps only unread ones) |
+| `POST /internal/notifications` | Used by other services only (needs the `x-internal-key` header; the gateway answers 404 for `/chat/internal`) |
 
 ## WebSocket events (typed in `shared/types/chat-types.ts`)
 

@@ -22,7 +22,7 @@
 - Local game, **vs. AI bot** (3 levels), **online 1v1** with matchmaking and 3 mazes
 - Real-time chat, friends with online status, notifications
 - Profiles, avatars, achievements, match history, leaderboard
-- English / French / Arabic (RTL), custom design system, responsive UI
+- English / French / Arabic (RTL), dark / light theme, custom design system, responsive UI
 
 More details (diagrams, flows): [`docs/`](docs/README.md).
 
@@ -37,7 +37,7 @@ cp .env.example .env       # fill in the values (below)
 make
 ```
 
-Open **https://localhost:443** (self-signed certificate: accept the browser warning once).
+Open **https://localhost:443** (self-signed certificate: accept the browser warning once). Port 8080 only redirects to HTTPS.
 
 **`.env` variables:** 
 
@@ -46,10 +46,11 @@ Open **https://localhost:443** (self-signed certificate: accept the browser warn
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | PostgreSQL credentials |
 | `AUTH_/USER_/CHAT_/GAME_DATABASE_URL` | One connection string per service |
 | `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, `TWO_FACTOR_CHALLENGE_SECRET` | Token secrets (`openssl rand -hex 32`) |
-| `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET` | 42 OAuth app credentials |
-| `FORTYTWO_CALLBACK_URL`, `FRONTEND_URL` | `https://localhost:443/api/auth/42/callback` and `https://localhost:443` |
+| `INTERNAL_API_KEY` | Shared key for service-to-service calls (`openssl rand -hex 32`) |
+| `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET` | 42 OAuth app credentials (optional: only needed for "Continue with 42") |
+| `FORTYTWO_CALLBACK_URL`, `FRONTEND_URL` | `https://localhost/api/auth/42/callback` and `https://localhost` |
 
-Databases are created by `postgres-db/init.sql`; Prisma migrations run automatically at start. Make targets: `make`, `make down`, `make logs`, `make status`, `make migrate`, `make clean` (wipes volumes), `make re`.
+Databases are created by `postgres-db/init.sql`; Prisma migrations run automatically at start. Make targets: `make` (build + start), `make down`, `make restart`, `make logs`, `make status`, `make migrate`, `make clean` (stops and wipes volumes), `make fclean` (also removes images), `make re` (`fclean` + rebuild + start).
 
 ## Team Information
 
@@ -91,10 +92,10 @@ One PostgreSQL server, **one database per service**; services reference users by
 
 | Database | Tables (key fields) | Relations |
 |---|---|---|
-| `auth_db` | `User` (id Int, username String, email String, passwordHash String?, fortyTwoId Int?, twoFactorEnabled Boolean, twoFactorSecret String?) | — |
-| `user_db` | `Profile` (userId Int, displayName String?, bio String, avatarUrl String?, statusText String?), `Achievement` (id String, title String, description String, image String), `UserAchievement` (userId Int, achievementId String, unlocked Boolean, progress Int) | Profile 1—N UserAchievement N—1 Achievement |
+| `auth_db` | `User` (id Int, username String, email String, passwordHash String?, fortyTwoId Int?, avatar String?, twoFactorEnabled Boolean, twoFactorSecret String?), `TwoFactorRecoveryCode` (userId Int, codeHash String, usedAt DateTime?; not used by the code yet) | User 1—N TwoFactorRecoveryCode |
+| `user_db` | `Profile` (userId Int, displayName String?, bio String, avatarUrl String?, statusText String?), `Achievement` (id String, title String, description String, image String, borderColor String, textColor String), `UserAchievement` (userId Int, achievementId String, unlocked Boolean, progress Int, unlockedAt DateTime?) | Profile 1—N UserAchievement N—1 Achievement |
 | `chat_db` | `Message` (senderId, receiverId, content String, kind String, meta Json?, readAt DateTime?), `BlockedUser` (blockerId, blockedId), `FriendRequest` (requesterId, addresseeId, status String), `Friendship` (userLowId, userHighId), `Notification` (userId, type String, payload Json, isRead Boolean) | Unique pairs on blocks, requests and friendships |
-| `game_db` | `Match` (id BigInt, mode, status, mazeSeed String?, timeLimitSeconds Int, winnerUserId Int?, startedAt, endedAt), `MatchParticipant` (matchId, userId, slot Int, result String?, score Int, pelletsEaten Int, ghostsEaten Int, livesRemaining Int) | Match 1—N MatchParticipant |
+| `game_db` | `Match` (id BigInt, mode, status, mazeSeed String?, timeLimitSeconds Int, winnerUserId Int?, startedAt, endedAt), `MatchParticipant` (matchId, userId, slot Int, result String?, score Int, pelletsEaten Int, fruitsEaten Int, ghostsEaten Int, livesRemaining Int) | Match 1—N MatchParticipant |
 
 ## Features List
 
@@ -106,7 +107,7 @@ One PostgreSQL server, **one database per service**; services reference users by
 | 2FA | TOTP with QR code | `hfegrach` |
 | Auth pages | Login / sign-up UI | `nel-khad` |
 | Profile | Public and own profile, avatar, rank, achievements, match history | `nel-khad` |
-| Settings | Edit profile, avatar upload, security, language | `oelmanso` |
+| Settings | Edit profile, avatar upload, security (2FA), appearance (dark / light), language | `oelmanso` |
 | Friends | Requests, accept / decline / remove, list with online status | `oelmanso` |
 | Chat | Real-time private chat, history, block, typing, read receipts, game invites | `machaouk` |
 | Notifications | Real-time and persistent, unread counter | `hfegrach` |
@@ -128,11 +129,11 @@ Each member also made their own pages responsive.
 | Module | Type | Pts | Why / how | Who |
 |---|---|---|---|---|
 | Frontend + backend framework | Major | 2 | React + Express, structured architecture, shared types | all |
-| Real-time (WebSockets) | Major | 2 | `ws` in chat and game, JWT-checked upgrades through the gateway, rooms, presence | `machaouk`, `ynadime`, `hfegrach` |
+| Real-time (WebSockets) | Major | 2 | `ws` in chat and game, JWT-checked upgrades through the gateway, rooms, presence | `machaouk`, `ynadime`, `oelmanso`, `hfegrach` |
 | User interaction | Major | 2 | Chat, profiles, friends | `machaouk`, `nel-khad`, `oelmanso` |
 | ORM | Minor | 1 | Prisma models and migrations in every service | all |
 | Notification system | Minor | 1 | Persistent notifications pushed in real time | `hfegrach` |
-| Custom design system | Minor | 1 | Palette, pixel typography, 10+ reusable components | `nel-khad` |
+| Custom design system | Minor | 1 | Palette, pixel typography, reusable components (`components/ui`, `game`, `profile`) | `nel-khad` |
 | Multiple languages | Minor | 1 | i18next, EN / FR / AR | team |
 | Right-to-left (RTL) support | Minor | 1 | Arabic sets `dir="rtl"`; layout uses logical CSS properties so it mirrors | team |
 | Standard user management | Major | 2 | Profile edit, avatar upload, friends + status, profile page | `nel-khad`, `oelmanso` |
@@ -176,4 +177,4 @@ Each member also made their own pages responsive.
 - `hfegrach`: Hanane Fegrachi
 - `nel-khad`: Noussaiba El khadar 
 - `ynadime` : Yazid Nadime 
-- `oelmanso`: Oumaima Elmansoum 
+- `oelmanso`: Oumaima Elmansoum

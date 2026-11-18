@@ -1,14 +1,16 @@
 # AI bot
 
-**Owner:** `machaouk` (algorithm and bot game page). Pac-Man / ghost images and game components were created by `nel-khad` and reused.
+**Owner:** `machaouk`.
 
-The bot runs **in the browser** on the same engine as the local game (`frontend/src/ai/bot.ts`, page `pages/Game/GameBot.tsx`). It is a second Pac-Man in the maze with id `ai`.
+The bot runs **in the browser** on the same engine as the local game (`frontend/src/engine/bot.ts`, page `pages/Game/GameBot.tsx`). It is a second Pac-Man in the maze with id `ai`; the human plays with arrows or WASD.
+
+The bot only decides when it is exactly on a tile (30 ticks/s, one tile every 8 ticks). Bot games are **local**: they are not saved in the match history, statistics, leaderboard or achievements.
 
 ## How it decides
 
 ```mermaid
 flowchart TD
-    T[Bot reaches a tile] --> R[Rank the 4 directions<br/>by simulating the game N steps ahead]
+    T[Bot reaches a tile] --> R[Rank the free directions<br/>by simulating the game N tiles ahead]
     R --> B{Best move deadly?}
     B -- yes --> R2[Search again, now allowing U-turn]
     B -- no --> C
@@ -20,8 +22,9 @@ flowchart TD
     BEST --> OUT
 ```
 
-- **Look-ahead:** each direction is scored by simulating the engine `depth` steps: pellets and power pellets add value, being caught is a huge penalty, edible ghosts attract the bot, dangerous ghosts repel it.
-- **No pointless U-turns** unless it is the only way to survive.
+- **Look-ahead:** each direction is tested on a copy of the game, played for one tile with the real engine, then the search goes `depth` tiles deep (later tiles count 0.9×).
+- **Score of a move:** points won by the engine (pellets, power pellets, frightened ghosts) minus a huge penalty if the bot loses a life. At the last level, positions close to a pellet are preferred (distance computed with BFS).
+- **No pointless U-turns**, unless it is the only way to survive.
 - **Human-like:** with a probability `mistake` it picks a worse but survivable move, so it can lose.
 
 ## Difficulty
@@ -32,4 +35,8 @@ flowchart TD
 | normal | 4 | 15 % |
 | hard | 6 | 5 % |
 
-The bot plays on whichever of the 3 mazes the player chooses.
+The player also chooses the maze (3 available) and the time limit before the match.
+
+## Winner
+
+Same rules as the online game: the player who still has lives wins, otherwise the higher score, otherwise a draw.
