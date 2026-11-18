@@ -5,7 +5,8 @@ import { useLocalGame } from "../../hooks/useLocalGame";
 import { useKeyboard } from "../../hooks/useKeyboard";
 import HudTop from "../../components/game/HudTop";
 import GameMenu from "../../components/game/GameMenu";
-import PixelButton from "../../components/ui/PixelButton";
+// import PixelButton from "../../components/ui/PixelButton";
+import { MenuButton, PauseMenu, ResultModal } from "../../components/game/GameOverlays";
 import type { Direction } from "../../../../shared/types/game-types";
 import HudPlayer from "../../components/game/HudPlayer";
 import styles from "./GamePage.module.css";
@@ -23,7 +24,9 @@ const GameSession: React.FC<{
   gameMode: 1 | 2;
   timeLimit: number;
   mazeId: string;
-  difficulty: string;}> = ({ gameMode, timeLimit, mazeId, difficulty }) => {
+  // difficulty: string;}> = ({ gameMode, timeLimit, mazeId, difficulty }) => {
+  difficulty: string;
+  onRestart: () => void;}> = ({ gameMode, timeLimit, mazeId, difficulty, onRestart }) => {
   const { state, sendInput, paused, togglePause } = useLocalGame(
     "player-1",
     gameMode,
@@ -49,13 +52,14 @@ const GameSession: React.FC<{
   return (
     <>
       <RotDev />
-      {state.status === "playing" && !paused && (
+      {/* {state.status === "playing" && !paused && (
         <div className="fixed top-4 right-4 z-50">
           <PixelButton variant="outline-green" size="sm" onClick={togglePause}>
             {t('local_game_pause')}
           </PixelButton>
         </div>
-      )}
+      )} */}
+      {state.status === "playing" && !paused && <MenuButton onClick={togglePause} />}
       {state.status === "playing" && (
         <MobileControls onInput={(dir) => sendInput("player-1", dir)} />
       )}
@@ -80,7 +84,7 @@ const GameSession: React.FC<{
         )}
       </div>
 
-      {paused && state.status === "playing" && (
+      {/* {paused && state.status === "playing" && (
         <div className={styles.gameOverLayout}>
           <h1 className={styles.gameoverstate}>{t('local_game_pause')}</h1>
           <div className="flex flex-row gap-6">
@@ -119,6 +123,25 @@ const GameSession: React.FC<{
             </a>
           </div>
         </div>
+      )} */}
+
+      {paused && state.status === "playing" && (
+        <PauseMenu onResume={togglePause} onQuit={() => navigate("/choose")} />
+      )}
+
+      {state.status !== "playing" && (
+        <ResultModal
+          title={state.status === "won" ? t("online_game_you_won") : t("online_game_you_lost")}
+          win={state.status === "won"}
+          players={state.players.map((p, i) => ({
+            name: `P${i + 1}`,
+            score: p.score,
+            lives: p.lives,
+            win: state.status === "won",
+          }))}
+          onPlayAgain={onRestart}
+          onQuit={() => navigate("/choose")}
+        />
       )}
     </>
   );
@@ -131,6 +154,7 @@ const GamePage: React.FC = () => {
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
   const [difficulty, setDifficulty] = useState<string>(DEFAULT_DIFFICULTY);
   const [started, setStarted] = useState<boolean>(false);
+  const [run, setRun] = useState(0); // bump to restart with the same settings
 
   const [searchParams] = useSearchParams();
   const urlMode = searchParams.get("mode");
@@ -187,12 +211,21 @@ if (!started)
   );
 
   return (
+    // <GameSession
+    //   key={gameMode}
+    //   gameMode={gameMode}
+    //   timeLimit={timeLimit}
+    //   mazeId={mazeId}
+    //   difficulty={difficulty}
+    // />
+
     <GameSession
-      key={gameMode}
+      key={`${gameMode}-${run}`}
       gameMode={gameMode}
       timeLimit={timeLimit}
       mazeId={mazeId}
       difficulty={difficulty}
+      onRestart={() => setRun((r) => r + 1)}
     />
   );
 };
