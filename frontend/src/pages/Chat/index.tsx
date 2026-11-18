@@ -25,7 +25,6 @@ export const routeMap: Record<string, string> = {
 
 // Same gray Card as Profile / Settings. No padding, and its content wrapper fills the card
 const CARD = '!p-0 [&>div:last-child]:flex [&>div:last-child]:flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0';
-// Readable on both themes (same trick as Notifications)
 const TEXT = 'text-white';
 const LINE = 'border-pacova-gray';   //The gray border color
 
