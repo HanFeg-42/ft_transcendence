@@ -10,14 +10,6 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Keep nginx → user service as it is. One thing is worth fixing, though: 
-// your upload code builds the file extension from the name the client sends, and express.
-// static picks the content type from that extension. 
-// Someone could upload a file called x.html and claim the type is image/png.
-//  The server would store it as .
-// html and serve it as HTML,
-//  which can run scripts on your site. Two small changes close that.
-
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
@@ -54,7 +46,6 @@ function getUserIdFromHeader(req: Request): number | null {
 }
 
 
-// Helper : récupère ou crée le Profile
 export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
 
@@ -62,7 +53,6 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        // headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -98,7 +88,6 @@ export async function getOrCreateProfile(userId: number) {
 }
 
 
-// Achievements of one user, in the shape the frontend expects
 async function getUserAchievements(userId: number) {
   const achievements = await prisma.achievement.findMany({
     include: {
@@ -146,6 +135,7 @@ router.get('/me', async (req: Request, res: Response) => {
 });
 
 
+
 // GET /profile/profiles?ids=1,4,7
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
@@ -158,7 +148,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
     }
 
-    // One query for existing profiles, then create only the missing ones
     const existing = await prisma.profile.findMany({ where: { userId: { in: ids } } });
     const known = new Set(existing.map((p) => p.userId));
     const created = await Promise.all(

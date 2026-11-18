@@ -1,16 +1,8 @@
-import { useRef, useEffect, useState } from "react";
-import type {
-  GameState,
-  Direction,
-  Player,
-} from "../../../shared/types/game-types";
+import { useRef, useEffect, useState, useCallback } from "react";
+import type {  GameState,  Direction,  Player,} from "../../../shared/types/game-types";
 import { createGame, tick, applyInput } from "../engine/engine";
 import { TICKS_PER_SECOND } from "../../../shared/data/game-data";
-import {
-  DEFAULT_TIME_LIMIT,
-  DEFAULT_MAZE_ID,
-  DEFAULT_DIFFICULTY,
-} from "../../../shared/data/game-data";
+import {  DEFAULT_TIME_LIMIT,  DEFAULT_MAZE_ID,  DEFAULT_DIFFICULTY,} from "../../../shared/data/game-data";
 
 const TICK_INTERVAL_MS = 1000 / TICKS_PER_SECOND;
 export function useLocalGame(
@@ -24,6 +16,14 @@ export function useLocalGame(
     createGame(playerId, timeLimit, mazeId, difficulty),
   );
   const [, setFrame] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
+
+  const togglePause = useCallback(() => {
+    if (stateRef.current.status !== "playing") return;
+    pausedRef.current = !pausedRef.current;
+    setPaused(pausedRef.current);
+  }, []);
 
   useEffect(() => {
     const state = stateRef.current;
@@ -53,7 +53,7 @@ export function useLocalGame(
     const interval = setInterval(() => {
       const state = stateRef.current;
 
-      if (state.status === "playing") {
+      if (state.status === "playing" && !pausedRef.current) {
         tick(state);
       }
       setFrame((f) => f + 1);
@@ -63,11 +63,13 @@ export function useLocalGame(
 
   const sendInput = (id: string, dir: Direction) => {
     const state = stateRef.current;
-    if (state.status !== "playing") return;
+    if (state.status !== "playing" || pausedRef.current) return;
     applyInput(state, id, dir);
   };
   return {
     state: stateRef.current,
     sendInput,
+    paused,
+    togglePause,
   };
 }
