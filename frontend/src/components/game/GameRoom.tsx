@@ -76,6 +76,7 @@ const GameRoom = ({
   const myId = String(user?.id);
   const opponent = state?.players.find((p) => p.id !== myId);
   const [opponentName, setOpponentName] = useState(t("online_game_opponent"));
+  const [showMenu, setShowMenu] = useState<boolean>(false);
 
   useEffect(() => {
     if (!opponent?.id || !token) return;
@@ -92,16 +93,17 @@ const GameRoom = ({
   }, [opponent?.id]);
 
   useEffect(() => {
+    if (state?.status !== "playing") return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const dir = KEY_MAP[e.key];
       if (dir) {
         e.preventDefault();
         sendPlayerInput(dir);
-      }
+      } else if (e.key === "Escape") setShowMenu((menu) => !menu);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [state?.status]);
 
   useEffect(() => {
     if (error && state?.status !== "finished") {
@@ -200,6 +202,17 @@ const GameRoom = ({
       {state.status === "playing" && (
         <MobileControls onInput={sendPlayerInput} />
       )}
+      {state.status === "playing" && !showMenu && (
+        <div className="fixed top-4 right-4 z-50">
+          <PixelButton
+            variant="outline-green"
+            size="sm"
+            onClick={() => setShowMenu(true)}
+          >
+            {t("online_game_menu")}
+          </PixelButton>
+        </div>
+      )}
       <div className={styles.page}>
         <div className={styles.topBar}>
           <HudTop state={state} />
@@ -275,6 +288,26 @@ const GameRoom = ({
               <p className="font-press-start text-3xl text-pacova-green drop-shadow-glow-green">
                 <Countdown seconds={FORFEIT_DELAY_MS / 1000} />s
               </p>
+            </div>
+          </div>
+        )}
+        {showMenu && state.status === "playing" && (
+          <div className={styles.gameOverLayout}>
+            <div className="flex flex-row gap-6">
+              <PixelButton
+                variant="outline-green"
+                size="lg"
+                onClick={() => setShowMenu(false)}
+              >
+                {t("local_game_resume")}
+              </PixelButton>
+              <PixelButton
+                variant="danger-red"
+                size="lg"
+                onClick={onBackToMenu}
+              >
+                {t("online_game_back_to_menu")}
+              </PixelButton>
             </div>
           </div>
         )}

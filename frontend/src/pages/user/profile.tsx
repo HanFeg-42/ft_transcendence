@@ -12,17 +12,9 @@ import Achievements from '../../components/profile/Achievements';
 import Card from '../../components/ui/Card';
 import EditProfileModal from '../../components/profile/EditProfileModal';
 import { useAuth } from '../../context/AuthContext';
-import {
-  getMyProfile,
-  updateMyProfile,
-  getProfileById,
-  type ProfileData,
-} from '../../services/userService';
+import { getMyProfile, updateMyProfile, getProfileById, type ProfileData,} from '../../services/userService';
 import { getStats, type StatsData } from '../../services/matchService';
-import {
-  getLeaderboardRows,
-  type LeaderboardRow,
-} from '../../services/leaderboardService';
+import {  getLeaderboardRows,  type LeaderboardRow,} from '../../services/leaderboardService';
 import { routeMap } from '../Chat/index';
 
 function calculateLevel(wins: number, matchesPlayed: number) {
@@ -31,7 +23,7 @@ function calculateLevel(wins: number, matchesPlayed: number) {
   const currentXp = xp % 500;
   const maxXp = 500;
 
-  return { level, currentXp, maxXp };
+  return { level, currentXp, maxXp }; 
 }
 
 export function handleSelectTab(
@@ -83,8 +75,7 @@ export default function ProfilePage() {
         setLeaderboard(leaderboardData);
         setLoading(false);
       })
-      .catch((err: unknown) => {
-        console.error('[PROFILE] Failed to load:', err);
+      .catch(() => {
         setError(t('userProfile_loadError'));
         setLoading(false);
       });
@@ -103,7 +94,7 @@ export default function ProfilePage() {
     (row) => row.userId === profile?.id
   );
   const myRank = myRankRow?.rank ?? 0;
-  const myWins = myRankRow?.wins ?? 0;
+  const myWins = stats?.wins ?? 0;
   const totalPlayers = leaderboard.length;
 
   const { level, currentXp, maxXp } = calculateLevel(
@@ -123,17 +114,13 @@ export default function ProfilePage() {
         onSelectTab={(tab) => handleSelectTab(tab, navigate)}
       />
 
-      <main className={isOwnProfile ? "flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
-                                    : "flex pt-8 items-center justify-center min-h-[70vh]"}>
-        <div className={isOwnProfile
-          ? "lg:col-span-4 xl:col-span-3 flex flex-col"
-          : "w-full max-w-lg flex flex-col"
-        }>          
+      <main className={isOwnProfile ? "flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch" : "flex pt-8 items-center justify-center min-h-[70vh]"}>
+        <div className={isOwnProfile ? "lg:col-span-4 xl:col-span-3 flex flex-col" : "w-full max-w-lg flex flex-col"}>          
           {loading ? (
             <Card
               variant="gray"
               className="w-full h-full flex items-center justify-center p-8"
-            >
+              >
               <span className="font-pixelify text-pacova-green text-lg animate-pulse">
                 {t('userProfile_loading')}
               </span>

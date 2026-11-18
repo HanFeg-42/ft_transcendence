@@ -15,7 +15,7 @@ const ACHIEVEMENTS = [
     title: 'GHOST HUNTER',
     description: '--',
     image: 'ghost-hanter.png',
-    borderColor: 'border-pink-500',
+    borderColor: 'border-pink',
     textColor: 'text-pink-500',
   },
   {
@@ -68,8 +68,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
-    console.error('Failed to seed achievements:', error);
+  .catch(() => {
     process.exitCode = 1;
   })
   .finally(async () => {

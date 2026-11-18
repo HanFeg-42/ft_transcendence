@@ -2,9 +2,12 @@ import { Router } from 'express';
 import { prisma } from '../prisma';
 import { toIncoming } from '../ws/websocket';
 
+
 const router = Router();
 
-// Chat history with one friend, newest first, 50 per page (GET /messages/:friendId?cursor=<id>)
+
+// Chat history with one friend: newest first, 50 per page.
+// GET /messages/:friendId?cursor=<last message id> -> cursor loads the next (older) page
 router.get('/messages/:friendId', async (req, res) => {
   const userId = Number(req.headers['x-user-id']);
   const friendId = Number(req.params.friendId);
@@ -13,6 +16,7 @@ router.get('/messages/:friendId', async (req, res) => {
   if (!userId) return res.status(401).json({ error: 'Missing identity' });
   if (!friendId || Number.isNaN(friendId)) return res.status(400).json({ error: 'Invalid friendId' });
 
+  // Messages in both directions between the two users
   const rows = await prisma.message.findMany({
     where: {
       OR: [
@@ -27,5 +31,6 @@ router.get('/messages/:friendId', async (req, res) => {
 
   res.json(rows.map(toIncoming));
 });
+
 
 export default router;

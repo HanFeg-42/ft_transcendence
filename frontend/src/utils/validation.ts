@@ -35,3 +35,29 @@ export function validateSignUp(data: {
 
   return errors;
 }
+
+export function validateLogin(data: {
+  email: string;
+  password: string;
+}) {
+  const errors: Record<string, string> = {};
+
+  const email = data.email.trim().toLowerCase();
+
+  if (!email) {
+    errors.email = "login_errEmailRequired";
+  } else if (
+    email.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    errors.email = "login_errEmailInvalid";
+  }
+
+  if (!data.password) {
+    errors.password = "login_errPasswordRequired";
+  } else if (new TextEncoder().encode(data.password).length > 72) {
+    errors.password = "login_errPasswordLength";
+  }
+
+  return errors;
+}

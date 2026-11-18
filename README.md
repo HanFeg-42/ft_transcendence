@@ -71,8 +71,8 @@ Databases are created by `postgres-db/init.sql` and Prisma migrations run automa
 
 | Login | Role(s) | Responsibilities |
 |---|---|---|
-| `hfegrach` | Product Owner, Project Manager, Developer | Owns the backlog, plans sprints, leads meetings |
-| `machaouk` | Project Manager, Tech Lead / Architect, Developer | Microservices and gateway architecture, task planning |
+| `hfegrach` | Product Owner, Developer | Owns the backlog, plans sprints, leads meetings |
+| `machaouk` | Tech Lead / Architect, Developer | Microservices and gateway architecture, task planning |
 | `nel-khad` | Project Manager, Developer | UI/UX and design system, task planning |
 | `ynadime` | Developer | Game backend and remote multiplayer |
 | `oelmanso` | Developer | Settings and friends |
@@ -83,7 +83,7 @@ Code review of critical changes was done by the whole team through Pull Requests
 ## Project Management
 
 - **Organisation:** 1-week Scrum sprints (planning, daily stand-up, review/demo, retrospective). Details in [`docs/architecture/team-workflow.md`](docs/architecture/team-workflow.md).
-- **Task planning:** `hfegrach` created the backlog (task founder). Every other member worked on their own tasks or edited / split the backlog cards.
+- **Task planning:** Every member worked on their own tasks or edited / split the backlog cards.
 - **Tools:** Trello (backlog and sprint board), GitHub (PRs, code review, protected `main` and `dev`), Figma (design).
 - **Communication:** Discord (announcements, meeting schedule, pair-programming channels).
 - **Git rules:** feature branches (`feat/`, `fix/`, `test/`), PR + 1 approval, Conventional Commits.

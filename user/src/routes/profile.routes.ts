@@ -10,14 +10,6 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Keep nginx → user service as it is. One thing is worth fixing, though: 
-// your upload code builds the file extension from the name the client sends, and express.
-// static picks the content type from that extension. 
-// Someone could upload a file called x.html and claim the type is image/png.
-//  The server would store it as .
-// html and serve it as HTML,
-//  which can run scripts on your site. Two small changes close that.
-
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
@@ -54,7 +46,6 @@ function getUserIdFromHeader(req: Request): number | null {
 }
 
 
-// Helper : récupère ou crée le Profile
 export async function getOrCreateProfile(userId: number) {
   let profile = await prisma.profile.findUnique({ where: { userId } });
 
@@ -62,7 +53,6 @@ export async function getOrCreateProfile(userId: number) {
     let displayName = `Player${userId}`;
     try {
       const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        // headers: { 'x-user-id': userId.toString() },
       });
 
       if (authRes.ok) {
@@ -98,7 +88,6 @@ export async function getOrCreateProfile(userId: number) {
 }
 
 
-// Achievements of one user, in the shape the frontend expects
 async function getUserAchievements(userId: number) {
   const achievements = await prisma.achievement.findMany({
     include: {
@@ -141,15 +130,13 @@ router.get('/me', async (req: Request, res: Response) => {
       achievements,
     });
   } catch (err: any) {
-    console.error('[USER] getMyProfile error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
 
 
+
 // GET /profile/profiles?ids=1,4,7
-// Returns { id, username, avatarUrl } for each requested user (max 100).
-// Invalid ids are ignored; missing profiles are created.
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
     const raw = typeof req.query.ids === 'string' ? req.query.ids : '';
@@ -161,7 +148,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
     }
 
-    // One query for existing profiles, then create only the missing ones
     const existing = await prisma.profile.findMany({ where: { userId: { in: ids } } });
     const known = new Set(existing.map((p) => p.userId));
     const created = await Promise.all(
@@ -176,7 +162,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       })),
     );
   } catch (err) {
-    console.error('[USER] profiles failed:', err);
     return res.status(500).json({ error: 'Failed to load profiles' });
   }
 });
@@ -292,21 +277,8 @@ router.post('/avatar', upload.single('avatar'), async (req: Request, res: Respon
 
     return res.json({ avatarUrl });
   } catch (err: any) {
-    console.error('[USER] uploadAvatar error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
-
-
-// Objet créé par Multer :
-
-// {
-//   fieldname: 'avatar',
-//   originalname: 'photo.jpg',
-//   filename: 'avatar_1_1735689600000.jpg',
-//   path: '/app/user/uploads/avatars/avatar_1_xxx.jpg',
-//   size: 12345,
-//   mimetype: 'image/jpeg',
-// }
 
 export default router;

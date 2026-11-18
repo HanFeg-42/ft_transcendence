@@ -37,8 +37,7 @@ app.use(
     target: process.env.AUTH_SERVICE_URL || 'http://auth:3001',
     changeOrigin: true, //Changes HTTP host header of outgoing request to match target URL host
     on: {
-      error: (err, req, res) => {
-        console.error('[API-GATEWAY] Auth service error:', err.message);
+      error: (res) => {
         if (!res.headersSent) res.status(502).json({ error: 'Auth service unreachable' });
       }
     }
@@ -53,8 +52,7 @@ app.use(
     changeOrigin: true,
     pathRewrite: (path) => `/users${path}`,
     on: {
-      error: (err, req, res) => {
-        console.error('[API-GATEWAY] Auth directory error:', err.message);
+      error: (res) => {
         if (!res.headersSent) {
           res.status(502).json({ error: 'Auth service unreachable' });
         }
@@ -70,8 +68,7 @@ app.use(
     target: process.env.USER_SERVICE_URL || 'http://user:3004',
     changeOrigin: true,
     on: {
-      error: (err, req, res) => {
-        console.error('[API-GATEWAY] User service error:', err.message);
+      error: (res) => {
         if (!res.headersSent) res.status(502).json({ error: 'User service unreachable' });
       }
     }
@@ -85,8 +82,7 @@ app.use(
     target: process.env.GAME_SERVICE_URL || 'http://game:3002',
     changeOrigin: true,
     on: {
-      error: (err, req, res) => {
-        console.error('[API-GATEWAY] Game service error:', err.message);
+      error: (res) => {
         if (!res.headersSent) res.status(502).json({ error: 'Game service unreachable' });
       }
     }
@@ -100,8 +96,7 @@ app.use(
     target: process.env.CHAT_SERVICE_URL || 'http://chat:3003',
     changeOrigin: true,
     on: {
-      error: (err, req, res) => {
-        console.error('[API-GATEWAY] Chat service error:', err.message);
+      error: (res) => {
         if (!res.headersSent) res.status(502).json({ error: 'Chat service unreachable' });
       }
     }
@@ -160,7 +155,6 @@ server.on('upgrade', (req, socket, head) => {
 
     req.headers['x-user-id'] = String(decoded.userId);
   } catch (err) {
-    console.warn('[API-GATEWAY] Rejected ws handshake:', err.message);
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     socket.destroy();
     return;
@@ -176,6 +170,5 @@ server.on('upgrade', (req, socket, head) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`[API-GATEWAY] Running on internal port ${PORT}`);
-});
+server.listen(PORT);
+

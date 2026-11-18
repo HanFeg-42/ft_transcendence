@@ -8,8 +8,6 @@ datasource db {
 }
 
 
-
-
 model Profile {
   userId      Int       @id
   displayName String?
@@ -20,15 +18,6 @@ model Profile {
   updatedAt   DateTime  @updatedAt
   
   achievements UserAchievement[]
-}
-
-model ProcessedOnlineMatch {
-  userId    Int
-  matchId   String
-  createdAt DateTime @default(now())
-
-  @@id([userId, matchId])
-  @@index([createdAt])
 }
 
 model Achievement {

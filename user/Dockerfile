@@ -1,15 +1,10 @@
 FROM node:22-alpine
+WORKDIR /app
 
-# Installer les dépendances système requises par Prisma sous Alpine
-RUN apk add --no-cache openssl libc6-compat
-
-WORKDIR /app/user
-
-COPY user/package.json user/package-lock.json ./
+COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY shared/types ../shared/types
-COPY user/ .
+COPY . .
 RUN npx prisma generate
 
 EXPOSE 3004

@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import Background from "../components/ui/Background";
-import Navbar from "../components/ui/Navbar";
-import Card from "../components/ui/Card";
-import { useAuth } from "../context/AuthContext";
+import Background from "../../components/ui/Background";
+import Navbar from "../../components/ui/Navbar";
+import Card from "../../components/ui/Card";
+import { useAuth } from "../../context/AuthContext";
+import { ChatEvents } from "../../../../shared/types/chat-types";
 
 type Relation = "self" | "friend" | "incoming_request" | "outgoing_request" | "blocked" | "none";
 type User = { id: number; username: string; avatar?: string | null; online?: boolean; relation?: Relation };
@@ -178,12 +179,12 @@ export default function Friends() {
           return;
         }
         const name = p.event ?? p.type ?? "";
-        if (SOCKET_REFRESH.includes(name) || name === "block_updated") {
+        if (SOCKET_REFRESH.includes(name) || name === ChatEvents.BLOCK_UPDATED) {
           delete presence.current[p.data?.blockerId];
           delete presence.current[p.data?.blockedId];
           void loadLists(false);
           void search().catch(() => {});
-          if (name === "block_updated") void loadBlocked();
+          if (name === ChatEvents.BLOCK_UPDATED) void loadBlocked();
           return;
         }
         if (p.event === "presence" && p.data && typeof p.data === "object") {

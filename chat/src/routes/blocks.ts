@@ -31,7 +31,7 @@ function notifyBlockUpdate(blockerId: number, blockedId: number, blocked: boolea
       }
       try {
         socket.send(event);
-      } catch (error) {
+      } catch {
         // socket closed while sending: nothing to do
       }
     }
@@ -57,7 +57,7 @@ router.post('/blocks/:blockedId', async (req: Request, res: Response) => {
  
     notifyBlockUpdate(blockerId, blockedId, true);
     return res.status(201).json({ blocked: true });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -76,7 +76,7 @@ router.delete('/blocks/:blockedId', async (req: Request, res: Response) => {
     await prisma.blockedUser.deleteMany({ where: { blockerId, blockedId } });
     notifyBlockUpdate(blockerId, blockedId, false);
     return res.json({ blocked: false });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -102,7 +102,7 @@ router.get('/blocks/status/:friendId', async (req: Request, res: Response) => {
     ]);
 
     return res.json({ iBlockedThem: !!iBlockedThem, theyBlockedMe: !!theyBlockedMe });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

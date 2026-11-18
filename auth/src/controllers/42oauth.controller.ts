@@ -4,15 +4,12 @@ import { prisma } from "../prisma";
 import { randomBytes } from "node:crypto";
 import { createSession } from "../sessionTokens";
 
-// 1. On crée une interface TypeScript pour typer proprement les données que 42 nous renverra plus tard
 interface FortyTwoUser {
   id: number;
   login: string;
   email: string;
 }
 
-// Tickets temporaires pour transmettre le résultat OAuth au frontend.
-// Le JWT complet ne doit pas apparaître dans l'URL.
 type OAuthLoginResult =
   | {
       requiresTwoFactor: true;
@@ -37,7 +34,6 @@ const oauthTickets = new Map<
 function createOAuthTicket(result: OAuthLoginResult): string {
   const now = Date.now();
 
-  // Nettoyer les tickets expirés.
   for (const [ticket, entry] of oauthTickets) {
     if (entry.expiresAt <= now) {
       oauthTickets.delete(ticket);
@@ -54,7 +50,6 @@ function createOAuthTicket(result: OAuthLoginResult): string {
   return ticket;
 }
 
-// Le frontend échangera ce ticket contre le résultat de connexion.
 export const exchangeOAuthTicket = (req: Request, res: Response): void => {
   res.setHeader("Cache-Control", "no-store");
 
@@ -67,7 +62,6 @@ export const exchangeOAuthTicket = (req: Request, res: Response): void => {
 
   const entry = oauthTickets.get(ticket);
 
-  // Chaque ticket ne peut être utilisé qu'une seule fois.
   oauthTickets.delete(ticket);
 
   if (!entry || entry.expiresAt <= Date.now()) {
@@ -88,10 +82,7 @@ export const exchangeOAuthTicket = (req: Request, res: Response): void => {
   });
 };
 
-/**
- * 2. Première fonction : Rediriger l'utilisateur vers 42
- * Cette fonction est appelée dès que l'utilisateur clique sur "Continue with 42"
- */
+
 export const redirectTo42 = (req: Request, res: Response): void => {
   const state = randomBytes(32).toString("hex");
 
@@ -111,19 +102,13 @@ export const redirectTo42 = (req: Request, res: Response): void => {
     `&response_type=code` +
     `&state=${state}`;
 
-  // On ordonne au navigateur du client de naviguer vers cette URL 42
   res.redirect(fortyTwoAuthUrl);
 };
 
-/**
- * 3. Deuxième fonction : Le Callback 42
- * Reçoit le code temporaire de 42 pour l'échanger contre un token d'accès
- */
 export const handle42Callback = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  // A) On extrait 'code' et 'error' des paramètres d'URL (req.query)
   const { code, error, state } = req.query;
 
   const expectedState = req.headers.cookie
@@ -144,14 +129,12 @@ export const handle42Callback = async (
     return;
   }
 
-  // Si l'utilisateur a cliqué sur "Refuser" sur la page 42 ou s'il n'y a pas de code
   if (error || typeof code !== "string" || !code) {
     res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_cancelled`);
     return;
   }
 
   try {
-    // B) ÉCHANGE DU CODE CONTRE LE TOKEN 42
     const tokenResponse = await fetch("https://api.intra.42.fr/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -166,18 +149,14 @@ export const handle42Callback = async (
 
     const tokenData = await tokenResponse.json();
 
-    // Si 42 nous renvoie une erreur au lieu du token
     if (!tokenResponse.ok) {
       throw new Error(
         tokenData.error_description || "Échec de la récupération du token 42",
       );
     }
 
-    // On extrait le fameux token d'accès
     const fortyTwoAccessToken: string = tokenData.access_token;
 
-    // C) RÉCUPÉRATION DES INFORMATIONS DU PROFIL 42
-    // On fait une requête GET à l'API 42 en transmettant le token dans le Header Authorization
     const userResponse = await fetch("https://api.intra.42.fr/v2/me", {
       method: "GET",
       headers: {
@@ -185,7 +164,6 @@ export const handle42Callback = async (
       },
     });
 
-    // On transforme la réponse JSON et on applique notre type FortyTwoUser
     const ftData: FortyTwoUser = await userResponse.json();
 
     if (!userResponse.ok) {
@@ -194,9 +172,6 @@ export const handle42Callback = async (
       );
     }
 
-    // D) GESTION DANS LA BASE DE DONNÉES AVEC PRISMA
-    // On importe prisma (assurez-vous d'avoir importé Prisma en haut du fichier)
-    // 1. On cherche si un utilisateur existe déjà soit par son ID 42, soit par son Email
     let user = await prisma.user.findUnique({
       where: { fortyTwoId: ftData.id },
     });
@@ -217,7 +192,6 @@ export const handle42Callback = async (
         where: { username: ftData.login },
       });
 
-      // Garder le login 42 si disponible, sinon ajouter un suffixe unique.
       const username = existingUsername
         ? `${ftData.login}_${randomBytes(8).toString("hex")}`
         : ftData.login;
@@ -231,7 +205,6 @@ export const handle42Callback = async (
       });
     }
     
-    // E) GÉNÉRATION DU JWT & REDIRECTION
     const jwtSecret = process.env.JWT_SECRET;
 
     if (!jwtSecret) {
@@ -247,7 +220,6 @@ export const handle42Callback = async (
         throw new Error("TWO_FACTOR_CHALLENGE_SECRET is not configured");
       }
 
-      // 42 a vérifié l'identité, mais la 2FA Pacova reste obligatoire.
       const challengeToken = jwt.sign(
         { userId: user.id, purpose: "2fa" },
         challengeSecret,
@@ -259,15 +231,9 @@ export const handle42Callback = async (
         challengeToken,
       };
     } else {
-      // Même format et durée que la connexion classique.
-      // const token = jwt.sign({ userId: user.id }, jwtSecret, {
-      //   expiresIn: "1h",
-      //   algorithm: "HS256",
-      // });
 
       result = {
         requiresTwoFactor: false,
-        // token,
         user: {
           id: user.id,
           username: user.username,
@@ -277,7 +243,6 @@ export const handle42Callback = async (
       };
     }
 
-    // Transmettre uniquement un ticket temporaire dans l'URL.
     const ticket = createOAuthTicket(result);
     const frontendUrl = process.env.FRONTEND_URL;
 
