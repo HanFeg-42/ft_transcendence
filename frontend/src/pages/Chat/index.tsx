@@ -101,7 +101,7 @@ export default function Chat() {
     <Background>
       <Navbar activeTab="CHAT" onSelectTab={(tab) => routeMap[tab] && navigate(routeMap[tab])} />
       {children}
-    </Background>
+    </Background> 
   );
 
   // Full-page centered message (loading, reconnecting, no friends)

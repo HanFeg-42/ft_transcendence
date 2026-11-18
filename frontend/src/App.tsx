@@ -26,6 +26,9 @@ function App() {
       <Route path="/" element={<Welcome />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="*" element={<NotFound />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
@@ -41,9 +44,7 @@ function App() {
         <Route path="/how-to-play" element={<HowToPlay />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
       </Route>
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="*" element={<NotFound />} />
+
     </Routes>
   );
 }
