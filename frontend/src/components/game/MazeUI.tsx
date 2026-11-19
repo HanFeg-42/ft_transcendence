@@ -16,6 +16,8 @@ interface MazeUIProps {
 }
 
 const GHOST_COLORS = ["#ff0000", "#ffb8ff", "#00ffff", "#ffb851"];
+// Pac-Man colors: index 0 = yellow, index 1 = pink (same order on both clients)
+const PLAYER_COLORS = ["#ffff00", "rgb(149, 245, 76)"];
 
 // ⭐ Fonction 1 : position pixel (définie UNE SEULE FOIS)
 const getPixelPosition = (
@@ -126,7 +128,7 @@ const height = maze.length;
       )}
 
       {/* 3. JOUEURS — SIMPLIFIÉ : juste l'appel aux fonctions */}
-      {players.map((player) => {
+      {/* {players.map((player) => {
         const pos = getPixelPosition(
           player.tile,
           player.dir,
@@ -145,6 +147,33 @@ const height = maze.length;
               height: `${CELL_SIZE}px`,
               transform: getRotation(player.dir),
             }}
+          />
+        );
+      })} */}
+
+        {players.map((player, index) => {
+        const pos = getPixelPosition(
+          player.tile,
+          player.dir,
+          player.step,
+          CELL_SIZE,
+          TICKS_PER_TILE,
+        );
+        return (
+          <div
+            key={`player-${player.id}`}
+            className={styles.player}
+            style={
+              {
+                left: `${pos.x}px`,
+                top: `${pos.y}px`,
+                width: `${CELL_SIZE}px`,
+                height: `${CELL_SIZE}px`,
+                transform: getRotation(player.dir),
+                // CSS variable read by .player in the CSS file
+                "--pac-color": PLAYER_COLORS[index % PLAYER_COLORS.length],
+              } as React.CSSProperties
+            }
           />
         );
       })}
@@ -178,7 +207,7 @@ const height = maze.length;
         })
       )}
 
-      {/* 4. CHASERS */}
+            {/* 4. CHASERS */}
       {chasers.map((chaser) => {
         const pos = getPixelPosition(
           chaser.tile,
@@ -187,7 +216,26 @@ const height = maze.length;
           CELL_SIZE,
           DIFFICULTIES[state.difficulty],
         );
-        const color = GHOST_COLORS[chaser.id % GHOST_COLORS.length];
+
+        // eatable = power pellet active AND this ghost not eaten yet
+        const isFrightened = state.vulnerableTimer > 0 && !chaser.isEaten;
+        // last ~3 s (90 ticks at 30 ticks/s): flash blue <-> white
+        const flashWhite =
+          isFrightened &&
+          state.vulnerableTimer < 90 &&
+          Math.floor(state.tick / 8) % 2 === 0;
+
+        const normalColor = GHOST_COLORS[chaser.id % GHOST_COLORS.length];
+        const color = isFrightened
+          ? flashWhite
+            ? "#ffffff"
+            : "#2121ff"
+          : normalColor;
+
+        // frightened face: pale eyes + red pupils (visible on blue AND white)
+        const eyeFill = isFrightened ? "#ffb8ae" : "#ffffff";
+        const pupilFill = isFrightened ? "#ff0000" : "#0000ff";
+
         return (
           <svg
             key={`chaser-${chaser.id}`}
@@ -199,7 +247,7 @@ const height = maze.length;
               width: `${CELL_SIZE}px`,
               height: `${CELL_SIZE}px`,
               imageRendering: "pixelated",
-              color: color,
+              color: color, // also drives the glow (currentColor in the CSS)
             }}
             shapeRendering="crispEdges"
           >
@@ -208,13 +256,13 @@ const height = maze.length;
             <rect x="4" y="0" width="8" height="14" fill={color} />
             <rect x="0" y="4" width="16" height="10" fill={color} />
 
-            {/* Yeux blancs */}
-            <rect x="4" y="4" width="3" height="4" fill="#ffffff" />
-            <rect x="9" y="4" width="3" height="4" fill="#ffffff" />
+            {/* Yeux */}
+            <rect x="4" y="4" width="3" height="4" fill={eyeFill} />
+            <rect x="9" y="4" width="3" height="4" fill={eyeFill} />
 
             {/* Pupilles */}
-            <rect x="5" y="5" width="2" height="2" fill="#0000ff" />
-            <rect x="10" y="5" width="2" height="2" fill="#0000ff" />
+            <rect x="5" y="5" width="2" height="2" fill={pupilFill} />
+            <rect x="10" y="5" width="2" height="2" fill={pupilFill} />
 
             {/* Jupe */}
             <rect x="0" y="14" width="4" height="2" fill={color} />

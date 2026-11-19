@@ -7,7 +7,7 @@ import { getPublicUsers } from './friends';
 
 const router = Router();
 
-function parsePositiveId(raw: string): number | null {
+function parsePositiveId(raw: unknown): number | null {
   const id = Number(raw);
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
