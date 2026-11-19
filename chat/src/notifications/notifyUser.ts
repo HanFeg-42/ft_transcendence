@@ -7,6 +7,9 @@ import {
   NotificationPayloadMap,
   NotificationSocketData,
 } from '../../../shared/types/notification-types';
+import { Prisma } from '../generated/prisma/client'; // check the path used in your prisma.ts
+
+
 
 export async function notifyUser<T extends NotificationType>(
   userId: number,
@@ -18,7 +21,7 @@ export async function notifyUser<T extends NotificationType>(
     data: {
       userId,
       type,
-      payload,
+      payload: payload as unknown as Prisma.InputJsonValue,
     },
   });
 

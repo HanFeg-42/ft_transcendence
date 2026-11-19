@@ -16,6 +16,10 @@ import { useTranslation } from 'react-i18next';
 import GameSetup from "../../components/game/GameSetup";
 
 
+// Seconds -> "MM:SS"
+const fmt = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
 
 const GameSession: React.FC<{
   gameMode: 1 | 2;
@@ -44,6 +48,18 @@ const GameSession: React.FC<{
   useKeyboard((dir: Direction) => sendInput("player-2", dir), "wasd");
 
   const hasPlayer2 = state.players.length > 1;
+
+
+    // 2 players on the same PC: nobody is "you", so find who wins
+  // rules (same as bot/online): 1) still has lives  2) higher score  3) draw
+  const [p1, p2] = state.players;
+  let winnerIndex: number | null = null; // 0 = P1, 1 = P2, null = draw
+  if (p1 && p2) {
+    if (p1.lives <= 0 && p2.lives > 0) winnerIndex = 1;
+    else if (p2.lives <= 0 && p1.lives > 0) winnerIndex = 0;
+    else if (p1.score > p2.score) winnerIndex = 0;
+    else if (p2.score > p1.score) winnerIndex = 1;
+  }
 
   return (
     <>
@@ -78,17 +94,28 @@ const GameSession: React.FC<{
 
       {state.status !== "playing" && (
         <ResultModal
-          title={state.status === "won" ? t("online_game_you_won") : t("online_game_you_lost")}
-          win={state.status === "won"}
+          title={
+            hasPlayer2
+              ? winnerIndex === null
+                ? t("online_game_draw")
+                : `P${winnerIndex + 1} ${t("local_game_win")}` // "P2 WIN 🏆"
+              : state.status === "won"
+                ? t("online_game_you_won")
+                : t("online_game_you_lost")
+          }
+          win={hasPlayer2 ? winnerIndex !== null : state.status === "won"}
           players={state.players.map((p, i) => ({
             name: `P${i + 1}`,
             score: p.score,
             lives: p.lives,
-            win: state.status === "won",
+            win: hasPlayer2 ? winnerIndex === i : state.status === "won",
           }))}
           onPlayAgain={onRestart}
-          onQuit={() => navigate("/choose")}
-        />
+          onQuit={() => navigate("/choose")}>
+          <p className="font-vt323 text-xl text-white/70">
+            {t("bot_time", { time: fmt(timeLimit - state.timeRemaining) })}
+          </p>
+          </ResultModal>
       )}
     </>
   );
