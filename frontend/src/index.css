@@ -35,22 +35,22 @@
 /* ============================================================
    TEXT COLOR VARIABLE (dark mode default)
    ============================================================ */
-:root {
+/* :root {
   --pacova-text-primary: #ffffff;
   --pacova-text-secondary: #d1d5db;
-}
+} */
 
 /* ============================================================
    LIGHT THEME: 
    ============================================================ */
-.pacova-light {
+/* .pacova-light {
   --pacova-text-primary: #421226;
   --pacova-text-secondary: #5e4c6e;
   --color-pacova-bg: #f7f3fb;
   --color-pacova-surface: rgba(124, 15, 75, 0.671);
   --color-pacova-gray: #b9a9c4;
   color: #30213f;
-}
+} */
 
 .pacova-light .pacova-card-surface {
   background-color: rgba(255, 255, 255, 0.68);
