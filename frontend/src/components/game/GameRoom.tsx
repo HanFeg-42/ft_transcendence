@@ -20,6 +20,12 @@ import Dots from "./Dots";
 import { getProfileById } from "../../services/userService";
 import { useTranslation } from "react-i18next";
 
+
+// Seconds -> "MM:SS"
+const fmt = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+
 const KEY_MAP: Record<string, Direction> = {
   w: "UP",
   s: "DOWN",
@@ -294,8 +300,11 @@ const GameRoom = ({
               win: p.id === state.winnerId,
             }))}
             onPlayAgain={onPlayAgain}
-            onQuit={onBackToMenu}
-          />
+            onQuit={onBackToMenu}>
+            <p className="font-vt323 text-xl text-white/70">
+              {t("bot_time", { time: fmt(timeLimit - state.timeRemaining) })}
+            </p>
+            </ResultModal>
         )}
 
         {isOpponentAway && (

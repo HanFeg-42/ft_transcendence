@@ -26,7 +26,7 @@ router.get('/', async (_req: Request, res: Response) => {
 
 // GET /users/:id — Retourne les infos publiques d'un utilisateur
 router.get('/:id', async (req: Request, res: Response) => {
-  const userId = parseInt(req.params.id, 10);
+  const userId = parseInt(String(req.params.id), 10);
   if (isNaN(userId)) {
     return res.status(400).json({ error: 'Invalid user id' });
   }
