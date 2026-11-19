@@ -35,6 +35,8 @@ erDiagram
     }
 ```
 
+> `TwoFactorRecoveryCode` exists in the schema, but no code reads or writes it yet (recovery codes are not implemented).
+
 ## user_db — profiles and achievements
 
 ```mermaid
@@ -120,7 +122,7 @@ erDiagram
         string mode "1v1"
         string status
         string mazeSeed
-        int timeLimitSeconds "360"
+        int timeLimitSeconds "120, 240 or 360"
         int winnerUserId
         datetime startedAt
         datetime endedAt
@@ -130,9 +132,10 @@ erDiagram
         bigint matchId FK
         int userId
         int slot "unique with matchId"
-        string result "WIN, LOSS, DRAW"
+        string result "WIN, LOSS, DRAW, ABANDONED"
         int score
         int pelletsEaten
+        int fruitsEaten
         int ghostsEaten
         int livesRemaining
     }
@@ -142,4 +145,4 @@ erDiagram
 
 ## Migrations
 
-Each service has its own `prisma/migrations`. They are applied automatically at container start (`prisma migrate deploy`) or manually with `make migrate`.
+Each service has its own `prisma/migrations`. They are applied automatically at container start (`prisma migrate deploy`) or manually with `make migrate`. The user service also seeds the 4 achievements at start.

@@ -14,7 +14,8 @@ import {
   FORFEIT_DELAY_MS,
 } from "../../../../shared/data/game-data";
 import MazeUI from "./MazeUI";
-import Result from "./ResultCard";
+// import Result from "./ResultCard";
+import { PauseMenu, ResultModal } from "./GameOverlays";
 import Dots from "./Dots";
 import { getProfileById } from "../../services/userService";
 import { useTranslation } from "react-i18next";
@@ -192,9 +193,9 @@ const GameRoom = ({
       </span>
     );
 
-  const titleColor = won
-    ? "text-pacova-green drop-shadow-glow-green"
-    : "text-pacova-pink drop-shadow-glow-pink";
+  // const titleColor = won
+  //   ? "text-pacova-green drop-shadow-glow-green"
+  //   : "text-pacova-pink drop-shadow-glow-pink";
 
   return (
     <>
@@ -232,7 +233,7 @@ const GameRoom = ({
         <div className={styles.mazeWrapper}>
           <MazeUI state={state} mazeId={state.mazeId} />
         </div>
-        {state.status === "finished" && (
+        {/* {state.status === "finished" && (
           <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
             <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
               <h1 className={`font-press-start text-3xl ${titleColor}`}>
@@ -275,7 +276,28 @@ const GameRoom = ({
               </div>
             </div>
           </div>
+        )} */}
+          {state.status === "finished" && (
+          <ResultModal
+            title={
+              state.winnerId === undefined
+                ? t("online_game_draw")
+                : won
+                  ? t("online_game_you_won")
+                  : t("online_game_you_lost")
+            }
+            win={won}
+            players={state.players.map((p) => ({
+              name: getName(p.id),
+              score: p.score,
+              lives: p.lives,
+              win: p.id === state.winnerId,
+            }))}
+            onPlayAgain={onPlayAgain}
+            onQuit={onBackToMenu}
+          />
         )}
+
         {isOpponentAway && (
           <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
             <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
@@ -291,7 +313,7 @@ const GameRoom = ({
             </div>
           </div>
         )}
-        {showMenu && state.status === "playing" && (
+        {/* {showMenu && state.status === "playing" && (
           <div className={styles.gameOverLayout}>
             <div className="flex flex-row gap-6">
               <PixelButton
@@ -310,7 +332,11 @@ const GameRoom = ({
               </PixelButton>
             </div>
           </div>
+        )} */}
+        {showMenu && state.status === "playing" && (
+          <PauseMenu onResume={() => setShowMenu(false)} onQuit={onBackToMenu} />
         )}
+
         {!isConnected && state.status === "playing" && (
           <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
             <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">

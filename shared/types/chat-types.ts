@@ -10,6 +10,7 @@ export const ChatEvents = {
   GAME_INVITE_REPLY: "gameInviteReply",
   NOTIFICATION: "notification",
   BLOCK_UPDATED: "block_updated",
+  FRIEND_REMOVED: "friend_removed",
   ERROR: "error",
 } as const;
 
@@ -48,4 +49,5 @@ export type ChatServerMessage =
   | { event: typeof ChatEvents.READ; data: { reader_id: number; read_at: string } }
   | { event: typeof ChatEvents.NOTIFICATION; data: NotificationSocketData }
   | { event: typeof ChatEvents.BLOCK_UPDATED; data: { blockerId: number; blockedId: number; blocked: boolean } } // sent to both users on block / unblock
+  | { event: typeof ChatEvents.FRIEND_REMOVED; data: { userId: number } }
   | { event: typeof ChatEvents.ERROR; data: { message: string } };

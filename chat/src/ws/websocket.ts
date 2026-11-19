@@ -13,22 +13,25 @@ import { notifyUser } from "../notifications/notifyUser";
 import { NotificationTypes } from "../../../shared/types/notification-types";
 
 
-/* ------------------------------------------------------------------ */
-/* Config & in-memory state                                            */
-/* ------------------------------------------------------------------ */
+
+/* --------------Config & in-memory state-------------- */                 
 const AUTH_URL = process.env.AUTH_SERVICE_URL || "http://auth:3001";
 const INVITE_TTL_MS = 60_000; // a game invite expires after 60s
 
 // Recent send times per socket (used for rate limiting)
-const hits = new WeakMap<WebSocket, number[]>();
+const hits = new WeakMap<WebSocket, number[]>();        // messages / invites
+const allHits = new WeakMap<WebSocket, number[]>();     // every packet
+const lookupHits = new WeakMap<WebSocket, number[]>();  // calls to the auth service
+
+
+// Last time each socket sent a "typing" packet
+const lastTyping = new WeakMap<WebSocket, number>();
 
 // User ids already confirmed to exist (avoids calling the auth service every time)
 const known = new Set<number>();
 
 
-/* ------------------------------------------------------------------ */
-/* Helpers                                                             */
-/* ------------------------------------------------------------------ */
+/* --------------Helpers-------------- */
 // DB message -> the shape the frontend expects (also used by routes/messages.ts)
 export const toIncoming = (m: {
   id: number; senderId: number; receiverId: number; content: string;
@@ -52,8 +55,21 @@ function sendError(ws: WebSocket, message: string) {
 }
 
 
+// True if this socket did more than `max` things in the last `windowMs`
+function overLimit(store: WeakMap<WebSocket, number[]>, ws: WebSocket, max: number, windowMs: number) {
+  const now = Date.now();
+  const recent = (store.get(ws) ?? []).filter((t) => now - t < windowMs);
+  recent.push(now);
+  store.set(ws, recent);
+  return recent.length > max;
+}
+
 // Checks every incoming packet. Returns an error message, or null if it is valid.
 async function validate(ws: WebSocket, p: any, myId: string): Promise<string | null> {
+  // General limit: max 100 packets per 10s per socket (covers READ, TYPING, everything)
+  if (overLimit(allHits, ws, 100, 10_000)) return "Too many requests, slow down";
+
+
   if (!p || typeof p.data !== "object" || !p.data) return "Malformed packet";
 
   const d = p.data;
@@ -61,11 +77,7 @@ async function validate(ws: WebSocket, p: any, myId: string): Promise<string | n
 
   // Rate limit: max 20 messages/invites per 10s per socket
   if (e === ChatEvents.MESSAGE || e === ChatEvents.GAME_INVITE) {
-    const now = Date.now();
-    const recent = (hits.get(ws) ?? []).filter((t) => now - t < 10_000);
-    recent.push(now);
-    hits.set(ws, recent);
-    if (recent.length > 20) return "Too many messages, slow down";
+    if (overLimit(hits, ws, 20, 10_000)) return "Too many messages, slow down";
   }
 
   // Message content: trimmed, not empty, max 1000 chars (saved trimmed)
@@ -81,6 +93,9 @@ async function validate(ws: WebSocket, p: any, myId: string): Promise<string | n
 
     if (!Number.isSafeInteger(id) || id <= 0 || id === Number(myId)) return "Invalid user id";
     if (!known.has(id)) {
+      // Max 20 auth-service lookups per 10s per socket
+      if (overLimit(lookupHits, ws, 20, 10_000)) return "Too many requests, slow down";
+
       const r = await fetch(`${AUTH_URL}/users/${id}`).catch(() => null);
       if (!r?.ok)
         return r?.status === 404 ? "User not found" : "Could not verify user, try again";
@@ -100,6 +115,13 @@ async function isBlocked(a: number, b: number): Promise<boolean> {
   return !!row;
 }
 
+// True if the two users are friends
+async function areFriends(a: number, b: number): Promise<boolean> {
+  const row = await prisma.friendship.findUnique({
+    where: { userLowId_userHighId: { userLowId: Math.min(a, b), userHighId: Math.max(a, b) } },
+  });
+  return !!row;
+}
 
 // Partners who haven't blocked us (and we haven't blocked): the only ones who may see our status.
 async function visiblePartners(userId: string, partners: number[]) {
@@ -131,9 +153,7 @@ async function settleInvite(id: number, status: "accepted" | "declined" | "expir
 }
 
 
-/* ------------------------------------------------------------------ */
-/* Connection lifecycle                                                */
-/* ------------------------------------------------------------------ */
+/* --------------Connection lifecycle-------------- */      
 
 // New socket: register it as online, attach listeners, and share presence.
 async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
@@ -187,6 +207,7 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const { receiver_id, content } = packet.data;
 
       if (await isBlocked(receiver_id, me)) return sendError(ws, "You can't message this user");
+      if (!(await areFriends(receiver_id, me))) return sendError(ws, "You can only message friends");
 
       const saved = await prisma.message.create({ data: { senderId: me, receiverId: receiver_id, content } });
 
@@ -212,6 +233,7 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
       const friendId = packet.data.sender_id;
 
       if (await isBlocked(friendId, me)) break;
+      if (!(await areFriends(friendId, me))) break;
 
       const now = new Date();
 
@@ -230,7 +252,13 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     case ChatEvents.TYPING: {
       const { receiver_id } = packet.data;
 
+      // Ignore typing packets sent less than 1s after the last one
+      const last = lastTyping.get(ws) ?? 0;
+      if (Date.now() - last < 1000) break;
+      lastTyping.set(ws, Date.now());
+
       if (await isBlocked(receiver_id, me)) break;
+      if (!(await areFriends(receiver_id, me))) break;
 
       sendTo(receiver_id, { event: ChatEvents.TYPING, data: { sender_id: me } });
       break;
@@ -241,7 +269,8 @@ async function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     case ChatEvents.GAME_INVITE: {
       const { receiver_id } = packet.data;
 
-      if ((await isBlocked(receiver_id, me)) || !onlineUsers.has(String(receiver_id)))
+      if ((await isBlocked(receiver_id, me)) || !(await areFriends(receiver_id, me))
+         || !onlineUsers.has(String(receiver_id)))
         return sendError(ws, "User is not available to play");
 
       const saved = await prisma.message.create({
@@ -290,9 +319,7 @@ async function handleClose(ws: WebSocket, userId: string) {
 }
 
 
-/* ------------------------------------------------------------------ */
-/* Setup                                                               */
-/* ------------------------------------------------------------------ */
+/* --------------Setup-------------- */
 
 // Attaches the WebSocket server to the HTTP server (same port)
 export function setupWebSocket(server: http.Server) {
