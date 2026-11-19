@@ -140,7 +140,7 @@ export default function EditProfileModal({
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={30}
+                maxLength={20}
                 className="w-full bg-black/60 border border-pacova-green/40 rounded px-4 py-2 font-vt323 text-lg text-white focus:outline-none focus:border-pacova-green"
                 placeholder={t('userProfile_namePlaceholder')}
               />
@@ -190,14 +190,14 @@ export default function EditProfileModal({
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                maxLength={200}
+                maxLength={50}
                 rows={3}
                 className="w-full bg-black/60 border border-pacova-green/40 rounded px-4 py-2 font-vt323 text-lg text-white focus:outline-none focus:border-pacova-green resize-none"
                 placeholder={t('userProfile_bioPlaceholder')}
               />
 
               <span className="font-vt323 text-xs text-gray-400 block text-right mt-1">
-                {bio.length}/200
+                {bio.length}/50
               </span>
             </div>
 
