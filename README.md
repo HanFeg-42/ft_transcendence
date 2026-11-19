@@ -37,7 +37,7 @@ cp .env.example .env       # fill in the values (below)
 make
 ```
 
-Open **https://localhost:443** (self-signed certificate: accept the browser warning once). Port 8080 only redirects to HTTPS.
+Open **https://localhost:8443** (self-signed certificate: accept the browser warning once).
 
 **`.env` variables:** 
 
