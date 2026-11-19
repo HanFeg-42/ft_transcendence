@@ -5,16 +5,13 @@ import { useLocalGame } from "../../hooks/useLocalGame";
 import { useKeyboard } from "../../hooks/useKeyboard";
 import HudTop from "../../components/game/HudTop";
 import GameMenu from "../../components/game/GameMenu";
-// import PixelButton from "../../components/ui/PixelButton";
 import { MenuButton, PauseMenu, ResultModal } from "../../components/game/GameOverlays";
 import type { Direction } from "../../../../shared/types/game-types";
 import HudPlayer from "../../components/game/HudPlayer";
 import styles from "./GamePage.module.css";
 import { RotDev } from "../../components/game/RotateDevice";
 import MobileControls from "../../components/game/MobileControls";
-// import GameSettings from "../../components/game/GameSettings";
 import {  DEFAULT_TIME_LIMIT,  DEFAULT_MAZE_ID,  DEFAULT_DIFFICULTY,} from "../../../../shared/data/game-data";
-// import Background from "../../components/ui/Background";
 import { useTranslation } from 'react-i18next';
 import GameSetup from "../../components/game/GameSetup";
 
@@ -28,7 +25,6 @@ const GameSession: React.FC<{
   gameMode: 1 | 2;
   timeLimit: number;
   mazeId: string;
-  // difficulty: string;}> = ({ gameMode, timeLimit, mazeId, difficulty }) => {
   difficulty: string;
   onRestart: () => void;}> = ({ gameMode, timeLimit, mazeId, difficulty, onRestart }) => {
   const { state, sendInput, paused, togglePause } = useLocalGame(
@@ -68,13 +64,6 @@ const GameSession: React.FC<{
   return (
     <>
       <RotDev />
-      {/* {state.status === "playing" && !paused && (
-        <div className="fixed top-4 right-4 z-50">
-          <PixelButton variant="outline-green" size="sm" onClick={togglePause}>
-            {t('local_game_pause')}
-          </PixelButton>
-        </div>
-      )} */}
       {state.status === "playing" && !paused && <MenuButton onClick={togglePause} />}
       {state.status === "playing" && (
         <MobileControls onInput={(dir) => sendInput("player-1", dir)} />
@@ -99,48 +88,6 @@ const GameSession: React.FC<{
           </div>
         )}
       </div>
-
-      {/* {paused && state.status === "playing" && (
-        <div className={styles.gameOverLayout}>
-          <h1 className={styles.gameoverstate}>{t('local_game_pause')}</h1>
-          <div className="flex flex-row gap-6">
-            <PixelButton variant="outline-green" size="lg" onClick={togglePause}>
-              {t('local_game_resume')}
-            </PixelButton>
-            <PixelButton variant="danger-red" size="lg" onClick={() => navigate("/home")}>
-              {t('local_game_quit')}
-            </PixelButton>
-          </div>
-        </div>
-      )}
-
-      {state.status !== "playing" && (
-        <div className={styles.gameOverLayout}>
-          <h1 className={styles.gameoverstate}>
-            {state.status === "won"
-              ? `${t('local_game_win')} 🏆`
-              : t('local_game_over')}
-          </h1>
-          <h1 className={styles.gameOverScore}>
-            {t('local_game_score_label')} : {state.players[0]?.score ?? 0}
-          </h1>
-          <div className="flex flex-row gap-6">
-            <PixelButton
-              variant="outline-green"
-              size="lg"
-              onClick={() => window.location.reload()}
-            >
-              {t('local_game_restart')}
-            </PixelButton>
-            <a href="/home" className="inline-flex">
-              <PixelButton variant="danger-red" size="lg">
-                {t('local_game_quit')}
-              </PixelButton>
-            </a>
-          </div>
-        </div>
-      )} */}
-
       {paused && state.status === "playing" && (
         <PauseMenu onResume={togglePause} onQuit={() => navigate("/choose")} />
       )}
@@ -175,7 +122,6 @@ const GameSession: React.FC<{
 };
 
 const GamePage: React.FC = () => {
-  // const { t } = useTranslation();
   const [gameMode, setGameMode] = useState<null | 1 | 2>(null);
   const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
@@ -204,25 +150,6 @@ const GamePage: React.FC = () => {
     );
   }
 
-  // if (!started)
-  //   return (
-  //     <Background>
-  //       <div className="flex-1 flex flex-col items-center justify-center gap-4">
-  //         <RotDev />
-  //         <GameSettings
-  //           difficulty={difficulty}
-  //           timeLimit={timeLimit}
-  //           mazeId={mazeId}
-  //           onDifficultyChange={setDifficulty}
-  //           onTimeLimitChange={setTimeLimit}
-  //           onMazeIdChange={setMazeId}
-  //         />
-  //         <PixelButton variant="filled-green" onClick={() => setStarted(true)}>
-  //           {t('local_game_start')}
-  //         </PixelButton>
-  //       </div>
-  //     </Background>
-  //   );
 
 if (!started)
   return (
@@ -238,14 +165,6 @@ if (!started)
   );
 
   return (
-    // <GameSession
-    //   key={gameMode}
-    //   gameMode={gameMode}
-    //   timeLimit={timeLimit}
-    //   mazeId={mazeId}
-    //   difficulty={difficulty}
-    // />
-
     <GameSession
       key={`${gameMode}-${run}`}
       gameMode={gameMode}

@@ -24,7 +24,7 @@ export async function updateUserAchievements(
     "pac-maniac": 1,
   };
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => { //prisma client
     const results = [];
 
     for (const [achievementId, target] of Object.entries(

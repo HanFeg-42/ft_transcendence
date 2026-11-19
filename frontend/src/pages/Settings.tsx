@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,6 @@ import PixelButton from "../components/ui/PixelButton";
 
 import accountIcon_green from "../assets/icons/user.png";
 import securityIcon from "../assets/icons/sc.png";
-import appearanceIcon from "../assets/icons/app.png";
 import languageIcon from "../assets/icons/lang.png";
 
 const routeMap: Record<string, string> = {
@@ -29,7 +29,6 @@ const routeMap: Record<string, string> = {
 const settingsSections = [
   { name: "ACCOUNT", image: accountIcon_green, color: "green" },
   { name: "SECURITY", image: securityIcon, color: "yellow" },
-  { name: "APPEARANCE", image: appearanceIcon, color: "purple" },
   { name: "LANGUAGE", image: languageIcon, color: "blue" },
 ];
 
@@ -46,16 +45,6 @@ export default function Settings() {
     i18n.resolvedLanguage?.split("-")[0] || "en"
   );
   const [showTwoFactor, setShowTwoFactor] = useState(false);
-
-  const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
-    try {
-      return localStorage.getItem("pacova-theme") === "light"
-        ? "light"
-        : "dark";
-    } catch {
-      return "dark";
-    }
-  });
 
   useEffect(() => {
     if (!token) return;
@@ -82,41 +71,6 @@ export default function Settings() {
     void i18n.changeLanguage(selectedLanguage);
   };
 
-const handleThemeChange = (selectedTheme: "dark" | "light") => {
-  if (selectedTheme === themeMode) return;
-
-  try {
-    localStorage.setItem("pacova-theme", selectedTheme);
-  } catch {
-    //
-  }
-
-  window.dispatchEvent(new Event("pacova-theme-change"));
-  setThemeMode(selectedTheme);
-};
-
-  // Keep the selected mode synchronized with the existing Background toggle.
-  useEffect(() => {
-    const app = document.querySelector(".pacova-app");
-
-    if (!app) return;
-
-    const observer = new MutationObserver(() => {
-      const currentTheme = app.getAttribute("data-theme");
-
-      if (currentTheme === "dark" || currentTheme === "light") {
-        setThemeMode(currentTheme);
-      }
-    });
-
-    observer.observe(app, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
   const activeSectionData = settingsSections.find(
     (section) => section.name === activeSection
   );
@@ -124,15 +78,15 @@ const handleThemeChange = (selectedTheme: "dark" | "light") => {
   const sectionBorders: Record<string, string> = {
     ACCOUNT: "border-pacova-green/90",
     SECURITY: "border-yellow-400/90",
-    APPEARANCE: "border-[#B069DB]/90",
     LANGUAGE: "border-[#59B5F7]/90",
   };
-const sectiontext: Record<string, string> = {
+
+  const sectiontext: Record<string, string> = {
     ACCOUNT: "text-pacova-green",
     SECURITY: "text-yellow-400",
-    APPEARANCE: "text-[#B069DB]",
     LANGUAGE: "text-[#59B5F7]",
   };
+
   // Desktop header only. The mobile header is rendered once below.
   const renderSectionHeader = () => (
     <div
@@ -148,7 +102,11 @@ const sectiontext: Record<string, string> = {
         />
       </div>
 
-      <h2 className={`min-w-0 flex-1 font-press-start text-sm sm:text-base ${sectiontext[activeSection]}`}>
+      <h2
+        className={`min-w-0 flex-1 font-press-start text-sm sm:text-base ${
+          sectiontext[activeSection]
+        }`}
+      >
         {t(activeSection.toLowerCase())}
       </h2>
     </div>
@@ -250,7 +208,11 @@ const sectiontext: Record<string, string> = {
                   />
                 </div>
 
-                <span className={`min-w-0 flex-1 font-press-start text-sm ${sectiontext[activeSection]}`}>
+                <span
+                  className={`min-w-0 flex-1 font-press-start text-sm ${
+                    sectiontext[activeSection]
+                  }`}
+                >
                   {t(activeSection.toLowerCase())}
                 </span>
 
@@ -295,15 +257,16 @@ const sectiontext: Record<string, string> = {
                       </button>
                     );
                   })}
-             <div className="mt-5 border-t border-pacova-pink/30 pt-5">
-              <PixelButton
-                onClick={handleLogout}
-                variant="outline-green"
-                className="w-full"
-              >
-                {t("logout")}
-              </PixelButton>
-            </div>
+
+                  <div className="mt-5 border-t border-pacova-pink/30 pt-5">
+                    <PixelButton
+                      onClick={handleLogout}
+                      variant="outline-green"
+                      className="w-full"
+                    >
+                      {t("logout")}
+                    </PixelButton>
+                  </div>
                 </nav>
               )}
             </div>
@@ -416,90 +379,6 @@ const sectiontext: Record<string, string> = {
               </section>
             )}
 
-            {/* APPEARANCE */}
-            {activeSection === "APPEARANCE" && (
-              <section id="appearance" className="min-w-0">
-                {renderSectionHeader()}
-
-                <div className="relative min-w-0 p-2 sm:p-4">
-                  <p className="pb-6 font-vt323 text-xl text-gray-600">
-                    {t("customizeInterface")}
-                  </p>
-
-                  {/* DARK / LIGHT MODE */}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                    {/* DARK MODE */}
-                    <button
-                      type="button"
-                      aria-pressed={themeMode === "dark"}
-                      onClick={() => handleThemeChange("dark")}
-                      className={`rounded-lg border-2 p-4 text-left transition-all ${
-                        themeMode === "dark"
-                          ? "border-[#B069DB] bg-[#B069DB]/10 shadow-[0_0_12px_rgba(176,105,219,0.15)]"
-                          : "border-white/10 bg-black/20 hover:border-[#B069DB]/60"
-                      }`}
-                    >
-                      <div className="mb-4 flex items-center justify-between gap-2">
-                        <span className="font-pixelify text-sm pacova-text-primary">
-                          {t("darkMode")}
-                        </span>
-
-                        {themeMode === "dark" && (
-                          <span className="font-vt323 text-sm text-[#B069DB]">
-                            {t("active")}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mb-3 flex h-20 overflow-hidden rounded-md border border-white/10 bg-[#0D0914]">
-                        <div className="w-2/3 p-3">
-                          <div className="mb-2 h-2 w-1/2 rounded-sm bg-[#B069DB]" />
-                          <div className="mb-2 h-2 w-4/5 rounded-sm bg-white/25" />
-                          <div className="h-2 w-3/5 rounded-sm bg-white/10" />
-                        </div>
-
-                        <div className="m-2 flex-1 rounded-sm border border-[#B069DB]/40 bg-[#510950]" />
-                      </div>
-                    </button>
-
-                    {/* LIGHT MODE */}
-                    <button
-                      type="button"
-                      aria-pressed={themeMode === "light"}
-                      onClick={() => handleThemeChange("light")}
-                      className={`rounded-lg border-2 p-4 text-left transition-all ${
-                        themeMode === "light"
-                          ? "border-[#B069DB] bg-[#B069DB]/10 shadow-[0_0_12px_rgba(176,105,219,0.15)]"
-                          : "border-white/10 bg-black/20 hover:border-[#B069DB]/60"
-                      }`}
-                    >
-                      <div className="mb-4 flex items-center justify-between gap-2">
-                        <span className="font-pixelify text-sm pacova-text-primary">
-                          {t("lightMode")}
-                        </span>
-
-                        {themeMode === "light" && (
-                          <span className="font-vt323 text-sm text-[#B069DB]">
-                            {t("active")}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mb-3 flex h-20 overflow-hidden rounded-md border border-[#D7C7E5] bg-[#F7F3FB]">
-                        <div className="w-2/3 p-3">
-                          <div className="mb-2 h-2 w-1/2 rounded-sm bg-[#B069DB]" />
-                          <div className="mb-2 h-2 w-4/5 rounded-sm bg-[#6B6075]/40" />
-                          <div className="h-2 w-3/5 rounded-sm bg-[#6B6075]/20" />
-                        </div>
-                        <div className="m-2 flex-1 rounded-sm border border-[#B069DB]/40 bg-[#EADCF2]" />
-                      </div>
-                    </button>
-                    </div>
-                </div>
-              </section>
-            )}
-
             {/* LANGUAGE */}
             {activeSection === "LANGUAGE" && (
               <section id="language" className="min-w-0">
@@ -517,8 +396,8 @@ const sectiontext: Record<string, string> = {
                       onChange={(event) =>
                         handleLanguageChange(event.target.value)
                       }
-                      className="w-full rounded-lg border border-[#59B5F7] bg-[#0D0914] px-3 py-2 font-vt323
-                      text-lg text-white outline-none focus:border-pacova-green focus:ring-1 focus:ring-pacova-green">
+                      className="w-full rounded-lg border border-[#59B5F7] bg-[#0D0914] px-3 py-2 font-vt323 text-lg text-white outline-none focus:border-pacova-green focus:ring-1 focus:ring-pacova-green"
+                    >
                       <option value="en">ENGLISH</option>
                       <option value="fr">FRANÇAIS</option>
                       <option value="ar">العربية</option>
