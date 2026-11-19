@@ -16,6 +16,8 @@ interface MazeUIProps {
 }
 
 const GHOST_COLORS = ["#ff0000", "#ffb8ff", "#00ffff", "#ffb851"];
+// Pac-Man colors: index 0 = yellow, index 1 = pink (same order on both clients)
+const PLAYER_COLORS = ["#ffff00", "#7dff49ff"];
 
 // ⭐ Fonction 1 : position pixel (définie UNE SEULE FOIS)
 const getPixelPosition = (
@@ -126,7 +128,7 @@ const height = maze.length;
       )}
 
       {/* 3. JOUEURS — SIMPLIFIÉ : juste l'appel aux fonctions */}
-      {players.map((player) => {
+      {/* {players.map((player) => {
         const pos = getPixelPosition(
           player.tile,
           player.dir,
@@ -145,6 +147,33 @@ const height = maze.length;
               height: `${CELL_SIZE}px`,
               transform: getRotation(player.dir),
             }}
+          />
+        );
+      })} */}
+
+        {players.map((player, index) => {
+        const pos = getPixelPosition(
+          player.tile,
+          player.dir,
+          player.step,
+          CELL_SIZE,
+          TICKS_PER_TILE,
+        );
+        return (
+          <div
+            key={`player-${player.id}`}
+            className={styles.player}
+            style={
+              {
+                left: `${pos.x}px`,
+                top: `${pos.y}px`,
+                width: `${CELL_SIZE}px`,
+                height: `${CELL_SIZE}px`,
+                transform: getRotation(player.dir),
+                // CSS variable read by .player in the CSS file
+                "--pac-color": PLAYER_COLORS[index % PLAYER_COLORS.length],
+              } as React.CSSProperties
+            }
           />
         );
       })}

@@ -94,7 +94,7 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty; timeLimi
   useEffect(() => {
     const interval = setInterval(() => {
       const state = stateRef.current;
-      if (state.status !== "playing") return;
+      if (state.status !== "playing" || paused) return;
 
       // The bot only decides at tile centers
       const bot = state.players.find((p) => p.id === BOT_ID);
