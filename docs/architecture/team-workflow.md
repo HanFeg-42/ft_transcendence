@@ -1,14 +1,14 @@
 # Team workflow
 
-The team worked with the **Agile** method, in short one-week sprints.
+The team worked with the **Agile** method, 1-week Scrum sprints (planning, review, retrospective).
 
 ## Roles
 
 | Login | Role(s) | Responsibilities |
 |---|---|---|
-| `hfegrach` | Product Owner, Developer | Leads meetings |
-| `machaouk` | Tech Lead / Architect, Developer | Microservices and gateway architecture|
-| `nel-khad` | Project Manager, Developer | UI/UX and design system, task planning |
+| `hfegrach` | Product Owner, Developer | Owns the backlog, auth |
+| `machaouk` | Tech Lead, Developer | Microservices and gateway architecture |
+| `nel-khad` | Project Manager, Developer | Task tracking, UI/UX and design system |
 | `ynadime` | Developer | Game backend and remote multiplayer |
 | `oelmanso` | Developer | Settings and friends |
 

@@ -2,15 +2,15 @@
 
 ## 1. The containers
 
-Only **one port is public (443)**. Everything else lives on the private Docker network `pacova`.
+The app is served on **port 443 (HTTPS)**; port 8080 only redirects to it. Everything else lives on the private Docker network `pacova`.
 
 ```mermaid
 flowchart LR
     B[Browser] -- HTTPS / WSS :443 --> N[frontend<br/>NGINX + React build]
     N -- "/api/*" --> G[api-gateway :3000]
     N -- "/uploads/*" --> U
-    G -- /auth --> A[auth :3001]
-    G -- /users /user --> U[user :3004]
+    G -- "/auth, /directory" --> A[auth :3001]
+    G -- /users --> U[user :3004]
     G -- /chat + ws --> C[chat :3003]
     G -- /game + ws --> M[game :3002]
     A --> DA[(auth_db)]
@@ -18,13 +18,18 @@ flowchart LR
     C --> DC[(chat_db)]
     M --> DG[(game_db)]
     M -. match result .-> U
-    subgraph PostgreSQL 17
+    A -. notification .-> C
+    U -. notification .-> C
+    M -. notification .-> C
+    subgraph PG[PostgreSQL 17]
     DA
     DU
     DC
     DG
     end
 ```
+
+Dotted arrows are internal calls between services (they do not go through the gateway).
 
 ## 2. Life of a request
 
@@ -36,14 +41,16 @@ sequenceDiagram
     participant S as Service
     B->>N: GET /api/chat/friends (Authorization: Bearer JWT)
     N->>G: forward to :3000 (prefix /api removed)
-    G->>G: verify JWT, rate limit, add x-user-id
-    G->>S: proxy to chat service
+    G->>G: verify JWT, add x-user-id
+    G->>S: proxy to chat service (prefix /chat removed)
     S-->>B: JSON response (same path back)
 ```
 
-Services never check passwords or tokens themselves for REST: the gateway verifies the JWT and tells them **who** the user is with the `x-user-id` header.
+For `/chat`, `/game`, `/users` and `/directory`, services never check tokens themselves: the gateway verifies the JWT and tells them **who** the user is with the `x-user-id` header. `/auth` is public (rate-limited); the auth service checks tokens itself where needed (`/me`, `/2fa/*`).
 
 ## 3. Login workflow
+
+The access JWT lives **15 min** (kept in memory, renewed every 10 min). The refresh cookie lives **7 days** (`httpOnly`).
 
 ```mermaid
 flowchart TD
@@ -52,9 +59,9 @@ flowchart TD
     B -- no --> E[Login page]
     E --> F[Email + password] --> G{2FA enabled?}
     G -- no --> D
-    G -- yes --> H[Enter TOTP or recovery code] --> D
+    G -- yes --> H[Enter the 6-digit TOTP code] --> D
     E --> I[Continue with 42] --> J[42 intra] --> K[Callback + one-time ticket] --> D
-    D --> L[Frontend opens chat WebSocket, user is online]
+    D --> L[Frontend opens the chat WebSocket, user is online]
 ```
 
 ## 4. WebSocket workflow (chat and game)
@@ -76,7 +83,7 @@ sequenceDiagram
     end
 ```
 
-All messages use the same envelope `{event, data}`; event names and payloads are typed once in `shared/types` and imported by frontend and services.
+All messages use the same envelope `{event, data}`; event names and payloads are typed once in `shared/types` and imported by the frontend and the services.
 
 ## 5. A full online game, from click to leaderboard
 
@@ -86,6 +93,7 @@ sequenceDiagram
     participant P2 as Player 2
     participant GS as game service
     participant US as user service
+    participant CS as chat service
     participant DB as game_db
     P1->>GS: queue
     P2->>GS: queue
@@ -100,10 +108,11 @@ sequenceDiagram
         GS-->>P1: gameState
         GS-->>P2: gameState
     end
-    GS->>DB: save Match + MatchParticipant
-    GS->>US: POST /profile/update-stats (win / loss / draw)
     GS-->>P1: final gameState (winner)
     GS-->>P2: final gameState (winner)
+    GS->>DB: save Match + MatchParticipant
+    GS->>US: POST /achievements/update-stats (per player)
+    GS->>CS: notification match_finished (per player)
     Note over DB: leaderboard = count of WIN results per user
 ```
 

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import Background from '../../components/ui/Background';
 import Navbar from '../../components/ui/Navbar';
-import { Avatar } from '../../components/ui/Avatar';
+import pacman from "../../assets/icons/packmann.png";
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import PixelButton from '../../components/ui/PixelButton';
@@ -23,8 +23,10 @@ export const routeMap: Record<string, string> = {
 };
 
 
-// Shared style of the two main panels (friends list + conversation)
-const PANEL = 'bg-pacova-surface border-2 border-pacova-green-dark rounded-lg';
+// Same gray Card as Profile / Settings. No padding, and its content wrapper fills the card
+const CARD = '!p-0 [&>div:last-child]:flex [&>div:last-child]:flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0';
+const TEXT = 'text-white';
+const LINE = 'border-pacova-gray';   //The gray border color
 
 
 // Round avatar of a friend (default Pac-Man icon if they have none)
@@ -33,20 +35,21 @@ function FriendAvatar({ friend }: { friend: Friend }) {
 
   return (
     <span className="rounded-full overflow-hidden ring-2 ring-pacova-green-dark/60 shrink-0">
-      {friend.avatar ? (
-        <img
-          src={friend.avatar}
+      <img
+          src={friend.avatar?? pacman}
           alt={t('chat_avatarAlt', { username: friend.username })}
-          className="w-10 h-10 object-cover" />) : (
-        <Avatar iconName="packmann" size="sm" />
-      )}
+          className="w-10 h-10 object-cover" />
     </span>
   );
 }
 
-
+interface GameInviteModalProps {
+  name: string;
+  receiver: boolean;
+  onAnswer: (yes: boolean) => void;
+}
 // Popup for a game invite: `receiver` = I was invited (accept/decline), otherwise I'm inviting (send/cancel)
-function GameInviteModal({ name, receiver, onAnswer }: { name: string; receiver: boolean; onAnswer: (yes: boolean) => void }) {
+function GameInviteModal({ name, receiver, onAnswer }: GameInviteModalProps) {
   const { t } = useTranslation();
 
   return (
@@ -92,11 +95,12 @@ export default function Chat() {
 
 
   // Page layout (background + navbar) around any content
+  //React.ReactNode: any kind of elements
   const page = (children: React.ReactNode) => (
     <Background>
       <Navbar activeTab="CHAT" onSelectTab={(tab) => routeMap[tab] && navigate(routeMap[tab])} />
       {children}
-    </Background>
+    </Background> 
   );
 
   // Full-page centered message (loading, reconnecting, no friends)
@@ -121,7 +125,7 @@ export default function Chat() {
 
   // Send the typed message (ignores empty text)
   function send() {
-    const text = draft.trim();
+    const text = draft.trim(); //removes spaces and line breaks from both ends
     if (!text) return;
     chat.sendMessage(text);
     setDraft('');
@@ -129,7 +133,10 @@ export default function Chat() {
 
   // Popup answer: reply to the invite I received, or send / cancel my own invite
   function answerInvite(yes: boolean) {
-    if (incomingInvite) chat.replyInvite(incomingInvite.id, yes);
+    if (incomingInvite) {
+      chat.replyInvite(incomingInvite.id, yes);
+      setInviteOpen(false);
+    }
     else {
       if (yes) chat.sendInvite();
       setInviteOpen(false);
@@ -141,11 +148,10 @@ export default function Chat() {
     <main className="flex-1 h-[calc(100dvh-152px)] max-h-[calc(100dvh-152px)] sm:h-[calc(100dvh-128px)] sm:max-h-[calc(100dvh-128px)] max-w-[1320px] mx-auto w-full p-2 md:px-4 md:py-5 flex gap-5 overflow-hidden">
 
       {/* ---------- Friends list (a slide-over panel on mobile) ---------- */}
-      <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0 flex-col overflow-hidden ${PANEL}`}>
-        <h2 className="font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 border-pacova-green-dark">
-          <PacManIcon className="w-7 h-7 shrink-0" />
+      <aside className={`${friendsOpen ? 'flex fixed inset-x-4 top-24 bottom-4 z-40' : 'hidden'} md:flex md:static md:w-[22rem] shrink-0`}>
+        <Card variant="gray" className={CARD}>
+        <h2 className={`font-pixelify text-pacova-green text-2xl uppercase tracking-wider px-5 h-20 flex items-center justify-center gap-4 border-b-2 ${LINE}`}>
           {t('chat_friends')}
-          <PacManIcon className="w-7 h-7 shrink-0" flip />
         </h2>
 
         <div className="flex-1 flex flex-col gap-3 overflow-y-auto p-4 [scrollbar-color:var(--color-pacova-gray)_transparent]">
@@ -158,19 +164,20 @@ export default function Chat() {
               }`}
             >
               <FriendAvatar friend={f} />
-              <span className="font-vt323 text-white text-lg uppercase truncate flex-1">{f.username}</span>
-              <span className={`w-3 h-3 rounded-full shrink-0 ${f.online ? 'bg-pacova-green' : 'bg-gray-500'}`} aria-label={f.online ? 'online' : 'offline'} />
+              <span className={`font-vt323 ${TEXT} text-lg uppercase truncate flex-1`}>{f.username}</span>
             </button>
           ))}
         </div>
+        </Card>
       </aside>
 
 
       {/* ---------- Conversation ---------- */}
-      <section className={`flex-1 flex flex-col overflow-hidden ${PANEL}`}>
+      <section className="flex-1 min-w-0 flex">
+        <Card variant="gray" className={CARD}>
 
         {/* Header: friend info + invite / block buttons */}
-        <div className="flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 border-pacova-green-dark">
+        <div className={`flex items-center gap-4 px-3 md:px-5 h-20 border-b-2 ${LINE}`}>
 
           {/* Burger button (mobile only): opens the friends list */}
           <button
@@ -189,7 +196,12 @@ export default function Chat() {
             onClick={() => navigate(`/profile/${friend.id}`)}
             className="flex items-center gap-3 min-w-0 disabled:cursor-not-allowed">
             <FriendAvatar friend={friend} />
-            <span className="font-pixelify text-white text-lg uppercase truncate">{friend.username}</span>
+            <span className="flex flex-col items-start min-w-0">
+              <span className={`font-pixelify ${TEXT} text-lg uppercase truncate max-w-full`}>{friend.username}</span>
+              <span className={`font-vt323 text-sm uppercase ${friend.online ? 'text-pacova-green' : 'text-gray-500'}`}>
+                {friend.online ? t('chat_online') : t('chat_offline')}
+              </span>
+          </span>
           </button>
 
           <div className="ms-auto flex items-center gap-2 shrink-0">
@@ -235,9 +247,9 @@ export default function Chat() {
         {chat.error && <p className="px-4 font-vt323 text-lg text-pacova-pink">{chat.error}</p>}
 
 
-        <div className="h-[76px] px-4 flex items-center gap-3 border-t-2 border-pacova-green-dark">
+        <div className={`h-[76px] px-4 flex items-center gap-3 border-t-2 ${LINE}`}>
           <Input
-            className="!border-pacova-pink !bg-[#080B1A] text-lg sm:!text-xl !py-3 disabled:opacity-40"
+            className="!border-pacova-gray !bg-transparent text-lg sm:!text-xl !py-3 disabled:opacity-40"
             value={draft}
             type="text"
             maxLength={1000}
@@ -248,10 +260,12 @@ export default function Chat() {
             placeholder={t('chat_typePlaceholder')}
             onKeyDown={(e) => e.key === 'Enter' && send()}
           />
-          <PixelButton type="button" variant="outline-green" size="lg" onClick={send}>
+          <PixelButton type="button" variant="outline-green" size="lg"
+             disabled={blocked} onClick={send}>
             {t('chat_send')}
           </PixelButton>
         </div>
+        </Card>
       </section>
     </main>,
   );

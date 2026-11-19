@@ -128,6 +128,7 @@ const resources = {
       online_game_join_title: "JOIN A ROOM",
       online_game_room_placeholder: "Enter room name",
       online_game_back_to_menu: "Back to menu",
+      online_game_menu: "MENU",
       online_game_create: "Create",
       online_game_join: "Join",
       online_game_search_lost: "Lost connection while searching for a match",
@@ -270,6 +271,7 @@ const resources = {
       bot_time: "TIME {{time}}",
       bot_restart: "RESTART",
       bot_quit: "QUIT",
+      game_setup_title: "GAME SETTINGS",
 
       // ===== HOW TO PLAY =====
       howToPlay_title: "HOW TO PLAY",
@@ -286,7 +288,7 @@ const resources = {
       howToPlay_dot: "Dot: 10",
       howToPlay_powerPellet: "Power pellet: 50",
       howToPlay_ghostPoints: "Ghost: 200",
-      howToPlay_fruit: "Fruit: bonus",
+      howToPlay_fruit: "Fruit: 100",
       howToPlay_tips: "TIPS",
       howToPlay_tip1:
         "Each maze has only 4 power pellets. Save them for real danger.",
@@ -692,6 +694,7 @@ const resources = {
   fr: {
     translation: {
       settings: "Paramètres",
+      game_setup_title: "PARAMÈTRES DE LA PARTIE",
 
       ////////////////////
       home: "ACCUEIL",
@@ -818,6 +821,7 @@ const resources = {
       online_game_join_title: "REJOINDRE UNE SALLE",
       online_game_room_placeholder: "Nom de la salle",
       online_game_back_to_menu: "Retour au menu",
+      online_game_menu: "MENU",
       online_game_create: "Créer",
       online_game_join: "Rejoindre",
       online_game_search_lost:
@@ -981,7 +985,7 @@ const resources = {
       howToPlay_dot: "Point : 10",
       howToPlay_powerPellet: "Super pastille : 50",
       howToPlay_ghostPoints: "Fantôme : 200",
-      howToPlay_fruit: "Fruit : bonus",
+      howToPlay_fruit: "Fruit : 100",
       howToPlay_tips: "CONSEILS",
       howToPlay_tip1:
         "Chaque labyrinthe n'a que 4 super pastilles. Garde-les pour les vrais dangers.",
@@ -1396,6 +1400,7 @@ const resources = {
   ar: {
     translation: {
       settings: "الإعدادات",
+      game_setup_title: "إعدادات اللعبة",
       home: "الرئيسية",
       profile: "الملف الشخصي",
       chat: "الدردشة",
@@ -1569,6 +1574,7 @@ const resources = {
       online_game_join_title: "الانضمام إلى غرفة",
       online_game_room_placeholder: "أدخل اسم الغرفة",
       online_game_back_to_menu: "العودة إلى القائمة",
+      online_game_menu: "القائمة",
       online_game_create: "إنشاء",
       online_game_join: "انضمام",
       online_game_search_lost: "انقطع الاتصال أثناء البحث عن مباراة",
@@ -1667,7 +1673,7 @@ const resources = {
       howToPlay_dot: "النقطة: 10",
       howToPlay_powerPellet: "حبة القوة: 50",
       howToPlay_ghostPoints: "الشبح: 200",
-      howToPlay_fruit: "الفاكهة: نقاط إضافية",
+      howToPlay_fruit: "الفاكهة: 100",
       howToPlay_tips: "نصائح",
       howToPlay_tip1:
         "في كل متاهة 4 حبات قوة فقط. احتفظ بها للحظات الخطر الحقيقي.",

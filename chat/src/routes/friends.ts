@@ -4,17 +4,18 @@ import { prisma } from '../prisma';
 import { onlineUsers, sendPresence } from '../ws/presence';
 import { notifyUser } from '../notifications/notifyUser';
 import { NotificationTypes } from '../../../shared/types/notification-types';
+import { ChatEvents } from '../../../shared/types/chat-types';
 
 const router = Router();
 const AUTH_URL = process.env.AUTH_SERVICE_URL || 'http://auth:3001';
 const USER_URL = process.env.USER_SERVICE_URL || 'http://user:3004';
 
 type PublicUser = { id: number; username: string; avatar: string | null };
+
 type Db = { blockedUser: typeof prisma.blockedUser };
 const PENDING = 'pending';
 
 // ---------- helpers ----------
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 const isOnline = (id: number) => (onlineUsers.get(String(id))?.size ?? 0) > 0;
 const pair = (a: number, b: number) => ({ userLowId: Math.min(a, b), userHighId: Math.max(a, b) });
 const fail = (res: Response, code: number, error: string) => res.status(code).json({ error });
@@ -59,44 +60,41 @@ async function serializable<T>(work: (tx: any) => Promise<T>): Promise<T> {
   }
 }
 
-// ---------- external services ----------
-async function fetchArray(url: string, label: string): Promise<unknown[]> {
+async function getJson(url: string, allow404 = false): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5000);
   try {
     const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new Error(`${label} returned ${response.status}`);
-    const data: unknown = await response.json();
-    if (!Array.isArray(data)) throw new Error(`Invalid response from ${label}`);
-    return data;
+    if (allow404 && response.status === 404) return null;
+    if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+    return response.json();
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function getPublicUsers(ids?: number[]): Promise<PublicUser[]> {
-  const wanted = ids && new Set(ids);
-  const users = (await fetchArray(`${AUTH_URL}/users`, 'Auth service')).flatMap((u): PublicUser[] =>
-    isObj(u) && typeof u.id === 'number' && Number.isSafeInteger(u.id) && typeof u.username === 'string' &&
-    (!wanted || wanted.has(u.id))
-      ? [{ id: u.id, username: u.username, avatar: typeof u.avatar === 'string' ? u.avatar : null }]
-      : []);
-  if (!users.length) return users;
-
-  const profiles = await fetchArray(`${USER_URL}/profile/profiles?ids=${users.map(u => u.id).join(',')}`, 'User service');
-  const avatars = new Map<number, string | null>();
-  for (const p of profiles) {
-    if (isObj(p) && typeof p.id === 'number') avatars.set(p.id, typeof p.avatarUrl === 'string' ? p.avatarUrl : null);
-  }
-  return users.map(u => ({ ...u, avatar: avatars.has(u.id) ? avatars.get(u.id)! : u.avatar }));
+// Also used by blocks.ts. The profile endpoint returns at most 100 ids per call.
+export async function getPublicUsers(ids: number[]): Promise<PublicUser[]> {
+  if (!ids.length) return [];
+  const profiles = (await getJson(`${USER_URL}/profile/profiles?ids=${[...new Set(ids)].join(',')}`)) as
+    { id: number; username: string; avatarUrl: string | null }[];
+  return profiles.map(p => ({ id: p.id, username: p.username, avatar: p.avatarUrl }));
 }
+
+const userExists = async (id: number) => (await getJson(`${AUTH_URL}/users/${id}`, true)) !== null;
+const listUserIds = async () => ((await getJson(`${AUTH_URL}/users`)) as { id: number }[]).map(u => u.id);
 
 // ---------- websocket events ----------
 function sendToUser(userId: number, event: string, data: Record<string, unknown>) {
   const sockets = onlineUsers.get(String(userId));
-  for (const socket of sockets ?? []) {
-    if (socket.readyState !== WebSocket.OPEN) { sockets!.delete(socket); continue; }
+  if (!sockets) return;
+  for (const socket of sockets) {
+    if (socket.readyState !== WebSocket.OPEN) { sockets.delete(socket); continue; }
+    try {
       socket.send(JSON.stringify({ event, data }));
+    } catch {
+      sockets.delete(socket);
+    }
   }
 }
 
@@ -156,9 +154,11 @@ router.post('/friends/requests', route(async (requesterId, req, res) => {
   if (!addresseeId) return fail(res, 400, 'Invalid userId');
   if (addresseeId === requesterId) return fail(res, 400, 'You cannot send a friend request to yourself');
 
+  // The profile service creates a profile for any id, so existence is checked first.
+  if (!(await userExists(addresseeId))) return fail(res, 404, 'User not found');
+
   const users = await getPublicUsers([requesterId, addresseeId]);
   const target = users.find(u => u.id === addresseeId);
-  if (!target) return fail(res, 404, 'User not found');
 
   // One serializable transaction so A<->B requests racing resolve to a single state.
   const result = await serializable(async tx => {
@@ -206,7 +206,7 @@ router.post('/friends/requests', route(async (requesterId, req, res) => {
   await notifySafe(addresseeId, NotificationTypes.FRIEND_REQUEST, payload);
   return res.status(201).json({ id: payload.requestId, status: result.request.status, userId: addresseeId });
 }));
-
+// POST /friends/requests/:id/accept — accept an incoming request.
 router.post('/friends/requests/:id/accept', requestRoute(async (userId, id, res) => {
   const result = await serializable(async tx => {
     const request = await tx.friendRequest.findFirst({ where: { id, addresseeId: userId, status: PENDING } });
@@ -261,8 +261,8 @@ router.delete('/friends/:userId', route(async (userId, req, res) => {
   if (!friendId || friendId === userId) return fail(res, 400, 'Invalid userId');
   if (!(await prisma.friendship.deleteMany({ where: pair(userId, friendId) })).count) return fail(res, 404, 'Friendship not found');
 
-  sendToUser(userId, 'friend_removed', { userId: friendId });
-  sendToUser(friendId, 'friend_removed', { userId });
+  sendToUser(userId, ChatEvents.FRIEND_REMOVED, { userId: friendId });
+  sendToUser(friendId, ChatEvents.FRIEND_REMOVED, { userId });
   await notifySafe(friendId, NotificationTypes.FRIEND_REMOVED, { userId });
   return res.json({ removed: true });
 }));
@@ -271,8 +271,10 @@ router.delete('/friends/:userId', route(async (userId, req, res) => {
 router.get('/users/search', route(async (userId, req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase() : '';
   if (!q) return res.json([]);
-  const matches = (await getPublicUsers())
-    .filter(u => u.id !== userId && u.username.toLowerCase().includes(q))
+  // Ids come from auth, names come from the profile (a renamed user is found by the new name).
+  const ids = (await listUserIds()).filter(id => id !== userId);
+  const matches = (await getPublicUsers(ids))
+    .filter(u => u.username.toLowerCase().includes(q))
     .slice(0, 20);
   return res.json(await Promise.all(matches.map(async u => ({ ...u, relation: await getRelation(userId, u.id) }))));
 }));
