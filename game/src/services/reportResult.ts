@@ -14,7 +14,7 @@ export const reportResult = async (state: GameState) => {
     try {
       const response = await fetch(`${USER_SERVICE_URL}/achievements/update-stats`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-user-id": p.id, "x-internal-key": process.env.INTERNAL_API_KEY ?? "", },
+        headers: { "Content-Type": "application/json", "x-user-id": p.id,},
         body: JSON.stringify({
           result,
           fruitsEaten: p.fruitsEaten,
