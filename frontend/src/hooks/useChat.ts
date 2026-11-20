@@ -7,6 +7,8 @@ import type {
 } from '../../../shared/types/chat-types';
 
 
+/* ---------------- Types ---------------- */
+
 export interface Friend {
   id: number;
   username: string;
@@ -14,17 +16,34 @@ export interface Friend {
   online: boolean;
 }
 
+// Result of loading the history of one friend
+interface LoadedState {
+  friendId: number;
+  ok: boolean;
+}
 
-// Small helper for REST calls to the chat service (adds the JWT)
-const api = (token: string, path: string, method = 'GET') =>
-  fetch(`/api/chat/${path}`, { method, headers: { Authorization: `Bearer ${token}` } });
 
+/* ---------------- Helpers ---------------- */
 
-// Add or replace messages by id (a game-invite reply has the same id as its invite, so it replaces it).
-const upsert = (list: Message[]) => (prev: Record<number, Message>) => ({
-  ...prev,
-  ...Object.fromEntries(list.map((m) => [m.id, m])),
-});
+// Call the chat service (adds the JWT token)
+function callApi(token: string, path: string, method = 'GET') {
+  return fetch(`/api/chat/${path}`, {
+    method,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// Add messages to the list, or replace them if the id already exists
+// (a game-invite reply has the same id as its invite, so it replaces it)
+function addMessages(newMessages: Message[]) {
+  return (oldMessages: Record<number, Message>) => {
+    const copy = { ...oldMessages };
+    for (const message of newMessages) {
+      copy[message.id] = message;
+    }
+    return copy;
+  };
+}
 
 
 /** Everything the chat page needs: friends, the selected conversation, and the live websocket events. */
@@ -33,16 +52,17 @@ export default function useChat(token: string | null) {
   /* ---------------- State ---------------- */
 
   const [friendList, setFriendList] = useState<Friend[]>([]);
-  const [selectedId, select] = useState(0);
-  const [messages, setMessages] = useState<Record<number, Message>>({}); // REST history + websocket, by id
-  const [loaded, setLoaded] = useState<{ friendId: number; ok: boolean } | null>(null);
-  const [blocked, setBlocked] = useState<Record<number, boolean>>({}); // "I blocked this friend"
+  const [selectedId, setSelectedId] = useState(0);
+  const [messages, setMessages] = useState<Record<number, Message>>({}); // by message id
+  const [loaded, setLoaded] = useState<LoadedState | null>(null);
+  const [blocked, setBlocked] = useState<Record<number, boolean>>({});     // "I blocked this friend"
   const [blockedBy, setBlockedBy] = useState<Record<number, boolean>>({}); // "this friend blocked me"
-  const [presence, setPresence] = useState<Record<number, boolean>>({}); // friend id -> online
+  const [presence, setPresence] = useState<Record<number, boolean>>({});   // friend id -> online
   const [typing, setTyping] = useState<Record<number, boolean>>({});
   const [readAt, setReadAt] = useState<Record<number, string>>({});
   const [error, setError] = useState('');
   const [reconnecting, setReconnecting] = useState(false); // websocket is down and being retried
+  const tokenRef = useRef(token);
 
   const socket = useRef<WebSocket | null>(null);
   const typedAt = useRef<Record<number, number>>({}); // when we last sent "typing", per friend
@@ -51,87 +71,174 @@ export default function useChat(token: string | null) {
   /* ---------------- Derived values ---------------- */
 
   // The selected friend (the first one until the user picks another)
-  const friendId = friendList.find((f) => f.id === selectedId)?.id ?? friendList[0]?.id ?? 0;
+  const selectedFriend = friendList.find((f) => f.id === selectedId);
+  const friendId = selectedFriend?.id ?? friendList[0]?.id ?? 0;
+
   const iBlockedThem = blocked[friendId] ?? false;
   const theyBlockedMe = blockedBy[friendId] ?? false;
 
-  const friends = friendList.map((f) => ({
-    ...f,
-    online: !(blocked[f.id] || blockedBy[f.id]) && (presence[f.id] ?? f.online), // blocked (by either side) looks offline
-  }));
+  // A friend blocked (by either side) looks offline
+  const friends = friendList.map((f) => {
+    const isBlocked = blocked[f.id] || blockedBy[f.id];
+    const isOnline = presence[f.id] ?? f.online;
+    return { ...f, online: !isBlocked && isOnline };
+  });
 
-  const status: 'loading' | 'error' | 'ok' = loaded?.friendId !== friendId ? 'loading' : loaded.ok ? 'ok' : 'error';
+  //The loading status(default to loading)
+  let status: 'loading' | 'error' | 'ok' = 'loading';
+  if (loaded?.friendId === friendId) {
+    status = loaded.ok ? 'ok' : 'error';
+  }
 
   // Send a packet only if the socket is open
   const send = useCallback((packet: ChatClientMessage) => {
-    if (socket.current?.readyState === WebSocket.OPEN) socket.current.send(JSON.stringify(packet));
+    if (socket.current?.readyState === WebSocket.OPEN) {
+      socket.current.send(JSON.stringify(packet));
+    }
   }, []);
 
 
   /* ---------------- Loading data (REST) ---------------- */
 
+  useEffect(() => { tokenRef.current = token; }, [token]);
+  const loggedIn = !!token;
   // Friends list (once, when we have a token)
   useEffect(() => {
-    if (!token) return;
+    if (!loggedIn) return;
 
-    api(token, 'friends')
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setFriendList)
-      .catch(() => {});
-  }, [token]);
+    async function loadFriends() {
+      try {
+        const res = await callApi(tokenRef.current!, 'friends');
+        setFriendList(res.ok ? await res.json() : []);
+      } catch {
+        // ignore errors
+      }
+    }
+
+    loadFriends();
+  }, [loggedIn]);
 
 
-  // History + block status: on friend change and after a reconnect (to catch up on missed messages).
+  // History + block status: when the friend changes and after a reconnect (to catch up on missed messages)
   useEffect(() => {
-    if (!token || !friendId || reconnecting) return;
+    if (!loggedIn || !friendId || reconnecting) return;
 
-    let stale = false; // ignore the answer if the user already switched friend
+    let stale = false; // true if the user already switched to another friend
 
-    api(token, `messages/${friendId}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data: Message[]) => {
+    async function loadHistory() {
+      try {
+        const res = await callApi(tokenRef.current!, `messages/${friendId}`);
+        if (!res.ok) throw false;
+        const data: Message[] = await res.json();
         if (stale) return;
-        setMessages(upsert(data));
+        setMessages(addMessages(data));
         setLoaded({ friendId, ok: true });
-      })
-      .catch(() => !stale && setLoaded({ friendId, ok: false }));
+      } catch {
+        if (!stale) setLoaded({ friendId, ok: false });
+      }
+    }
 
-    api(token, `blocks/status/${friendId}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
+    async function loadBlockStatus() {
+      try {
+        const res = await callApi(tokenRef.current!, `blocks/status/${friendId}`);
+        if (!res.ok) return;
+        const data = await res.json();
         if (stale || !data) return;
-        setBlocked((b) => ({ ...b, [friendId]: data.iBlockedThem }));
-        setBlockedBy((b) => ({ ...b, [friendId]: data.theyBlockedMe }));
-      })
-      .catch(() => {});
+        setBlocked((old) => ({ ...old, [friendId]: data.iBlockedThem }));
+        setBlockedBy((old) => ({ ...old, [friendId]: data.theyBlockedMe }));
+      } catch {
+        // ignore errors
+      }
+    }
+
+    loadHistory();
+    loadBlockStatus();
 
     return () => {
       stale = true;
     };
-  }, [token, friendId, reconnecting]);
+  }, [loggedIn, friendId, reconnecting]);
 
 
   /* ---------------- WebSocket (live events) ---------------- */
 
-  // One WebSocket connection for the page, with automatic reconnects.
+  // One WebSocket connection for the page, with automatic reconnects
   useEffect(() => {
-    if (!token) return;
+    if (!loggedIn) return;
 
     let ws: WebSocket;
     let closed = false; // true when the page is leaving (do not reconnect)
-    let retries = 0;
-    let retry: ReturnType<typeof setTimeout>;
-    const timers: Record<number, ReturnType<typeof setTimeout>> = {};
+    let retries = 0;    //How many times in a row we failed to connect
+    let retryTimer: ReturnType<typeof setTimeout>;  // takes the type of return type of setTimeout
+    const typingTimers: Record<number, ReturnType<typeof setTimeout>> = {};
 
     // Show the typing indicator for 2s, then hide it
-    const showTyping = (id: number, on: boolean) => {
-      clearTimeout(timers[id]);
-      setTyping((p) => ({ ...p, [id]: on }));
-      if (on) timers[id] = setTimeout(() => setTyping((p) => ({ ...p, [id]: false })), 2000);
-    };
+    function showTyping(id: number, on: boolean) {
+      clearTimeout(typingTimers[id]);
+      setTyping((old) => ({ ...old, [id]: on }));
 
-    const connect = () => {
-      ws = new WebSocket(`wss://${window.location.host}/api/chat/ws?token=${token}`);
+      if (on) {
+        typingTimers[id] = setTimeout(() => {
+          setTyping((old) => ({ ...old, [id]: false }));
+        }, 2000);
+      }
+    }
+
+    // Every server packet comes here, handled by its event type
+    function handlePacket(packet: ChatServerMessage) {
+      switch (packet.event) {
+
+        // Messages, invites and invite replies all arrive as a full message
+        case E.MESSAGE:
+        case E.GAME_INVITE:
+        case E.GAME_INVITE_REPLY:
+          if (packet.event === E.MESSAGE) showTyping(packet.data.sender_id, false);
+          setMessages(addMessages([packet.data]));
+          break;
+
+        // A friend went online / offline
+        case E.PRESENCE: {
+          const { user_id, status } = packet.data;
+          setPresence((old) => ({ ...old, [user_id]: status === 'online' }));
+          break;
+        }
+
+        case E.TYPING:
+          showTyping(packet.data.sender_id, true);
+          break;
+
+        // The friend read our messages (turns ✓ into ✓✓)
+        case E.READ: {
+          const { reader_id, read_at } = packet.data;
+          setReadAt((old) => ({ ...old, [reader_id]: read_at }));
+          break;
+        }
+
+        // The blocker is the friend, so this means "they blocked me"
+        case E.BLOCK_UPDATED: {
+          const { blockerId, blocked } = packet.data;
+          setBlockedBy((old) => ({ ...old, [blockerId]: blocked }));
+          break;
+        }
+
+        // A friendship ended (either side removed it): drop the friend, leave their chat
+        case E.FRIEND_REMOVED: {
+          const { userId } = packet.data;
+          setFriendList((old) => old.filter((f) => f.id !== userId));
+          setSelectedId((old) => (old === userId ? 0 : old)); // 0 = fall back to the first friend
+          break;
+        }
+
+        // Server-side error, shown for 3s
+        case E.ERROR:
+          setError(packet.data.message);
+          setTimeout(() => setError(''), 3000);
+          break;
+      }
+    }
+
+    function connect() {
+      ws = new WebSocket(`wss://${window.location.host}/api/chat/ws?token=${tokenRef.current}`);
       socket.current = ws;
 
       ws.onopen = () => {
@@ -143,88 +250,47 @@ export default function useChat(token: string | null) {
       ws.onclose = () => {
         if (closed) return;
         setReconnecting(true);
-        retry = setTimeout(connect, Math.min(1000 * 2 ** retries++, 15000));
+        const delay = Math.min(1000 * 2 ** retries, 15000);
+        retries++;
+        retryTimer = setTimeout(connect, delay); //Schedule the retry after delay milliseconds
       };
 
-      // Every server packet comes here, handled by its event type
       ws.onmessage = (event) => {
-        let packet: ChatServerMessage;
-
         try {
-          packet = JSON.parse(event.data);
+          handlePacket(JSON.parse(event.data));
         } catch {
-          return;
-        }
-
-        switch (packet.event) {
-
-          // Messages, invites and invite replies all arrive as a full message
-          case E.MESSAGE:
-          case E.GAME_INVITE:
-          case E.GAME_INVITE_REPLY:
-            if (packet.event === E.MESSAGE) showTyping(packet.data.sender_id, false);
-            setMessages(upsert([packet.data]));
-            break;
-
-          // A friend went online / offline
-          case E.PRESENCE: {
-            const { user_id, status } = packet.data;
-            setPresence((p) => ({ ...p, [user_id]: status === 'online' }));
-            break;
-          }
-
-          case E.TYPING:
-            showTyping(packet.data.sender_id, true);
-            break;
-
-          // The friend read our messages (turns ✓ into ✓✓)
-          case E.READ: {
-            const { reader_id, read_at } = packet.data;
-            setReadAt((p) => ({ ...p, [reader_id]: read_at }));
-            break;
-          }
-
-          // Someone blocked / unblocked: the blocker is the friend, so this means "they blocked me"
-          case E.BLOCK_UPDATED: {
-            const { blockerId, blocked } = packet.data;
-            setBlockedBy((b) => ({ ...b, [blockerId]: blocked }));
-            break;
-          }
-
-          // Server-side error, shown for 3s
-          case E.ERROR:
-            setError(packet.data.message);
-            setTimeout(() => setError(''), 3000);
-            break;
+          // ignore packets we can't read
         }
       };
-    };
+    }
 
     connect();
 
     // Cleanup: stop reconnecting and close everything
     return () => {
       closed = true;
-      clearTimeout(retry);
-      Object.values(timers).forEach(clearTimeout);
+      clearTimeout(retryTimer);
+      Object.values(typingTimers).forEach(clearTimeout);
       ws.close();
     };
-  }, [token]);
+  }, [loggedIn]);
 
 
   /* ---------------- Conversation ---------------- */
 
-  // Messages for the selected friend, oldest first
+  // Messages with the selected friend, oldest first
   const conversation = Object.values(messages)
     .filter((m) => m.sender_id === friendId || m.receiver_id === friendId)
     .sort((a, b) => a.id - b.id);
 
 
-  // Mark this conversation as read, and again when the tab becomes visible
+  // Mark the conversation as read, and again when the tab becomes visible
   useEffect(() => {
-    const markRead = () => {
-      if (friendId && document.visibilityState === 'visible') send({ event: E.READ, data: { sender_id: friendId } });
-    };
+    function markRead() {
+      if (friendId && document.visibilityState === 'visible') {
+        send({ event: E.READ, data: { sender_id: friendId } });
+      }
+    }
 
     markRead();
     document.addEventListener('visibilitychange', markRead);
@@ -233,12 +299,49 @@ export default function useChat(token: string | null) {
   }, [conversation.length, friendId, reconnecting, send]);
 
 
+  /* ---------------- Actions ---------------- */
+
+  function sendMessage(content: string) {
+    send({ event: E.MESSAGE, data: { receiver_id: friendId, content } });
+  }
+
+  function sendInvite() {
+    send({ event: E.GAME_INVITE, data: { receiver_id: friendId } });
+  }
+
+  function replyInvite(message_id: number, accept: boolean) {
+    send({ event: E.GAME_INVITE_REPLY, data: { message_id, accept } });
+  }
+
+  // Tell the friend we're typing, at most once every 2s
+  function sendTyping() {
+    const lastTime = typedAt.current[friendId] ?? 0;
+    if (Date.now() - lastTime < 2000) return;
+
+    typedAt.current[friendId] = Date.now();
+    send({ event: E.TYPING, data: { receiver_id: friendId } });
+  }
+
+  // Block or unblock the selected friend
+  async function toggleBlock() {
+    if (!token) return;
+
+    try {
+      const method = iBlockedThem ? 'DELETE' : 'POST';
+      const res = await callApi(tokenRef.current!, `blocks/${friendId}`, method);
+      if (res.ok) setBlocked((old) => ({ ...old, [friendId]: !iBlockedThem }));
+    } catch {
+      // ignore errors
+    }
+  }
+
+
   /* ---------------- What the page can use ---------------- */
 
   return {
     friends,
     friend: friends.find((f) => f.id === friendId),
-    select,
+    select: setSelectedId,
     conversation,
     status,
     error,
@@ -248,23 +351,10 @@ export default function useChat(token: string | null) {
     typing: typing[friendId] ?? false,
     friendReadAt: readAt[friendId] ?? null,
 
-    sendMessage: (content: string) => send({ event: E.MESSAGE, data: { receiver_id: friendId, content } }),
-    sendInvite: () => send({ event: E.GAME_INVITE, data: { receiver_id: friendId } }),
-    replyInvite: (message_id: number, accept: boolean) =>
-      send({ event: E.GAME_INVITE_REPLY, data: { message_id, accept } }),
-
-    // Tell the friend we're typing, at most once every 2s
-    sendTyping: () => {
-      if (Date.now() - (typedAt.current[friendId] ?? 0) < 2000) return;
-      typedAt.current[friendId] = Date.now();
-      send({ event: E.TYPING, data: { receiver_id: friendId } });
-    },
-
-    // Block or unblock the selected friend
-    toggleBlock: async () => {
-      if (!token) return;
-      const res = await api(token, `blocks/${friendId}`, iBlockedThem ? 'DELETE' : 'POST').catch(() => undefined);
-      if (res?.ok) setBlocked((b) => ({ ...b, [friendId]: !iBlockedThem }));
-    },
+    sendMessage,
+    sendInvite,
+    replyInvite,
+    sendTyping,
+    toggleBlock,
   };
 }

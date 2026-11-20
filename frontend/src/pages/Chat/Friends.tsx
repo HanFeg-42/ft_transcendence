@@ -21,7 +21,7 @@ const ROUTES: Record<string, string> = {
   NOTIFICATION: "/notifications", SETTINGS: "/settings", LEADERBOARD: "/leaderboard",
 };
 const SOCKET_REFRESH = ["friend_request", "friend_request_cancelled", "friend_request_declined",
-                        "friend_accepted", "friend_removed"];
+                        "friend_accepted", ChatEvents.FRIEND_REMOVED];
 
 const btn = (color: string) =>
   `rounded-lg px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm font-medium

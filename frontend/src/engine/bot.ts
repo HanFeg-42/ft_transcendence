@@ -39,6 +39,7 @@ const simulateState = (state: GameState, id: string): GameState => ({
   players: state.players.filter((p) => p.id === id).map((p) => ({ ...p })),
   chasers: state.chasers.map((c) => ({ ...c })),
   pellets: state.pellets.map((row) => [...row]),
+  fruits: state.fruits.map((row) => [...row]),
 });
 
 // Tile -> "x,y" string, used as a key in the visited set

@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "tsx src/index.ts",
-    "build": "tsc",
+    "build": "tsc --noEmit -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
