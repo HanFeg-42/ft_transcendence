@@ -23,7 +23,7 @@ export async function setupTwoFactor(req: Request, res: Response) {
       });
     }
 
-    console.error(error);
+    // console.error(error);
 
     return res.status(500).json({
       error: "Something went wrong",
@@ -70,7 +70,7 @@ export async function confirmTwoFactor(req: Request, res: Response) {
       }
     }
 
-    console.error(error);
+    // console.error(error);
 
     return res.status(500).json({
       error: "Something went wrong",
@@ -96,8 +96,12 @@ export async function disableTwoFactor(req: Request, res: Response) {
       });
     }
 
-    console.error(error);
-
+    if (error instanceof Error && error.message === "TWO_FACTOR_ALREADY_ENABLED") {
+      return res.status(409).json({
+        error: "2FA is already enabled",
+      });
+    }
+    
     return res.status(500).json({
       error: "Something went wrong",
     });

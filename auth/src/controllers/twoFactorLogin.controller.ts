@@ -30,7 +30,7 @@ export async function verifyTwoFactorLogin(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "AUTH_SECRETS_NOT_CONFIGURED") {
-        console.error("JWT secrets are not configured");
+        // console.error("JWT secrets are not configured");
 
         return res.status(500).json({
           error: "Something went wrong",
@@ -56,7 +56,7 @@ export async function verifyTwoFactorLogin(req: Request, res: Response) {
       }
     }
 
-    console.error(error);
+    // console.error(error);
 
     return res.status(500).json({
       error: "Something went wrong",

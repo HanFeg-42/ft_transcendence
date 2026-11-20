@@ -177,15 +177,11 @@ export default function Notifications() {
   };
 
   const handleDelete = (id: string) => {
-    removeNotification(id).catch((err) =>
-      console.error("Failed to delete notification:", err),
-    );
+    removeNotification(id).catch(() => {});
   };
 
   const handleClearAll = () => {
-    clearAll().catch((err) =>
-      console.error("Failed to clear notifications:", err),
-    );
+    clearAll().catch(() => {});
   };
 
   const actionClass = `font-vt323 text-lg ${MUTED} hover:text-pacova-pink transition-colors cursor-pointer`;

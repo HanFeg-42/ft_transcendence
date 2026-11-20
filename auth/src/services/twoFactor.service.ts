@@ -49,6 +49,10 @@ export async function confirmTwoFactor(userId: number, code: string) {
     throw new Error("USER_NOT_FOUND");
   }
 
+  if (user.twoFactorEnabled) {
+    throw new Error("TWO_FACTOR_ALREADY_ENABLED");
+  }
+  
   if (!user.twoFactorSecret) {
     throw new Error("TWO_FACTOR_NOT_SETUP");
   }

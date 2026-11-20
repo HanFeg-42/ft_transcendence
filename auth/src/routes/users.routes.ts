@@ -19,7 +19,7 @@ router.get('/', async (_req: Request, res: Response) => {
 
     return res.json(users);
   } catch (err: any) {
-    console.error('[AUTH] getUsers error:', err);
+    // console.error('[AUTH] getUsers error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -47,7 +47,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     return res.json(user);
   } catch (err: any) {
-    console.error('[AUTH] getUserById error:', err);
+    // console.error('[AUTH] getUserById error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
