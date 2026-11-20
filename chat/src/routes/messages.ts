@@ -12,9 +12,7 @@ const MAX_ID = 2147483647;
 
 // Chat history with one friend: newest first, 50 per page.
 // GET /messages/:friendId?cursor=<last message id> -> cursor loads the next (older) page
-router.get(
-  '/messages/:friendId',
-  safe(async (req, res) => {
+router.get('/messages/:friendId', safe(async (req, res) => {
     const userId = Number(req.headers['x-user-id']);
     const friendId = Number(req.params.friendId);
 
