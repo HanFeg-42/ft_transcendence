@@ -154,7 +154,7 @@ export default function Settings() {
                       sm:gap-3 sm:px-3
                       ${
                         isActive
-                          ? "rounded border-pacova-green bg-pacova-green/10 pacova-text-primary"
+                          ? "rounded border-pacova-green bg-pacova-green/10 text-white"
                           : "rounded border-transparent text-gray-500 hover:border-pacova-green/50 hover:bg-pacova-green/5 hover:text-white"
                       }
                     `}
@@ -311,7 +311,7 @@ export default function Settings() {
 
                     {/* ACCOUNT DETAILS */}
                     <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <h3 className="break-words font-pixelify text-xl uppercase pacova-text-primary sm:text-2xl">
+                      <h3 className="break-words font-pixelify text-xl uppercase text-white sm:text-2xl">
                         {t("yourProfile")}
                       </h3>
 
@@ -320,7 +320,7 @@ export default function Settings() {
                           {t("username")}
                         </p>
 
-                        <p className="break-words font-vt323 text-2xl pacova-text-primary">
+                        <p className="break-words font-vt323 text-2xl text-white">
                           {profile?.username ?? user?.username ?? "PLAYER"}
                         </p>
                       </div>
@@ -330,7 +330,7 @@ export default function Settings() {
                           {t("email")}
                         </p>
 
-                        <p className="break-all font-vt323 text-xl pacova-text-primary">
+                        <p className="break-all font-vt323 text-xl text-white">
                           {user?.email ?? t("noEmail")}
                         </p>
                       </div>

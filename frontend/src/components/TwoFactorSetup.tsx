@@ -161,7 +161,7 @@ export default function TwoFactorSetup() {
         </div>
       ) : !qrCode ? (
         <>
-          <div className="font-vt323 pacova-text-primary text-lg leading-6 mb-4">
+          <div className="font-vt323 text-white text-lg leading-6 mb-4">
             <p>{t("step1")}</p>
             <p>{t("step2")}</p>
             <p>{t("step3")}</p>
