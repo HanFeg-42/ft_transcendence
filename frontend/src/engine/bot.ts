@@ -15,7 +15,7 @@ export type BotDifficulty = "easy" | "normal" | "hard";
 // depth   = how many tiles ahead the bot looks
 // mistake = chance of picking a worse (but safe) move instead of the best one
 const LEVELS = {
-  easy: { depth: 2, mistake: 0.3 },
+  easy: { depth: 2, mistake: 0.5 },
   normal: { depth: 4, mistake: 0.15 },
   hard: { depth: 6, mistake: 0.05 },
 };

@@ -31,7 +31,7 @@ flowchart TD
 
 | Level | Look-ahead depth | Mistake probability |
 |---|---|---|
-| easy | 2 | 30 % |
+| easy | 2 | 50 % |
 | normal | 4 | 15 % |
 | hard | 6 | 5 % |
 

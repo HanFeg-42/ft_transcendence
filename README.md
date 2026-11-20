@@ -22,7 +22,7 @@
 - Local game, **vs. AI bot** (3 levels), **online 1v1** with matchmaking and 3 mazes
 - Real-time chat, friends with online status, notifications
 - Profiles, avatars, achievements, match history, leaderboard
-- English / French / Arabic (RTL), dark / light theme, custom design system, responsive UI
+- English / French / Arabic (RTL), custom design system, responsive UI
 
 More details (diagrams, flows): [`docs/`](docs/README.md).
 
@@ -48,7 +48,7 @@ Open **https://localhost:8443** (self-signed certificate: accept the browser war
 | `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, `TWO_FACTOR_CHALLENGE_SECRET` | Token secrets (`openssl rand -hex 32`) |
 | `INTERNAL_API_KEY` | Shared key for service-to-service calls (`openssl rand -hex 32`) |
 | `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET` | 42 OAuth app credentials (optional: only needed for "Continue with 42") |
-| `FORTYTWO_CALLBACK_URL`, `FRONTEND_URL` | `https://localhost/api/auth/42/callback` and `https://localhost` |
+| `FORTYTWO_CALLBACK_URL`, `FRONTEND_URL` | `https://localhost:8443/api/auth/42/callback` and `https://localhost:8443` |
 
 Databases are created by `postgres-db/init.sql`; Prisma migrations run automatically at start. Make targets: `make` (build + start), `make down`, `make restart`, `make logs`, `make status`, `make migrate`, `make clean` (stops and wipes volumes), `make fclean` (also removes images), `make re` (`fclean` + rebuild + start).
 

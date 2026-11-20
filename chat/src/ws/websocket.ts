@@ -99,18 +99,25 @@ async function validate(ws: WebSocket, p: any, myId: string): Promise<string | n
 // `byUser` is set when someone answers, so only the invited user can do it.
 async function settleInvite(id: number, status: "accepted" | "declined" | "expired", byUser?: number) {
   const invite = await prisma.message.findUnique({ where: { id } });
-  const meta = invite?.meta as { gameId?: string; status?: string } | null;
+  if (!invite || invite.kind !== "game_invite") return;       // not an invite
 
-  // Ignore if it is not an invite or was already settled
-  if (!invite || invite.kind !== "game_invite" || meta?.status !== "pending") return;
-
-  // Only the invited user can answer
+  // byUser is only set when a real user answers; timers and cleanup leave it empty
   if (byUser !== undefined && invite.receiverId !== byUser) return;
 
-  // A late answer counts as expired
-  const final = status !== "expired" && Date.now() - invite.createdAt.getTime() > INVITE_TTL_MS ? "expired" : status;
+  // answering after the time limit counts as expired
+  const tooLate = Date.now() - invite.createdAt.getTime() > INVITE_TTL_MS;
+  const final = tooLate ? "expired" : status;
 
-  const updated = await prisma.message.update({ where: { id }, data: { meta: { ...meta, status: final } } });
+  // ONE atomic step: change it only if it is still "pending".
+  // If another reply got there first, count is 0 and we stop.
+  const { count } = await prisma.message.updateMany({
+    where: { id, meta: { path: ["status"], equals: "pending" } },
+    data: { meta: { ...(invite.meta as object), status: final } },
+  });
+  if (count === 0) return;                                    // already settled
+
+  const updated = await prisma.message.findUnique({ where: { id } });
+  if (!updated) return;
 
   const packet = { event: ChatEvents.GAME_INVITE_REPLY, data: toIncoming(updated) } as const;
   sendTo(invite.senderId, packet);
