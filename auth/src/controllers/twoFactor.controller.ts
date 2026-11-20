@@ -23,8 +23,6 @@ export async function setupTwoFactor(req: Request, res: Response) {
       });
     }
 
-    // console.error(error);
-
     return res.status(500).json({
       error: "Something went wrong",
     });
@@ -81,8 +79,16 @@ export async function confirmTwoFactor(req: Request, res: Response) {
 export async function disableTwoFactor(req: Request, res: Response) {
   const userId = (req as AuthenticatedRequest).userId;
 
+  const code = req.body?.code;
+
+  if (typeof code !== "string" || !/^\d{6}$/.test(code)) {
+    return res.status(400).json({
+      error: "A valid 6-digit 2FA code is required",
+    });
+  }
+
   try {
-    await disableTwoFactorService(userId);
+    await disableTwoFactorService(userId, code);
 
     void notify(userId, "two_factor_changed", { enabled: false });
 
@@ -90,18 +96,26 @@ export async function disableTwoFactor(req: Request, res: Response) {
       message: "2FA disabled successfully",
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
-      return res.status(404).json({
-        error: "User not found",
-      });
+    if (error instanceof Error) {
+      if (error.message === "USER_NOT_FOUND") {
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+
+      if (error.message === "INVALID_2FA_CODE") {
+        return res.status(401).json({
+          error: "Invalid 2FA code",
+        });
+      }
+
+      if (error.message === "TWO_FACTOR_NOT_ENABLED") {
+        return res.status(409).json({
+          error: "2FA is not enabled",
+        });
+      }
     }
 
-    if (error instanceof Error && error.message === "TWO_FACTOR_ALREADY_ENABLED") {
-      return res.status(409).json({
-        error: "2FA is already enabled",
-      });
-    }
-    
     return res.status(500).json({
       error: "Something went wrong",
     });
