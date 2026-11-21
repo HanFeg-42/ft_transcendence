@@ -44,7 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setToken(data.token);
         }
       } catch (error) {
-        console.error("Failed to restore session:", error);
+        //console.error("Failed to restore session:", error);
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(data.user);
       return true;
     } catch (error) {
-      console.error("Failed to verify current user:", error);
+      // console.error("Failed to verify current user:", error);
       return false;
     }
   };

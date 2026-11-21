@@ -74,7 +74,7 @@ export async function login(req: Request, res: Response) {
         error.message === "JWT_SECRET_NOT_CONFIGURED" ||
         error.message === "TWO_FACTOR_CHALLENGE_SECRET_NOT_CONFIGURED"
       ) {
-        console.error(error.message);
+        // console.error(error.message);
 
         return res.status(500).json({
           error: "Something went wrong",
@@ -82,7 +82,7 @@ export async function login(req: Request, res: Response) {
       }
     }
 
-    console.error(error);
+    // console.error(error);
 
     return res.status(500).json({
       error: "Something went wrong",
