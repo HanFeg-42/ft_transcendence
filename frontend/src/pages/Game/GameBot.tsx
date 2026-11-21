@@ -81,12 +81,12 @@ function BotSession({ mazeId, difficulty, timeLimit, onRestart }: BotSessionProp
     const interval = setInterval(() => {
       if (state.status !== "playing" || paused) return;
 
-      const dir = chooseDirection(state, BOT_ID, difficulty); // returns null unless the bot is on a tile center
+      const dir = chooseDirection(state, BOT_ID, difficulty); 
       if (dir) applyInput(state, BOT_ID, dir);
 
       tick(state);
       if (state.status !== "playing")
-        finishLocalMatch(state); // engine ends with "won"/"lost"
+        finishLocalMatch(state);
       setFrame((f) => f + 1); //redraw
     }, TICK_INTERVAL_MS);
 

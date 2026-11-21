@@ -197,11 +197,6 @@ const GameRoom = ({
         {t("online_game_opponent")}
       </span>
     );
-
-  // const titleColor = won
-  //   ? "text-pacova-green drop-shadow-glow-green"
-  //   : "text-pacova-pink drop-shadow-glow-pink";
-
   return (
     <>
       <RotDev />
@@ -238,50 +233,8 @@ const GameRoom = ({
         <div className={styles.mazeWrapper}>
           <MazeUI state={state} mazeId={state.mazeId} />
         </div>
-        {/* {state.status === "finished" && (
-          <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
-            <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
-              <h1 className={`font-press-start text-3xl ${titleColor}`}>
-                {state.winnerId === undefined
-                  ? t("online_game_draw")
-                  : won
-                    ? t("online_game_you_won")
-                    : t("online_game_you_lost")}
-              </h1>
-              <div className="flex gap-4 w-full">
-                <Result
-                  name={getName(state.players[0].id)}
-                  score={state.players[0].score}
-                  lives={state.players[0].lives}
-                  win={state.players[0].id === state.winnerId}
-                />
-                <Result
-                  name={getName(state.players[1].id)}
-                  score={state.players[1].score}
-                  lives={state.players[1].lives}
-                  win={state.players[1].id === state.winnerId}
-                />
-              </div>
 
-              <div className="flex gap-6">
-                <PixelButton
-                  variant="outline-green"
-                  size="md"
-                  onClick={onPlayAgain}
-                >
-                  {t("online_game_play_again")}
-                </PixelButton>
-                <PixelButton
-                  variant="danger-red"
-                  size="md"
-                  onClick={onBackToMenu}
-                >
-                  {t("online_game_back_to_menu")}
-                </PixelButton>
-              </div>
-            </div>
-          </div>
-        )} */}
+
           {state.status === "finished" && (
           <ResultModal
             title={
@@ -321,26 +274,7 @@ const GameRoom = ({
             </div>
           </div>
         )}
-        {/* {showMenu && state.status === "playing" && (
-          <div className={styles.gameOverLayout}>
-            <div className="flex flex-row gap-6">
-              <PixelButton
-                variant="outline-green"
-                size="lg"
-                onClick={() => setShowMenu(false)}
-              >
-                {t("local_game_resume")}
-              </PixelButton>
-              <PixelButton
-                variant="danger-red"
-                size="lg"
-                onClick={onBackToMenu}
-              >
-                {t("online_game_back_to_menu")}
-              </PixelButton>
-            </div>
-          </div>
-        )} */}
+
         {showMenu && state.status === "playing" && (
           <PauseMenu onResume={() => setShowMenu(false)} onQuit={onBackToMenu} />
         )}

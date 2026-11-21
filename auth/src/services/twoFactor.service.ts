@@ -49,6 +49,10 @@ export async function confirmTwoFactor(userId: number, code: string) {
     throw new Error("USER_NOT_FOUND");
   }
 
+  if (user.twoFactorEnabled) {
+    throw new Error("TWO_FACTOR_ALREADY_ENABLED");
+  }
+  
   if (!user.twoFactorSecret) {
     throw new Error("TWO_FACTOR_NOT_SETUP");
   }
@@ -70,7 +74,7 @@ export async function confirmTwoFactor(userId: number, code: string) {
   });
 }
 
-export async function disableTwoFactor(userId: number) {
+export async function disableTwoFactor(userId: number, code: string) {
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -81,6 +85,19 @@ export async function disableTwoFactor(userId: number) {
     throw new Error("USER_NOT_FOUND");
   }
 
+  if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+    throw new Error("TWO_FACTOR_NOT_ENABLED");
+  }
+
+  const result = await verify({
+    secret: user.twoFactorSecret,
+    token: code,
+  });
+
+  if (!result.valid) {
+    throw new Error("INVALID_2FA_CODE");
+  }
+  
   await prisma.user.update({
     where: {
       id: userId,

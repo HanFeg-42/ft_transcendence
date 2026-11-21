@@ -12,7 +12,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s  # run the test every 5 seconds
       timeout: 5s   # the test has 5 seconds to answer
-      retries: 12   # after 12 failures in a row, mark it unhealthy
+      retries: 12   # unhealthy it after 12 failures in a row
     networks:
       - pacova
 

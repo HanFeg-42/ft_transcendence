@@ -1,9 +1,9 @@
-/* ⭐ Caché par défaut */
+/*  Caché par défaut */
 .controls {
     display: none;
 }
 
-/* ⭐ Affiché sur mobile paysage */
+/*  Affiché sur mobile paysage */
 @media (max-width: 900px){
     .controls {
         display: grid;
@@ -31,9 +31,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* ⭐ Désactive le zoom sur double-tap */
+    /*  Désactive le zoom sur double-tap */
     touch-action: manipulation;
-    /* ⭐ Désactive la sélection de texte */
+    /*  Désactive la sélection de texte */
     user-select: none;
     -webkit-user-select: none;
 }

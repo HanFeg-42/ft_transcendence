@@ -19,7 +19,7 @@ const GHOST_COLORS = ["#ff0000", "#ffb8ff", "#00ffff", "#ffb851"];
 // Pac-Man colors: index 0 = yellow, index 1 = pink (same order on both clients)
 const PLAYER_COLORS = ["#ffff00", "rgb(149, 245, 76)"];
 
-// ⭐ Fonction 1 : position pixel (définie UNE SEULE FOIS)
+//  Fonction 1 : position pixel (définie UNE SEULE FOIS)
 const getPixelPosition = (
   tile: { x: number; y: number },
   dir: string | null,
@@ -49,7 +49,7 @@ const getPixelPosition = (
   }
 };
 
-// ⭐ Fonction 2 : rotation (définie UNE SEULE FOIS)
+//  Fonction 2 : rotation (définie UNE SEULE FOIS)
 const getRotation = (dir: string | null): string => {
   switch (dir) {
     case "UP":
@@ -126,31 +126,7 @@ const height = maze.length;
           );
         }),
       )}
-
-      {/* 3. JOUEURS — SIMPLIFIÉ : juste l'appel aux fonctions */}
-      {/* {players.map((player) => {
-        const pos = getPixelPosition(
-          player.tile,
-          player.dir,
-          player.step,
-          CELL_SIZE,
-          TICKS_PER_TILE,
-        );
-        return (
-          <div
-            key={`player-${player.id}`}
-            className={styles.player}
-            style={{
-              left: `${pos.x}px`,
-              top: `${pos.y}px`,
-              width: `${CELL_SIZE}px`,
-              height: `${CELL_SIZE}px`,
-              transform: getRotation(player.dir),
-            }}
-          />
-        );
-      })} */}
-
+      
         {players.map((player, index) => {
         const pos = getPixelPosition(
           player.tile,
