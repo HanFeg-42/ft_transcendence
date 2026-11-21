@@ -121,7 +121,7 @@ flowchart TD
 ## Friends
 
 Request lifecycle
-```
+```mermaid
 stateDiagram-v2
     [*] --> pending: POST /friends/requests
     pending --> friends: accept (or the other user sends a request too)
@@ -132,7 +132,7 @@ stateDiagram-v2
 ```
 
 Real-time flow
-```
+```mermaid
 sequenceDiagram
     participant A as Alice (browser)
     participant C as Chat service
