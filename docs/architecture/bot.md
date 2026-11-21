@@ -35,7 +35,7 @@ flowchart TD
 | normal | 4 | 15 % |
 | hard | 6 | 5 % |
 
-The player also chooses the maze (3 available) and the time limit before the match.
+The player also chooses the maze (3 available) and the time limit before the match. The difficulty chosen on that screen only changes the bot: the 4 ghosts always move at the default `normal` speed in bot games.
 
 ## Winner
 

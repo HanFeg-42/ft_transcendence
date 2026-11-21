@@ -14,7 +14,6 @@ import {
   FORFEIT_DELAY_MS,
 } from "../../../../shared/data/game-data";
 import MazeUI from "./MazeUI";
-// import Result from "./ResultCard";
 import { PauseMenu, ResultModal } from "./GameOverlays";
 import Dots from "./Dots";
 import { getProfileById } from "../../services/userService";

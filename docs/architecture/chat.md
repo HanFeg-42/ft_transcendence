@@ -11,7 +11,7 @@
 
 | REST route | Meaning |
 |---|---|
-| `GET /messages/:friendId?` | History with one friend, newest first, 500 per page  |
+| `GET /messages/:friendId` | History with one friend, newest first, the last 500 messages (no paging) |
 | `GET /friends` | Friends list with `online` (always `false` if either side blocked) |
 | `GET /friends/requests` | Pending requests, `incoming` and `outgoing` |
 | `POST /friends/requests` | Send a request (or accept the pending reverse one) |
@@ -42,7 +42,7 @@ The friends routes also push `friend_request`, `friend_request_cancelled`, `frie
 
 Safety, checked on every packet:
 
-- Limits per socket: **100 packets**, **20 messages/invites** and **20 user lookups** per 10 s; a `typing` packet is ignored if the last one was less than 1 s ago.
+- Limit per socket: **50 packets per 10 s** (more gets `Too many requests, slow down`); a `typing` packet is ignored if the last one was less than 1 s ago.
 - A message is trimmed, cannot be empty, and is limited to **1000 characters**.
 - The target must be a valid user id, not myself, and must exist (checked once with the auth service).
 - Messages, typing, read receipts and invites only work between **friends**, and never when either user **blocked** the other.
@@ -101,7 +101,7 @@ Only the invited user can answer, and only once. A late answer counts as expired
 
 ## Presence
 
-The service keeps a map `userId → set of sockets` (so several tabs work). Presence is shared with the user's **partners**: friends plus everyone they exchanged messages with, minus the ones who blocked them or whom they blocked.
+The service keeps a map `userId → set of sockets` (so several tabs work). Presence is shared with the user's **partners**: their friends, minus the ones who blocked them or whom they blocked.
 
 ```mermaid
 flowchart TD
@@ -146,6 +146,7 @@ stateDiagram-v2
 
 Other services create theirs through `POST /internal/notifications`. The UI shows an unread counter and a Notifications page (mark one / all as read, delete one / all, load more with `cursor`).
 
+## Frontend behavior
 
 - `useChat` loads the friends, then the last 500 messages and the block status of the selected friend (again after every reconnect, to catch up). Live events update the same state.
 - The socket reconnects by itself with a growing delay (1 s, 2 s, 4 s … max 15 s); while it is down the page shows "reconnecting".

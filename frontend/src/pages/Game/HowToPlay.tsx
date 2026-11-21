@@ -76,9 +76,6 @@ export default function HowToPlay() {
           </Card>
 
           <div className="flex justify-center gap-4 pb-6">
-            <PixelButton variant="outline-green" onClick={() => navigate(-1)}>
-              {t("howToPlay_back")}
-            </PixelButton>
             <PixelButton variant="filled-magenta" onClick={() => navigate("/choose")}>
               {t("howToPlay_play")}
             </PixelButton>

@@ -19,7 +19,7 @@
 **Key features**
 
 - Sign up / login, **42 OAuth**, **2FA** (TOTP)
-- Local game, **vs. AI bot** (3 levels), **online 1v1** with matchmaking and 3 mazes
+- Local game (1 or 2 players on one device), **vs. AI bot** (3 levels), **online 1v1** with matchmaking, private rooms and 3 mazes
 - Real-time chat, friends with online status, notifications
 - Profiles, avatars, achievements, match history, leaderboard
 - English / French / Arabic (RTL), custom design system, responsive UI
@@ -64,9 +64,9 @@ Databases are created by `postgres-db/init.sql`; Prisma migrations run automatic
 
 ## Project Management
 
-- **Organisation:** 1-week Scrum sprints (planning, review, retrospective); each member took or split backlog cards. See [`docs/architecture/team-workflow.md`](docs/architecture/team-workflow.md).
-- **Tools:** Trello (backlog and sprint board), GitHub (Pull Requests, code review, protected `main` and `dev`), Figma (design), Discord.
-- **Git rules:** feature branches, PR + 1 approval, Conventional Commits.
+- **Method:** Agile, using **Scrum** with **1-week sprints**: the work is split into small backlog cards, each sprint starts with a planning, ends with a review (demo of what works) and a retrospective (what to improve). Each member took or split backlog cards. The Product Owner (`hfegrach`) owns the backlog and priorities, the Tech Lead (`machaouk`) the architecture, the Project Manager (`nel-khad`) the tracking. Full explanation (roles, sprint cycle, ceremonies, board, definition of done): [`docs/architecture/team-workflow.md`](docs/architecture/team-workflow.md).
+- **Tools:** Trello (backlog and sprint board), GitHub (Pull Requests, code review, protected `main` and `dev`, automatic CodeRabbit review on PRs to `dev`), Figma (design), Discord.
+- **Git rules:** feature branches from `dev`, PR + 1 teammate approval, Conventional Commits.
 
 ## Technical Stack
 
@@ -76,8 +76,8 @@ Databases are created by `postgres-db/init.sql`; Prisma migrations run automatic
 | Backend | Node.js + Express (TypeScript), `ws` for WebSockets |
 | API Gateway | Express + `http-proxy-middleware` + `express-rate-limit` |
 | Database | PostgreSQL 17 with Prisma 7 |
-| Security | bcrypt, JWT (access + refresh), TOTP 2FA (`otplib`), NGINX TLS |
-| Infra | Docker Compose, NGINX |
+| Security | bcrypt (`bcryptjs`), JWT (access + refresh), TOTP 2FA (`otplib`), NGINX TLS, rate limiting on `/auth` |
+| Infra | Docker Compose, NGINX, Node.js 22 |
 
 **Why these choices**
 
@@ -111,7 +111,7 @@ One PostgreSQL server, **one database per service**; services reference users by
 | Friends | Requests, accept / decline / remove, list with online status | `oelmanso` |
 | Chat | Real-time private chat, history, block, typing, read receipts, game invites | `machaouk` |
 | Notifications | Real-time and persistent, unread counter | `hfegrach` |
-| Local game | Two players on one device | `ynadime` |
+| Local game | One or two players on one device (arrows + WASD) | `ynadime` |
 | Play vs. bot | Pac-Man bot with 3 difficulty levels | `machaouk` |
 | Online 1v1 | Matchmaking, two Pac-Mans on two computers, reconnection | `ynadime` |
 | Game customization | 3 mazes, power pellets, difficulty and time settings | `ynadime`, `machaouk` |
