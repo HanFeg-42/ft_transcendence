@@ -72,14 +72,14 @@ const resources = {
       userProfile_match_DRAW: "DRAW",
       userProfile_match_ABANDONED: "ABANDONED",
       userProfile_achievement_champion_title: "Champion",
-      userProfile_achievement_champion_description: "Win 100 matches",
+      userProfile_achievement_champion_description: "Win 1 matche",
       "userProfile_achievement_ghost-hunter_title": "Ghost Hunter",
-      "userProfile_achievement_ghost-hunter_description": "Defeat 50 ghosts",
+      "userProfile_achievement_ghost-hunter_description": "Defeat 5 ghosts",
       "userProfile_achievement_cherry-collector_title": "Cherry Collector",
       "userProfile_achievement_cherry-collector_description":
-        "Collect 200 fruits",
+        "Collect 20 fruits",
       "userProfile_achievement_pac-maniac_title": "Pac-Maniac",
-      "userProfile_achievement_pac-maniac_description": "Play 500 matches",
+      "userProfile_achievement_pac-maniac_description": "Play 30 matches",
 
       game_mode_select_title: "SELECT MODE",
       game_mode_choose: "CHOOSE YOUR GAME MODE",
@@ -762,16 +762,16 @@ const resources = {
       userProfile_match_ABANDONED: "ABANDON",
       //achv
       userProfile_achievement_champion_title: "Champion",
-      userProfile_achievement_champion_description: "Gagner 100 parties",
+      userProfile_achievement_champion_description: "Gagner 1 partie",
       "userProfile_achievement_ghost-hunter_title": "Chasseur de fantômes",
       "userProfile_achievement_ghost-hunter_description":
-        "Éliminer 50 fantômes",
+        "Éliminer 5 fantômes",
       "userProfile_achievement_cherry-collector_title":
         "Collectionneur de cerises",
       "userProfile_achievement_cherry-collector_description":
-        "Récolter 200 fruits",
+        "Récolter 20 fruits",
       "userProfile_achievement_pac-maniac_title": "Pac-Maniaque",
-      "userProfile_achievement_pac-maniac_description": "Jouer 500 parties",
+      "userProfile_achievement_pac-maniac_description": "Jouer 30 parties",
 
       game_mode_select_title: "CHOISIR UN MODE",
       game_mode_choose: "CHOISISSEZ VOTRE MODE DE JEU",
@@ -1519,13 +1519,13 @@ const resources = {
       userProfile_match_DRAW: "تعادل",
       userProfile_match_ABANDONED: "انسحاب",
       userProfile_achievement_champion_title: "البطل",
-      userProfile_achievement_champion_description: "اربح 100 مباراة",
+      userProfile_achievement_champion_description: "اربح 1 مباراة",
       "userProfile_achievement_ghost-hunter_title": "صائد الأشباح",
-      "userProfile_achievement_ghost-hunter_description": "اقضِ على 50 شبحًا",
+      "userProfile_achievement_ghost-hunter_description": "اقضِ على 5 شبحًا",
       "userProfile_achievement_cherry-collector_title": "جامع الكرز",
-      "userProfile_achievement_cherry-collector_description": "اجمع 200 فاكهة",
+      "userProfile_achievement_cherry-collector_description": "اجمع 20 فاكهة",
       "userProfile_achievement_pac-maniac_title": "عاشق باك مان",
-      "userProfile_achievement_pac-maniac_description": "العب 500 مباراة",
+      "userProfile_achievement_pac-maniac_description": "العب 30 مباراة",
 
       game_mode_select_title: "اختر نمط اللعب",
       game_mode_choose: "اختر نمط اللعب",
