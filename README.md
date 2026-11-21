@@ -161,57 +161,31 @@ Each member also made their own pages responsive.
 
 ## Resources
 
-**Documentation**
-
 - [React](https://react.dev)
 - [TypeScript](https://www.typescriptlang.org/docs/)
 - [Vite](https://vite.dev)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [PostgreSQL](https://www.postgresql.org/docs/)
-
-**Concepts**
-
 - [Microservices — GeeksforGeeks](https://www.geeksforgeeks.org/system-design/microservices/)
 - [What is WebSocket? — Ably](https://ably.com/topic/websockets)
 - [Breadth First Search — GeeksforGeeks](https://www.geeksforgeeks.org/dsa/breadth-first-search-or-bfs-for-a-graph/) (bot pathfinding)
 - [Depth Limited Search for AI — GeeksforGeeks](https://www.geeksforgeeks.org/artificial-intelligence/depth-limited-search-for-ai/) (bot look-ahead)
-
-**UI inspiration**
-
 - [Figma Community](https://www.figma.com/community): shared design files and UI kits
-- [Dribbble](https://dribbble.com): UI and game interface shots
-- [Pinterest](https://www.pinterest.com): pixel-art and retro-arcade moodboards
-- [Stitch (Google Labs)](https://blog.google/innovation-and-ai/models-and-research/google-labs/stitch-ai-ui-design/): AI tool used to explore layout ideas
-
-**Authentication and security**
-
 - [Introduction to JSON Web Tokens — jwt.io](https://jwt.io/introduction) (access and refresh tokens)
 - [Password Storage Cheat Sheet — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) (bcrypt hashing)
 - [42 API: web application flow](https://api.intra.42.fr/apidoc/guides/web_application_flow) (42 OAuth)
 - [RFC 6238: TOTP](https://datatracker.ietf.org/doc/html/rfc6238) (2FA codes)
-
-**Backend, database and infrastructure**
-
 - [Express](https://expressjs.com)
 - [Prisma documentation](https://www.prisma.io/docs) (schemas, migrations, transactions used for friend requests)
 - [Docker Compose](https://docs.docker.com/compose/)
 - [NGINX as a WebSocket proxy](https://nginx.org/en/docs/http/websocket.html)
-
-**Real-time and game**
-
 - [WebSockets API — MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) (chat, presence, game sockets)
 - [Client-Server Game Architecture — Gabriel Gambetta](https://www.gabrielgambetta.com/client-server-game-architecture.html) (server-authoritative game)
 - [The Pac-Man Dossier](https://pacman.holenet.info/) (original rules, ghost behavior)
 
-**Translation and RTL**
-
 - [i18next](https://www.i18next.com) and [react-i18next](https://react.i18next.com)
 - [CSS logical properties — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values) (layout that mirrors for Arabic)
 
-**Teamwork**
-
-- [The Scrum Guide](https://scrumguides.org)
-- [Conventional Commits](https://www.conventionalcommits.org)
 
 
 **Use of AI:** used to explain concepts (microservices, WebSocket proxying, JWT / 2FA), read error messages, get code-review second opinions, and help with FR / AR translations.
