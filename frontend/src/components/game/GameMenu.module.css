@@ -23,7 +23,7 @@
     flex-direction: row; /* Puts buttons side by side */
     justify-content: center;
     align-items: center;
-    gap: 24px; /* 💡 This adds exactly 24px of spacing between your buttons */
+    gap: 24px; /*  This adds exactly 24px of spacing between your buttons */
 }
 
 @keyframes float {

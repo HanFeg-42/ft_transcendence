@@ -1,9 +1,9 @@
-/* ⭐ État par défaut : caché */
+/*  État par défaut : caché */
 .overlay {
     display: none;
 }
 
-/* ⭐ Affiché seulement en mobile portrait */
+/*  Affiché seulement en mobile portrait */
 @media (max-width: 900px) and (orientation: portrait){
     .overlay {
         display: flex;
