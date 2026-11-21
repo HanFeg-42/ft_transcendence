@@ -6,10 +6,6 @@ import { updateUserAchievements } from "../achievement.service";
 const router = Router();
 
 router.post("/update-stats", async (req: Request, res: Response) => {
-  // const KEY = process.env.INTERNAL_API_KEY;
-  // if (!KEY || req.headers["x-internal-key"] !== KEY) {
-  //   return res.status(403).json({ error: "Forbidden" });
-  // }
   const rawUserId = req.headers["x-user-id"];
   const userId = Number(
     Array.isArray(rawUserId) ? rawUserId[0] : rawUserId

@@ -14,18 +14,18 @@ export function useCellSize(mazeWidth: number) {
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
             
-            // ⭐ On garde une marge pour le HUD et les bordures
+            //  On garde une marge pour le HUD et les bordures
             const maxWidth = screenWidth - 200;   // 100px pour chaque barre HUD
             const maxHeight = screenHeight - 100; // 100px pour le HUD top
             
-            // ⭐ Calcule la taille max possible sans dépasser
+            //  Calcule la taille max possible sans dépasser
             const sizeByWidth = Math.floor(maxWidth / mazeWidth);
             const sizeByHeight = Math.floor(maxHeight / 20); // 20 = hauteur du maze
             
-            // ⭐ Prend la plus petite des deux pour que tout tienne
+            //  Prend la plus petite des deux pour que tout tienne
             const newSize = Math.min(sizeByWidth, sizeByHeight, 32);
             
-            // ⭐ Sécurité : minimum 12px pour que ce soit jouable
+            //  Sécurité : minimum 12px pour que ce soit jouable
             setCellSize(Math.max(newSize, 12));
         };
 

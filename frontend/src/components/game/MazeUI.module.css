@@ -5,7 +5,7 @@
    ═══════════════════════════════════════════ */
 .mazeContainer {
     position: relative;
-    /* ⭐ Fond semi-transparent */
+    /*  Fond semi-transparent */
     background-color: rgba(0, 0, 0, 0.4);
     
     border: 4px solid #EF4444;
@@ -17,7 +17,7 @@
     box-sizing: content-box;
     image-rendering: pixelated;
     
-    /* ⭐ Optionnel : verre dépoli */
+    /*  Optionnel : verre dépoli */
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
 }
@@ -91,11 +91,11 @@
     border-radius: 50%;
     transform-origin: center center;
     transition: transform 0.1s linear;
-    /* ⭐ Nécessaire pour positionner la bouche */
+    /*  Nécessaire pour positionner la bouche */
     position: absolute;
 }
 
-/* ⭐ La bouche : un triangle NOIR qui recouvre la partie droite */
+/*  La bouche : un triangle NOIR qui recouvre la partie droite */
 .player::after {
     content: '';
     position: absolute;
@@ -103,9 +103,9 @@
     right: 0;
     width: 50%;
     height: 100%;
-    /* ⭐ Triangle noir qui part du centre */
+    /*  Triangle noir qui part du centre */
     clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
-    /* ⭐ Animation de la bouche */
+    /*  Animation de la bouche */
     transform-origin: left center;
     animation: chomp 0.4s infinite alternate;
     background-color: rgba(0, 0, 0, 0.8);
@@ -128,6 +128,6 @@
     position: absolute;
     z-index: 9;
     pointer-events: none;
-    /* ⭐ Glow néon autour du fantôme (couleur héritée via SVG) */
+    /*  Glow néon autour du fantôme (couleur héritée via SVG) */
     filter: drop-shadow(0 0 6px currentColor);
 }

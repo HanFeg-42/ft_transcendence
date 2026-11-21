@@ -123,18 +123,18 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ userId }) => {
   return (
     <Card
       variant="gray"
-      className="w-full h-full p-5 bg-pacova-surface/60 backdrop-blur-sm flex flex-col justify-between"
+      className="w-full min-w-0 h-full p-4 sm:p-5 bg-pacova-surface/60 backdrop-blur-sm flex flex-col justify-between"
     >
-      <div className="w-full mb-4">
-        <span className="font-pixelify text-xl text-pacova-green uppercase tracking-widest block pl-1">
+      <div className="w-full mb-3 sm:mb-4">
+        <span className="font-pixelify text-lg sm:text-xl text-pacova-green uppercase tracking-widest block pl-1">
           {t("userProfile_matchHistory")}
         </span>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between font-vt323 text-xl tracking-wider text-gray-300">
+      <div className="flex-1 flex flex-col justify-between max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:thin] [scrollbar-color:#8ed603_transparent] font-vt323 text-xl tracking-wider text-gray-300">
         {loading ? (
           <span className="text-gray-500 text-sm">
-            {t("userProfile_loadingMatches")}
+            {t("userProfile_loading")}
           </span>
         ) : matches.length === 0 ? (
           <span className="text-gray-500 text-sm">
@@ -144,34 +144,34 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ userId }) => {
           matches.map((match) => (
             <div
               key={match.id}
-              className="flex items-center justify-between border-b border-white/5 pb-2.5 pt-1.5 last:border-none last:pb-0"
+              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 shrink-0 border-b border-white/5 py-2 sm:flex sm:justify-between sm:gap-3 sm:pb-2.5 sm:pt-1.5 last:border-none last:pb-0"
             >
-              <div className="w-16 sm:w-20">
+              <div className="col-start-2 row-start-1 sm:w-20">
                 <span
-                  className={`font-bold uppercase ${resultColors[match.result]}`}
+                  className={`font-bold uppercase text-base sm:text-xl ${resultColors[match.result]}`}
                 >
                   {t(`userProfile_match_${match.result}`)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-center w-12">
+              <div className="col-start-1 row-start-1 row-span-2 flex items-center justify-center sm:w-12">
                 <img
                   src={getMatchIcon(match)}
                   alt={t(`userProfile_match_${match.result}`)}
-                  className="w-9 h-9 object-contain"
+                  className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
                 />
               </div>
 
-              <div className="w-30 text-center font-bold text-white text-xl">
+              <div className="col-start-3 row-start-1 text-right sm:text-center sm:w-30 whitespace-nowrap font-bold text-white text-base sm:text-xl">
                 {match.score}
               </div>
 
-              <div className="w-28 sm:w-36 text-left text-lg uppercase truncate">
+              <div className="col-start-2 row-start-2 min-w-0 truncate text-left text-sm sm:text-lg uppercase sm:w-36">
                 <span className="text-pacova-pink">{t("userProfile_vs")}</span>{" "}
                 {match.opponent}
               </div>
 
-              <div className="text-right text-gray-500 text-sm font-sans min-w-[70px]">
+              <div className="col-start-3 row-start-2 text-right text-gray-500 text-xs sm:text-sm font-sans sm:min-w-[70px]">
                 {match.time}
               </div>
             </div>
