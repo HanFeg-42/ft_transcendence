@@ -124,24 +124,5 @@ Example:
 
 `GET /api/users/profile/me`
 
-## 7. Project Structure
-
-```text
-user/
-├── prisma/
-│   ├── schema.prisma
-│   └── seed.ts
-│
-└── src/
-    ├── routes/
-    │   ├── profile.routes.ts
-    │   └── achievement.routes.ts
-    │
-    ├── achievement.service.ts
-    ├── notify.ts
-    ├── prisma.ts
-    ├── app.ts
-    └── server.ts
-```
 
 **Main responsibility:** The User Service centralizes player profile management and achievement tracking, while maintaining persistent data through PostgreSQL and Prisma.
