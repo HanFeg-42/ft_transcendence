@@ -15,6 +15,7 @@ type PublicUser = { id: number; username: string; avatar: string | null };
 type Db = { blockedUser: typeof prisma.blockedUser };
 const PENDING = 'pending';
 
+
 // ---------- helpers ----------
 const isOnline = (id: number) => (onlineUsers.get(String(id))?.size ?? 0) > 0;
 const pair = (a: number, b: number) => ({ userLowId: Math.min(a, b), userHighId: Math.max(a, b) });
@@ -28,7 +29,7 @@ const isBlocked = (db: Db, a: number, b: number) =>
 const route = (fn: (userId: number, req: Request, res: Response) => unknown) =>
   async (req: Request, res: Response) => {
     const raw = req.headers['x-user-id'];
-    const userId = toId(Array.isArray(raw) ? raw[0] : raw);
+    const userId = toId(raw);
     if (!userId) return fail(res, 401, 'Missing identity');
     try {
       await fn(userId, req, res);
@@ -73,7 +74,7 @@ async function getJson(url: string, allow404 = false): Promise<unknown> {
   }
 }
 
-// Also used by blocks.ts. The profile endpoint returns at most 100 ids per call.
+
 export async function getPublicUsers(ids: number[]): Promise<PublicUser[]> {
   if (!ids.length) return [];
   const profiles = (await getJson(`${USER_URL}/profile/profiles?ids=${[...new Set(ids)].join(',')}`)) as
@@ -83,6 +84,7 @@ export async function getPublicUsers(ids: number[]): Promise<PublicUser[]> {
 
 const userExists = async (id: number) => (await getJson(`${AUTH_URL}/users/${id}`, true)) !== null;
 const listUserIds = async () => ((await getJson(`${AUTH_URL}/users`)) as { id: number }[]).map(u => u.id);
+
 
 // ---------- websocket events ----------
 function sendToUser(userId: number, event: string, data: Record<string, unknown>) {
@@ -117,19 +119,23 @@ async function getRelation(userId: number, otherId: number) {
   return friendship ? 'friend' : blocked ? 'blocked' : incoming ? 'incoming_request' : outgoing ? 'outgoing_request' : 'none';
 }
 
+
 // ---------- routes ----------
+
+// GET /friends — list of friends
 router.get('/friends', route(async (userId, _req, res) => {
   const [rows, blockedRows] = await Promise.all([
     prisma.friendship.findMany({ where: { OR: [{ userLowId: userId }, { userHighId: userId }] }, orderBy: { createdAt: 'desc' } }),
     prisma.blockedUser.findMany({ where: { OR: [{ blockerId: userId }, { blockedId: userId }] }, select: { blockerId: true, blockedId: true } }),
   ]);
   const blocked = new Set(blockedRows.map(r => (r.blockerId === userId ? r.blockedId : r.blockerId)));
-  const friendIds = rows.map(r => (r.userLowId === userId ? r.userHighId : r.userLowId)); // blocked friends stay in the list
+  const friendIds = rows.map(r => (r.userLowId === userId ? r.userHighId : r.userLowId));
   if (!friendIds.length) return res.json([]);
 
   const byId = new Map((await getPublicUsers(friendIds)).map(u => [u.id, u]));
   return res.json(friendIds.flatMap(id => (byId.has(id) ? [{ ...byId.get(id)!, online: !blocked.has(id) && isOnline(id) }] : [])));
 }));
+
 
 // GET /friends/requests — incoming and outgoing pending requests.
 router.get('/friends/requests', route(async (userId, _req, res) => {
@@ -148,13 +154,13 @@ router.get('/friends/requests', route(async (userId, _req, res) => {
   return res.json({ incoming: list('addresseeId'), outgoing: list('requesterId') });
 }));
 
+
 // POST /friends/requests { userId } — send a request, or accept a pending reverse one.
 router.post('/friends/requests', route(async (requesterId, req, res) => {
   const addresseeId = toId(req.body?.userId);
   if (!addresseeId) return fail(res, 400, 'Invalid userId');
   if (addresseeId === requesterId) return fail(res, 400, 'You cannot send a friend request to yourself');
 
-  // The profile service creates a profile for any id, so existence is checked first.
   if (!(await userExists(addresseeId))) return fail(res, 404, 'User not found');
 
   const users = await getPublicUsers([requesterId, addresseeId]);
@@ -206,6 +212,8 @@ router.post('/friends/requests', route(async (requesterId, req, res) => {
   await notifySafe(addresseeId, NotificationTypes.FRIEND_REQUEST, payload);
   return res.status(201).json({ id: payload.requestId, status: result.request.status, userId: addresseeId });
 }));
+
+
 // POST /friends/requests/:id/accept — accept an incoming request.
 router.post('/friends/requests/:id/accept', requestRoute(async (userId, id, res) => {
   const result = await serializable(async tx => {
@@ -214,7 +222,7 @@ router.post('/friends/requests/:id/accept', requestRoute(async (userId, id, res)
     if (await isBlocked(tx, userId, request.requesterId)) return { kind: 'blocked' as const };
 
     await tx.friendship.upsert({ where: { userLowId_userHighId: pair(userId, request.requesterId) }, update: {}, create: pair(userId, request.requesterId) });
-    // Also closes a duplicate reverse pending request, if any.
+    
     await tx.friendRequest.updateMany({
       where: { status: PENDING, OR: [{ id: request.id }, { requesterId: userId, addresseeId: request.requesterId }] },
       data: { status: 'accepted', respondedAt: new Date() },
@@ -230,6 +238,7 @@ router.post('/friends/requests/:id/accept', requestRoute(async (userId, id, res)
   return res.json({ accepted: true, friendId: result.friendId });
 }));
 
+
 // POST /friends/requests/:id/decline — decline an incoming request.
 router.post('/friends/requests/:id/decline', requestRoute(async (userId, id, res) => {
   const request = await prisma.friendRequest.findFirst({ where: { id, addresseeId: userId, status: PENDING }, select: { requesterId: true } });
@@ -237,23 +246,25 @@ router.post('/friends/requests/:id/decline', requestRoute(async (userId, id, res
     where: { id, addresseeId: userId, status: PENDING },
     data: { status: 'declined', respondedAt: new Date() },
   })).count;
-  if (!request || !done) return fail(res, 404, 'Pending friend request not found');
+  if (!done) return fail(res, 404, 'Pending friend request not found');
 
   sendToUser(request.requesterId, 'friend_request_declined', { requestId: id.toString(), userId });
   await notifySafe(request.requesterId, NotificationTypes.FRIEND_DECLINED, { userId });
   return res.json({ declined: true });
 }));
 
+
 // DELETE /friends/requests/:id — cancel our outgoing request.
 router.delete('/friends/requests/:id', requestRoute(async (userId, id, res) => {
   const request = await prisma.friendRequest.findFirst({ where: { id, requesterId: userId, status: PENDING }, select: { addresseeId: true } });
   const done = request && (await prisma.friendRequest.deleteMany({ where: { id, requesterId: userId, status: PENDING } })).count;
-  if (!request || !done) return fail(res, 404, 'Outgoing pending request not found');
+  if (!done) return fail(res, 404, 'Outgoing pending request not found');
 
   sendToUser(request.addresseeId, 'friend_request_cancelled', { requestId: id.toString(), userId });
   await notifySafe(request.addresseeId, NotificationTypes.FRIEND_REQUEST_CANCELLED, { userId });
   return res.json({ cancelled: true });
 }));
+
 
 // DELETE /friends/:userId — remove an existing friendship.
 router.delete('/friends/:userId', route(async (userId, req, res) => {
@@ -267,11 +278,12 @@ router.delete('/friends/:userId', route(async (userId, req, res) => {
   return res.json({ removed: true });
 }));
 
+
 // GET /users/search?q=... — never returns email, excludes self.
 router.get('/users/search', route(async (userId, req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase() : '';
   if (!q) return res.json([]);
-  // Ids come from auth, names come from the profile (a renamed user is found by the new name).
+
   const ids = (await listUserIds()).filter(id => id !== userId);
   const matches = (await getPublicUsers(ids))
     .filter(u => u.username.toLowerCase().includes(q))
