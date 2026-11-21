@@ -130,6 +130,22 @@ stateDiagram-v2
     friends --> [*]: DELETE /friends/:userId
 ```
 
+```
+sequenceDiagram
+    participant A as Alice (browser)
+    participant C as Chat service
+    participant B as Bob (browser)
+    A->>C: POST /friends/requests { userId: Bob }
+    C->>C: serializable transaction
+    C-->>B: socket event "friend_request" + saved notification
+    B->>C: POST /friends/requests/:id/accept
+    C->>C: create Friendship, mark request accepted
+    C-->>A: socket "friend_accepted" + presence of Bob
+    C-->>B: socket "friend_accepted" + presence of Alice
+    Note over A,B: each browser reloads its lists
+```
+
+
 `Friendship` stores the two ids in sorted order (`userLowId`, `userHighId`) with a unique constraint, so the same friendship can never exist twice. Requests are handled in serializable transactions (retried on conflict), so two users adding each other at the same time end up as friends, with no duplicates. Each change is pushed on the socket and creates a notification for the other user.
 
 ## Notifications
