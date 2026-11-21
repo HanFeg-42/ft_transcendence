@@ -11,7 +11,7 @@
 
 | REST route | Meaning |
 |---|---|
-| `GET /messages/:friendId?cursor=` | History with one friend, newest first, 50 per page (`cursor` = last message id, loads older ones) |
+| `GET /messages/:friendId?` | History with one friend, newest first, 500 per page  |
 | `GET /friends` | Friends list with `online` (always `false` if either side blocked) |
 | `GET /friends/requests` | Pending requests, `incoming` and `outgoing` |
 | `POST /friends/requests` | Send a request (or accept the pending reverse one) |
@@ -146,18 +146,8 @@ stateDiagram-v2
 
 Other services create theirs through `POST /internal/notifications`. The UI shows an unread counter and a Notifications page (mark one / all as read, delete one / all, load more with `cursor`).
 
-## Frontend
 
-```mermaid
-flowchart LR
-    CP[Chat page + MessageList] --> UC[useChat hook]
-    FP[Friends page] --> API
-    UC -- REST: friends, history, block --> API[(/api/chat)]
-    UC -- WebSocket ?token=JWT --> API
-    FP -- own socket: refresh on friend events --> API
-```
-
-- `useChat` loads the friends, then the last 50 messages and the block status of the selected friend (again after every reconnect, to catch up). Live events update the same state.
+- `useChat` loads the friends, then the last 500 messages and the block status of the selected friend (again after every reconnect, to catch up). Live events update the same state.
 - The socket reconnects by itself with a growing delay (1 s, 2 s, 4 s … max 15 s); while it is down the page shows "reconnecting".
 - "Typing" is sent at most every 2 s and the indicator disappears after 2 s. `read` is sent when a conversation is opened, when a message arrives and when the tab becomes visible again: ✓ = sent, ✓✓ = read.
 - When an invite is accepted, both users get a "Start game" button in the conversation. A pending invite opens an accept / decline popup for the invited user.
