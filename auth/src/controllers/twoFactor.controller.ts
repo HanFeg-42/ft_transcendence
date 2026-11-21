@@ -22,9 +22,6 @@ export async function setupTwoFactor(req: Request, res: Response) {
         error: "User not found",
       });
     }
-
-    console.error(error);
-
     return res.status(500).json({
       error: "Something went wrong",
     });
@@ -69,9 +66,6 @@ export async function confirmTwoFactor(req: Request, res: Response) {
         });
       }
     }
-
-    console.error(error);
-
     return res.status(500).json({
       error: "Something went wrong",
     });
@@ -95,9 +89,6 @@ export async function disableTwoFactor(req: Request, res: Response) {
         error: "User not found",
       });
     }
-
-    console.error(error);
-
     return res.status(500).json({
       error: "Something went wrong",
     });
