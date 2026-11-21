@@ -92,7 +92,7 @@ unlocked = newProgress >= target;
 | Champion | 1 | Each win |
 | Ghost Hunter | 10 | Ghosts eaten |
 | Cherry Collector | 20 | Fruits eaten |
-| Pac-Maniac | 1 | Each online match |
+| Pac-Maniac | 30 | Each online match |
 
 ## 5. Player Statistics & Progression
 
