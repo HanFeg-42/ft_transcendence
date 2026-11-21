@@ -69,7 +69,6 @@ Every message is a JSON envelope `{ event, data }`, typed in `shared/types/game-
 | `error {message}` | server → client | A refused request (see below). For the main errors, `message` is a **translation key** (`online_game_...`) that the frontend translates; the others are plain English. |
 
 - `joinGame` also carries a `username`, but the server ignores it and uses the id from the token.
-- `gameStart` and `gameOver` exist in the types but are never sent. The end of a match is a `gameState` with status `finished`.
 
 **Safety:**
 
