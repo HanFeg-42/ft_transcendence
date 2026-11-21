@@ -53,10 +53,7 @@ export async function notifyUser<T extends NotificationType>(
     try {
       socket.send(JSON.stringify(packet));
     } catch (err) {
-      console.warn(
-        '[CHAT-SERVICE] Failed to send notification to socket:',
-        err,
-      );
+      // console.warn('[CHAT-SERVICE] Failed to send notification to socket:', err);
     }
   }
 }

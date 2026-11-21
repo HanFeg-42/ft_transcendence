@@ -50,7 +50,8 @@ function RowAvatar({
   isActor: boolean;
 }) {
   const [imgFailed, setImgFailed] = useState(false);
-  const base = "shrink-0 w-10 h-10 rounded-full flex items-center justify-center";
+  const base =
+    "shrink-0 w-10 h-10 rounded-full flex items-center justify-center";
 
   if (isActor && info?.avatarUrl && !imgFailed) {
     return (
@@ -115,9 +116,15 @@ function NotificationRow({ notification, token, onOpen, onDelete }: RowProps) {
         onClick={() => onOpen(notification, view.link)}
         className="flex-1 min-w-0 flex items-center gap-4 px-3 py-3 text-start cursor-pointer"
       >
-        <RowAvatar info={info} icon={view.icon} isActor={actorId !== undefined} />
+        <RowAvatar
+          info={info}
+          icon={view.icon}
+          isActor={actorId !== undefined}
+        />
 
-        <div className={`flex-1 min-w-0 ${TEXT} ${isUnread ? "" : "opacity-60"}`}>
+        <div
+          className={`flex-1 min-w-0 ${TEXT} ${isUnread ? "" : "opacity-60"}`}
+        >
           <p className="font-vt323 text-xl sm:text-2xl leading-tight">
             {view.text}
           </p>
@@ -139,7 +146,8 @@ function NotificationRow({ notification, token, onOpen, onDelete }: RowProps) {
         aria-label={t("notif_delete")}
         title={t("notif_delete")}
         onClick={() => onDelete(notification.id)}
-        className={`shrink-0 px-4 py-3 font-vt323 text-2xl ${MUTED} hover:text-pacova-pink transition-colors cursor-pointer`}      >
+        className={`shrink-0 px-4 py-3 font-vt323 text-2xl ${MUTED} hover:text-pacova-pink transition-colors cursor-pointer`}
+      >
         ×
       </button>
     </li>
@@ -177,20 +185,16 @@ export default function Notifications() {
   };
 
   const handleDelete = (id: string) => {
-    removeNotification(id).catch((err) =>
-      console.error("Failed to delete notification:", err),
-    );
+    removeNotification(id).catch(() => {});
   };
 
   const handleClearAll = () => {
-    clearAll().catch((err) =>
-      console.error("Failed to clear notifications:", err),
-    );
+    clearAll().catch(() => {});
   };
 
   const actionClass = `font-vt323 text-lg ${MUTED} hover:text-pacova-pink transition-colors cursor-pointer`;
-  
-    return (
+
+  return (
     <Background>
       <Navbar activeTab="NOTIFICATION" onSelectTab={handleSelectTab} />
 
@@ -209,11 +213,19 @@ export default function Notifications() {
           <>
             <div className="flex justify-end gap-6 mb-2">
               {unreadCount > 0 && (
-                <button type="button" onClick={markAllAsRead} className={actionClass}>
+                <button
+                  type="button"
+                  onClick={markAllAsRead}
+                  className={actionClass}
+                >
                   {t("notif_markAllRead")}
                 </button>
               )}
-              <button type="button" onClick={handleClearAll} className={actionClass}>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className={actionClass}
+              >
                 {t("notif_clearAll")}
               </button>
             </div>

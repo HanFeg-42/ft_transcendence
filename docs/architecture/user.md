@@ -71,12 +71,13 @@ erDiagram
 
 | Feature | Logic | Responsible file |
 |---|---|---|
-| Profile creation | Find existing profile or create a new one | `routes/profile.routes.ts` → `getOrCreateProfile()` |
-| Profile update | Validate and update username, bio and avatar | `routes/profile.routes.ts` |
-| Avatar upload | Validate image, generate filename and store it | `routes/profile.routes.ts` → Multer |
-| Achievement progress | Add match statistics to existing progress | `achievement.service.ts` → `updateUserAchievements()` |
-| Achievement unlock | `newProgress >= target` | `achievement.service.ts` |
-| Achievement initialization | Create all achievements as locked with zero progress | `routes/profile.routes.ts` → `getOrCreateProfile()` |
+| GET | `/profile/me` | Own profile, **with achievements** |
+| GET | `/profile/:id` | Another player's profile (no achievements) |
+| GET | `/profile/profiles?ids=1,4,7` | Several profiles at once (max 100 ids), used by friends list, chat and leaderboard |
+| PATCH | `/profile/me` | Edit `username` (3–20 chars, must be unique), `bio`, `avatar` |
+| POST | `/profile/avatar` | Upload avatar (multipart, field `avatar`) |
+| POST | `/achievements/update-stats` | Called by the game service after a match (see below); the player is read from the `x-user-id` header |
+| GET | `/uploads/avatars/<file>` | Avatar files, served through NGINX `/uploads/` (no JWT) |
 
 ### Achievement calculation
 
@@ -106,7 +107,7 @@ unlocked = newProgress >= target;
 | Current rank | Position in leaderboard | `services/leaderboardService.ts` + `CurrentRank.tsx` |
 | Rank badge | Based on leaderboard percentile | `components/profile/CurrentRank.tsx` |
 
-## 6. API Routes
+Progress is capped at a target set in `achievement.service.ts` (`ACHIEVEMENT_TARGETS`). Currently `champion` has a target of **1**, and the other three have a target of **x**, so `champion` unlock after the first win in online match. The texts shown to the player come from the translations (`i18n.ts`); the `description` stored in the database is only a placeholder (`--`).
 
 | Method | Endpoint | Description |
 |---|---|---|

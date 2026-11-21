@@ -86,7 +86,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       if (requestId !== refreshId.current) return;
-      console.error("Failed to load notifications:", err);
+      // console.error("Failed to load notifications:", err);
       setError("notif_loadError");
     } finally {
       if (requestId === refreshId.current) setLoading(false);

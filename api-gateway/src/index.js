@@ -16,6 +16,7 @@ if (!JWT_SECRET) {
 
 app.set('trust proxy', 1);
 
+//counts requests per IP (429 for over limit).
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -132,7 +133,7 @@ const server = http.createServer(app);
 
 // auth gate for every WebSocket upgrade
 server.on('upgrade', (req, socket, head) => {
-  // a client dropping mid-handshake must not crash the process
+  // a client dropping mid-handshake
   socket.on('error', () => socket.destroy());
 
   const token = extractToken(req);

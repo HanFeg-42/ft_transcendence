@@ -12,10 +12,8 @@ import { ahead } from "../engine/movement";
 export type BotDifficulty = "easy" | "normal" | "hard";
 
 
-// depth   = how many tiles ahead the bot looks
-// mistake = chance of picking a worse (but safe) move instead of the best one
 const LEVELS = {
-  easy: { depth: 2, mistake: 0.3 },
+  easy: { depth: 2, mistake: 0.5 },
   normal: { depth: 4, mistake: 0.15 },
   hard: { depth: 6, mistake: 0.05 },
 };
@@ -28,12 +26,11 @@ const BACK: Record<Direction, Direction> = {
   RIGHT: "LEFT",
 };
 
-// Score of a move where the bot dies (always the worst value)
+
 const DEATH = -10000;
 
 
-// Copy of the game used to "imagine" a move without touching the real game.
-// Only the bot is kept as a player; ghosts and pellets are copied too.
+// Copy of the game leaving only bot player
 const simulateState = (state: GameState, id: string): GameState => ({
   ...state,
   players: state.players.filter((p) => p.id === id).map((p) => ({ ...p })),
@@ -49,7 +46,6 @@ function key(tile: Tile): string {
 
 
 // Distance (in tiles) from a tile to the nearest pellet, using BFS:
-// explore the maze ring by ring, the first pellet found gives the distance.
 const pelletDistance = (state: GameState, from: Tile): number => {
   const maze = MAZES[state.mazeId];
   const seen = new Set<string>(); // tiles already visited
@@ -80,24 +76,21 @@ const pelletDistance = (state: GameState, from: Tile): number => {
 };
 
 
-// Core of the bot: tries every possible move, looks `depth` tiles ahead,
-// and returns all moves sorted from best to worst.
-// `back` is the direction we came from (not reused, so the bot doesn't go back and forth).
+//lis of direction worth, looking depth tiles ahead
 function rank(
   state: GameState,
   bot: Player,
   depth: number,
   back?: Direction,
 ): { dir: Direction; value: number }[] {
-  const maze = MAZES[state.mazeId];
 
-  // Only the moves where the next tile is not a wall
+  const maze = MAZES[state.mazeId];
   const freeDirections = DIRS.filter(
     (dir) => !isWall(maze, ahead(bot.tile, dir)),
   );
   if (freeDirections.length === 0) return [];
 
-  // Avoid turning back, unless it is the only way
+  // Avoid turning back
   const dirs = freeDirections.filter((d) => d !== back);
   const options = dirs.length ? dirs : freeDirections;
 
@@ -122,8 +115,7 @@ function rank(
       if (newState.status !== "playing")
         return { dir, value: gained };
 
-      // Future value: keep searching deeper, or at the last level
-      // prefer positions close to a pellet (closer = higher value)
+      //keep searching deeper
       let futureValue = 0;
       if (depth > 1)
         futureValue = rank(newState, me, depth - 1, BACK[dir])[0]?.value ?? 0;
@@ -136,8 +128,7 @@ function rank(
 }
 
 
-// Called by the game loop: returns the direction the bot should take
-// (or null if the bot is not at the center of a tile yet).
+// returns the direction the bot should take
 export function chooseDirection(
   state: GameState,
   botId: string,
@@ -145,7 +136,6 @@ export function chooseDirection(
 ): Direction | null {
   const bot = state.players.find((p) => p.id === botId);
 
-  // The bot only decides when it is exactly on a tile (not between two tiles)
   if (!bot || bot.step !== 0) return null;
 
   const { depth, mistake } = LEVELS[level];
@@ -158,7 +148,7 @@ export function chooseDirection(
   const [best, ...others] = moves;
   const safe = others.filter((m) => m.value > DEATH / 2); // worse moves, but survivable
 
-  // Sometimes pick a random safe move instead of the best one (makes easy levels beatable)
+  //makes easy levels beatable
   const choice =
     Math.random() < mistake && safe.length
       ? safe[Math.floor(Math.random() * safe.length)]
