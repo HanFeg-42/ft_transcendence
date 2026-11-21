@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import GameSetup from "../../components/game/GameSetup";
@@ -18,6 +18,8 @@ import { MenuButton, PauseMenu, ResultModal } from "../../components/game/GameOv
 import { useKeyboard } from "../../hooks/useKeyboard";
 import styles from "./GamePage.module.css";
 
+
+
 const TICK_INTERVAL_MS = 1000 / 30; // game runs at 30 ticks per second
 const CENTER_OFFSET = 4;            // how far each player spawns from the maze center
 const HUMAN_ID = "player-1";
@@ -26,10 +28,11 @@ const BOT_ID = "ai";
 // Human spawns left of the center, bot right of it
 function createBotGame(mazeId: string, matchTime: number): GameState {
   const state = createGame(HUMAN_ID, matchTime, mazeId);
-  const spawn = findSpawn(MAZES[state.mazeId]);
+  const spawn = findSpawn(MAZES[state.mazeId]);//finds the center of the maze
   const left = { x: spawn.x - CENTER_OFFSET, y: spawn.y };
   const right = { x: spawn.x + CENTER_OFFSET, y: spawn.y };
 
+  //adds the bot as a second player
   state.players[0].spawn = left;
   state.players[0].tile = left;
   state.players.push({
@@ -40,7 +43,7 @@ function createBotGame(mazeId: string, matchTime: number): GameState {
   return state;
 }
 
-// Same rules as the backend: 1) still has lives  2) higher score  3) draw
+//decides the winner
 function finishLocalMatch(state: GameState) {
   const [human, bot] = state.players;
   if (bot.lives <= 0 && human.lives > 0) state.winnerId = human.id;
@@ -50,19 +53,26 @@ function finishLocalMatch(state: GameState) {
   state.status = "finished";
 }
 
+//seconds into MM:SS
 const fmt = (s: number) =>
-  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; // seconds -> MM:SS
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; 
+
+
+type BotSessionProps = {
+  mazeId: string;
+  difficulty: BotDifficulty;
+  timeLimit: number;
+  onRestart: () => void;
+};
 
 // The match: game loop, inputs, pause and result popup
-const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty; timeLimit: number; onRestart: () => void }> =
-  ({ mazeId, difficulty, timeLimit, onRestart }) => {
+function BotSession({ mazeId, difficulty, timeLimit, onRestart }: BotSessionProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [paused, setPaused] = useState(false);
   const togglePause = () => setPaused((p) => !p);
 
   // The engine changes this object in place every tick. The function form of useState
-  // creates the game only ONCE (useRef(createBotGame(...)) would rebuild it on every render).
   const [state] = useState(() => createBotGame(mazeId, timeLimit));
   const [, setFrame] = useState(0); // only used to force a redraw
 
@@ -75,9 +85,11 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty; timeLimi
       if (dir) applyInput(state, BOT_ID, dir);
 
       tick(state);
-      if (state.status !== "playing") finishLocalMatch(state); // engine ends with "won"/"lost" (solo): make it 2-player
-      setFrame((f) => f + 1);
+      if (state.status !== "playing")
+        finishLocalMatch(state); // engine ends with "won"/"lost"
+      setFrame((f) => f + 1); //redraw
     }, TICK_INTERVAL_MS);
+
     return () => clearInterval(interval);
   }, [state, difficulty, paused]);
 
@@ -85,8 +97,10 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty; timeLimi
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && togglePause();
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
 
   // Human input (keyboard or mobile buttons)
   const sendInput = (dir: Direction) => {
@@ -139,7 +153,7 @@ const BotSession: React.FC<{ mazeId: string; difficulty: BotDifficulty; timeLimi
 };
 
 // Page: first the setup screen (map + difficulty + time), then the match
-const BotPage: React.FC = () => {
+function BotPage() {
   const { t } = useTranslation();
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
   const [difficulty, setDifficulty] = useState<BotDifficulty>("hard");
