@@ -1,4 +1,5 @@
 import express from "express";
+import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -21,6 +22,8 @@ import {
 } from "./controllers/twoFactor.controller";
 
 const app = express();
+
+app.disable("x-powered-by");
 
 app.use(
   cors({
@@ -81,5 +84,24 @@ app.post("/2fa/setup", authenticateToken, setupTwoFactor);
 app.post("/2fa/confirm", authenticateToken, confirmTwoFactor);
 app.post("/2fa/verify-login", verifyTwoFactorLogin);
 app.post("/2fa/disable", authenticateToken, disableTwoFactor);
+
+// Fix #6: JSON parse errors etc. must not leak an HTML stack trace.
+// (Keep this AFTER all routes.)
+app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const status =
+    typeof (err as { status?: unknown })?.status === "number" &&
+    (err as { status: number }).status >= 400 &&
+    (err as { status: number }).status < 500
+      ? (err as { status: number }).status
+      : 500;
+
+  return res.status(status).json({
+    error: status === 500 ? "Something went wrong" : "Invalid request",
+  });
+});
 
 export default app;

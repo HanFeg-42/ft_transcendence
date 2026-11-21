@@ -5,6 +5,9 @@ export async function notify(userId: number, type: string, payload: object = {})
       headers: { 'Content-Type': 'application/json', 'x-internal-key': process.env.INTERNAL_API_KEY ?? '' },
       body: JSON.stringify({ userId, type, payload }),
     });
-    if (!res.ok) console.error('[NOTIFY] chat service answered', res.status);
-  } catch (e) { console.error('[NOTIFY] failed:', e); }
+    // a non-2xx answer from chat is intentionally ignored: notifications are best-effort
+    void res;
+  } catch (e) { 
+    // console.error('[NOTIFY] failed:', e); 
+  }
 }

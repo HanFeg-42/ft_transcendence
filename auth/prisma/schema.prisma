@@ -21,6 +21,10 @@ model User {
   avatar           String?
   twoFactorEnabled Boolean  @default(false)
   twoFactorSecret  String?
+  twoFactorFailedAttempts      Int       @default(0)
+  twoFactorLockedUntil         DateTime?
+  twoFactorLastUsedStep        Int?
+  twoFactorChallengeConsumedAt DateTime?
   createdAt    DateTime @default(now())
 
   twoFactorRecoveryCodes TwoFactorRecoveryCode[]

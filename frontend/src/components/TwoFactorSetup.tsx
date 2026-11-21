@@ -7,9 +7,9 @@ import { useTranslation } from "react-i18next";
 
 export default function TwoFactorSetup() {
   const { token, user, verifyUser } = useAuth();
-
   const [qrCode, setQrCode] = useState("");
   const [code, setCode] = useState("");
+  const [disableCode, setDisableCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
@@ -69,7 +69,7 @@ export default function TwoFactorSetup() {
         setError(
           data.error === "Invalid 2FA code"
             ? t("invalidAuthentication")
-            : data.error || t("invalidAuthenticationCode")
+            : data.error || t("invalidAuthenticationCode"),
         );
         return;
       }
@@ -86,20 +86,32 @@ export default function TwoFactorSetup() {
 
   const handleDisable = async () => {
     setError("");
+
+    if (!/^\d{6}$/.test(disableCode)) {
+      setError(t("invalidCode"));
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch("/api/auth/2fa/disable", {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ code: disableCode }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || t("disableFailed"));
+        setError(
+          data.error === "Invalid 2FA code"
+            ? t("invalidAuthentication")
+            : data.error || t("disableFailed"),
+        );
         return;
       }
 
@@ -109,6 +121,8 @@ export default function TwoFactorSetup() {
         setError(t("disableRefreshError"));
         return;
       }
+
+      setDisableCode("");
     } catch {
       setError(t("connectionError"));
     } finally {
@@ -148,11 +162,23 @@ export default function TwoFactorSetup() {
             {t("enabledDescription")}
           </p>
 
+          <Input
+            label={t("authenticationCode")}
+            type="text"
+            name="disableTwoFactorCode"
+            placeholder="000000"
+            value={disableCode}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "");
+              setDisableCode(value.slice(0, 6));
+            }}
+          />
+
           <PixelButton
             type="button"
             variant="filled-green"
             size="md"
-            disabled={loading}
+            disabled={loading || disableCode.length !== 6}
             onClick={handleDisable}
             className="w-full mt-4"
           >
@@ -201,13 +227,9 @@ export default function TwoFactorSetup() {
           </div>
 
           <div className="text-center font-vt323">
-            <p className="text-pacova-pink text-lg uppercase">
-              {t("verify")}
-            </p>
+            <p className="text-pacova-pink text-lg uppercase">{t("verify")}</p>
 
-            <p className="text-gray-400 text-lg mt-2">
-              {t("enterCode")}
-            </p>
+            <p className="text-gray-400 text-lg mt-2">{t("enterCode")}</p>
           </div>
 
           <Input

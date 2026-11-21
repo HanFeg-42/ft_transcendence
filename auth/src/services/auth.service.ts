@@ -41,6 +41,7 @@ export async function loginUser(
       {
         userId: user.id,
         purpose: "2fa",
+        issuedAtMs: Date.now(),
       },
       challengeSecret,
       {
