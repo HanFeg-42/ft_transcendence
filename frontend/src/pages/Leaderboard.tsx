@@ -92,20 +92,28 @@ export default function Leaderboard() {
                 : t("leaderboardPage.noWins")}
             </p>
 
-            <div className="overflow-x-auto">
-              <table className="w-full font-vt323 text-xl text-white">
+            <div className="w-full min-w-0 overflow-x-auto sm:overflow-x-hidden">
+              <table className="w-full table-fixed font-vt323 text-base sm:text-xl text-white">
+                <colgroup>
+                  <col className="w-14 sm:w-20" />
+                  <col />
+                  <col className="w-14 sm:w-20" />
+                </colgroup>
                 <caption className="sr-only">
                   {t("leaderboardPage.caption")}
                 </caption>
                 <thead>
-                  <tr className="text-left text-gray-400 border-b border-pacova-pink/40">
-                    <th scope="col" className="py-2 pr-4 w-20">
+                  <tr className="text-start text-gray-400 border-b border-pacova-pink/40">
+                    <th
+                      scope="col"
+                      className="py-2 pe-4 w-14 sm:w-20 text-start"
+                    >
                       {t("leaderboardPage.rank")}
                     </th>
-                    <th scope="col" className="py-2 pr-4">
+                    <th scope="col" className="py-2 pe-4 text-start">
                       {t("leaderboardPage.player")}
                     </th>
-                    <th scope="col" className="py-2 text-right">
+                    <th scope="col" className="py-2 text-end">
                       {t("leaderboardPage.wins")}
                     </th>
                   </tr>
@@ -121,11 +129,11 @@ export default function Leaderboard() {
                         className={`border-b border-white/10 ${isMe ? "bg-pacova-pink/15" : ""}`}
                       >
                         <td
-                          className={`py-3 pr-4 ${row.rank <= 3 ? "text-pacova-green" : ""}`}
+                          className={`py-3 pe-4 text-start ${row.rank <= 3 ? "text-pacova-green" : ""}`}
                         >
                           #{row.rank}
                         </td>
-                        <td className="py-3 pr-4">
+                        <td className="py-3 pe-4 min-w-0">
                           <Link
                             to={isMe ? "/profile" : `/profile/${row.userId}`}
                             className="flex items-center gap-3 hover:underline"
@@ -151,7 +159,7 @@ export default function Leaderboard() {
                             </span>
                           </Link>
                         </td>
-                        <td className="py-3 text-right">{row.wins}</td>
+                        <td className="py-3 text-end">{row.wins}</td>
                       </tr>
                     );
                   })}
