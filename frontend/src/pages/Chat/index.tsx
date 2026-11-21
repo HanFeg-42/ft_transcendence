@@ -118,6 +118,7 @@ export default function Chat() {
 
   // Select a friend and close the popups
   function pick(id: number) {
+    setDraft('');
     chat.select(id);
     setInviteOpen(false);
     setFriendsOpen(false);

@@ -3,7 +3,6 @@ import PixelButton from "../components/ui/PixelButton";
 import { useState } from "react";
 import Background from "../components/ui/Background";
 import Badge from "../components/ui/Badge";
-// import GameSettings from "../components/game/GameSettings";
 import {
   DEFAULT_DIFFICULTY,
   DEFAULT_MAZE_ID,
@@ -95,50 +94,6 @@ if (!gameRoom && screen === "create")
     </GameSetup>
   );
 
-  // if (screen === "create") {
-  //   form = (
-  //     <div className="flex-1 flex flex-col items-center justify-center gap-4">
-  //       <p className="font-vt323 text-3xl text-pacova-green">
-  //         ▼ {t("online_game_create_title")} ▼
-  //       </p>
-  //       <div className="w-80">
-  //         <Input
-  //           maxLength={20}
-  //           placeholder={t("online_game_room_placeholder")}
-  //           value={roomInput}
-  //           onChange={(e) => setRoomInput(e.target.value)}
-  //           className="text-center"
-  //           disabled={gameRoom !== null}
-  //         />
-  //         <p className="h-6 text-center font-vt323 text-red-500 text-md">
-  //           {error}
-  //         </p>
-  //       </div>
-  //       <GameSettings
-  //         difficulty={difficulty}
-  //         timeLimit={timeLimit}
-  //         mazeId={mazeId}
-  //         onDifficultyChange={setDifficulty}
-  //         onTimeLimitChange={setTimeLimit}
-  //         onMazeIdChange={setMazeId}
-  //       />
-  //       <div className="flex gap-4 mt-2">
-  //         <PixelButton variant="danger-red" onClick={backToMenu}>
-  //           {t("online_game_back_to_menu")}
-  //         </PixelButton>
-  //         <PixelButton
-  //           variant="filled-green"
-  //           disabled={!roomInput.trim() || gameRoom !== null}
-  //           onClick={() => {
-  //             changeRoom(roomInput.trim());
-  //           }}
-  //         >
-  //           {t("online_game_create")}
-  //         </PixelButton>
-  //       </div>
-  //     </div>
-  //   );
-  // }
   if (screen === "join") {
     form = (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
