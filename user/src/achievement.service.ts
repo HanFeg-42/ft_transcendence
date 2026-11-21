@@ -2,9 +2,9 @@ import { prisma } from "./prisma";
 
 const ACHIEVEMENT_TARGETS = {
   champion: 1,
-  "ghost-hunter": 0,
-  "cherry-collector": 0,
-  "pac-maniac": 0,
+  "ghost-hunter": 10,
+  "cherry-collector": 20,
+  "pac-maniac": 30,
 } as const;
 
 interface OnlineMatchStats {
