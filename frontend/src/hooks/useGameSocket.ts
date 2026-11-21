@@ -52,11 +52,6 @@ export function useGameSocket(
     }
   }
 
-  // Handle disconnection
-  function handleClose(event: CloseEvent) {
-    console.log(`[GAME-CLIENT] Connection closed (Code: ${event.code})`);
-  }
-
   useEffect(() => {
     urlRef.current = url;
   }, [url]);
@@ -101,7 +96,6 @@ export function useGameSocket(
 
       // Listen for client disconnects
       ws.onclose = (event: CloseEvent) => {
-        handleClose(event);
         setIsConnected(false);
         if (stopped || gameOverRef.current) return;
         if (attempts >= MAX_RECONNECT_ATTEMPTS || event.code === 4000) {

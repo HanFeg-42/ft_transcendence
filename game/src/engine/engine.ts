@@ -66,19 +66,12 @@ export const createGame = (
   difficulty: string = DEFAULT_DIFFICULTY,
 ): GameState => {
   if (!Object.keys(MAZES).includes(mazeId)) {
-    console.warn(`[GAME] Unknown map "${mazeId}", using "${DEFAULT_MAZE_ID}"`);
     mazeId = DEFAULT_MAZE_ID;
   }
   if (!TIME_LIMITS.includes(timeLimit)) {
-    console.warn(
-      `[GAME] Invalid time limit "${timeLimit}", using ${DEFAULT_TIME_LIMIT}`,
-    );
     timeLimit = DEFAULT_TIME_LIMIT;
   }
   if (!Object.keys(DIFFICULTIES).includes(difficulty)) {
-    console.warn(
-      `[GAME] Invalid difficulty "${difficulty}", using ${DEFAULT_DIFFICULTY}`,
-    );
     difficulty = DEFAULT_DIFFICULTY;
   }
 
