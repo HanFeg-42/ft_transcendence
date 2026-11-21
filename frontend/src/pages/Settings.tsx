@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import i18n from "../i18n";
 import { getMyProfile, type ProfileData } from "../services/userService";
 import { useAuth } from "../context/AuthContext";
 
@@ -35,17 +34,15 @@ const settingsSections = [
 export default function Settings() {
   const navigate = useNavigate();
   const { user, logout, token } = useAuth();
-  const { t } = useTranslation();
+  const { t , i18n} = useTranslation();
 
   const [activeSection, setActiveSection] = useState("ACCOUNT");
   const [showMobileSections, setShowMobileSections] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
 
-  const [language, setLanguage] = useState(
-    i18n.resolvedLanguage?.split("-")[0] || "en"
-  );
   const [showTwoFactor, setShowTwoFactor] = useState(false);
-
+  const language = i18n.resolvedLanguage || "en";
+  
   useEffect(() => {
     if (!token) return;
     getMyProfile(token).then(setProfile).catch(() => {});
@@ -55,7 +52,7 @@ export default function Settings() {
     const path = routeMap[tab];
 
     if (path) navigate(path);
-  };
+  };//
 
   const handleLogout = async () => {
     try {
@@ -64,11 +61,6 @@ export default function Settings() {
     } catch {
       // Logout failed: stay on the page, the session is still valid.
     }
-  };
-
-  const handleLanguageChange = (selectedLanguage: string) => {
-    setLanguage(selectedLanguage);
-    void i18n.changeLanguage(selectedLanguage);
   };
 
   const activeSectionData = settingsSections.find(
@@ -154,7 +146,7 @@ export default function Settings() {
                       sm:gap-3 sm:px-3
                       ${
                         isActive
-                          ? "rounded border-pacova-green bg-pacova-green/10 pacova-text-primary"
+                          ? "rounded border-pacova-green bg-pacova-green/10 text-white"
                           : "rounded border-transparent text-gray-500 hover:border-pacova-green/50 hover:bg-pacova-green/5 hover:text-white"
                       }
                     `}
@@ -311,7 +303,7 @@ export default function Settings() {
 
                     {/* ACCOUNT DETAILS */}
                     <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <h3 className="break-words font-pixelify text-xl uppercase pacova-text-primary sm:text-2xl">
+                      <h3 className="break-words font-pixelify text-xl uppercase text-white sm:text-2xl">
                         {t("yourProfile")}
                       </h3>
 
@@ -320,7 +312,7 @@ export default function Settings() {
                           {t("username")}
                         </p>
 
-                        <p className="break-words font-vt323 text-2xl pacova-text-primary">
+                        <p className="break-words font-vt323 text-2xl text-white">
                           {profile?.username ?? user?.username ?? "PLAYER"}
                         </p>
                       </div>
@@ -330,7 +322,7 @@ export default function Settings() {
                           {t("email")}
                         </p>
 
-                        <p className="break-all font-vt323 text-xl pacova-text-primary">
+                        <p className="break-all font-vt323 text-xl text-white">
                           {user?.email ?? t("noEmail")}
                         </p>
                       </div>
@@ -394,8 +386,7 @@ export default function Settings() {
                       id="interface-language"
                       value={language}
                       onChange={(event) =>
-                        handleLanguageChange(event.target.value)
-                      }
+                        void i18n.changeLanguage(event.target.value)}
                       className="w-full rounded-lg border border-[#59B5F7] bg-[#0D0914] px-3 py-2 font-vt323 text-lg text-white outline-none focus:border-pacova-green focus:ring-1 focus:ring-pacova-green"
                     >
                       <option value="en">ENGLISH</option>
