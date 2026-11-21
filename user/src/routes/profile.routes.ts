@@ -9,7 +9,6 @@ const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
