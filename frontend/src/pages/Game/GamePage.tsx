@@ -1,33 +1,33 @@
-import { useSearchParams } from "react-router-dom";
-import React, { useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import MazeUI from "../../components/game/MazeUI";
 import { useLocalGame } from "../../hooks/useLocalGame";
 import { useKeyboard } from "../../hooks/useKeyboard";
 import HudTop from "../../components/game/HudTop";
 import GameMenu from "../../components/game/GameMenu";
-import PixelButton from "../../components/ui/PixelButton";
+import { MenuButton, PauseMenu, ResultModal } from "../../components/game/GameOverlays";
 import type { Direction } from "../../../../shared/types/game-types";
 import HudPlayer from "../../components/game/HudPlayer";
 import styles from "./GamePage.module.css";
 import { RotDev } from "../../components/game/RotateDevice";
 import MobileControls from "../../components/game/MobileControls";
-import GameSettings from "../../components/game/GameSettings";
-import {
-  DEFAULT_TIME_LIMIT,
-  DEFAULT_MAZE_ID,
-  DEFAULT_DIFFICULTY,
-} from "../../../../shared/data/game-data";
-import Background from "../../components/ui/Background";
+import {  DEFAULT_TIME_LIMIT,  DEFAULT_MAZE_ID,  DEFAULT_DIFFICULTY,} from "../../../../shared/data/game-data";
 import { useTranslation } from 'react-i18next';
+import GameSetup from "../../components/game/GameSetup";
 
+
+// Seconds -> "MM:SS"
+const fmt = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
 
 const GameSession: React.FC<{
   gameMode: 1 | 2;
   timeLimit: number;
   mazeId: string;
-  difficulty: string;}> = ({ gameMode, timeLimit, mazeId, difficulty }) => {
-  const { state, sendInput } = useLocalGame(
+  difficulty: string;
+  onRestart: () => void;}> = ({ gameMode, timeLimit, mazeId, difficulty, onRestart }) => {
+  const { state, sendInput, paused, togglePause } = useLocalGame(
     "player-1",
     gameMode,
     timeLimit,
@@ -35,14 +35,36 @@ const GameSession: React.FC<{
     difficulty,
   );
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") togglePause();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [togglePause]);
   useKeyboard((dir: Direction) => sendInput("player-1", dir), "arrows");
   useKeyboard((dir: Direction) => sendInput("player-2", dir), "wasd");
 
   const hasPlayer2 = state.players.length > 1;
 
+
+    // 2 players on the same PC: nobody is "you", so find who wins
+  // rules (same as bot/online): 1) still has lives  2) higher score  3) draw
+  const [p1, p2] = state.players;
+  let winnerIndex: number | null = null; // 0 = P1, 1 = P2, null = draw
+  if (p1 && p2) {
+    if (p1.lives <= 0 && p2.lives > 0) winnerIndex = 1;
+    else if (p2.lives <= 0 && p1.lives > 0) winnerIndex = 0;
+    else if (p1.score > p2.score) winnerIndex = 0;
+    else if (p2.score > p1.score) winnerIndex = 1;
+  }
+
   return (
     <>
       <RotDev />
+      {state.status === "playing" && !paused && <MenuButton onClick={togglePause} />}
       {state.status === "playing" && (
         <MobileControls onInput={(dir) => sendInput("player-1", dir)} />
       )}
@@ -66,44 +88,46 @@ const GameSession: React.FC<{
           </div>
         )}
       </div>
+      {paused && state.status === "playing" && (
+        <PauseMenu onResume={togglePause} onQuit={() => navigate("/choose")} />
+      )}
 
       {state.status !== "playing" && (
-        <div className={styles.gameOverLayout}>
-          <h1 className={styles.gameoverstate}>
-            {state.status === "won"
-              ? `${t('local_game_win')} 🏆`
-              : t('local_game_over')}
-          </h1>
-          <h1 className={styles.gameOverScore}>
-            {t('local_game_score_label')} : {state.players[0]?.score ?? 0}
-          </h1>
-          <div className="flex flex-row gap-6">
-            <PixelButton
-              variant="outline-green"
-              size="lg"
-              onClick={() => window.location.reload()}
-            >
-              {t('local_game_restart')}
-            </PixelButton>
-            <a href="/home" className="inline-flex">
-              <PixelButton variant="danger-red" size="lg">
-                {t('local_game_quit')}
-              </PixelButton>
-            </a>
-          </div>
-        </div>
+        <ResultModal
+          title={
+            hasPlayer2
+              ? winnerIndex === null
+                ? t("online_game_draw")
+                : `P${winnerIndex + 1} ${t("local_game_win")}` // "P2 WIN 🏆"
+              : state.status === "won"
+                ? t("online_game_you_won")
+                : t("online_game_you_lost")
+          }
+          win={hasPlayer2 ? winnerIndex !== null : state.status === "won"}
+          players={state.players.map((p, i) => ({
+            name: `P${i + 1}`,
+            score: p.score,
+            lives: p.lives,
+            win: hasPlayer2 ? winnerIndex === i : state.status === "won",
+          }))}
+          onPlayAgain={onRestart}
+          onQuit={() => navigate("/choose")}>
+          <p className="font-vt323 text-xl text-white/70">
+            {t("bot_time", { time: fmt(timeLimit - state.timeRemaining) })}
+          </p>
+          </ResultModal>
       )}
     </>
   );
 };
 
 const GamePage: React.FC = () => {
-  const { t } = useTranslation();
   const [gameMode, setGameMode] = useState<null | 1 | 2>(null);
   const [timeLimit, setTimeLimit] = useState<number>(DEFAULT_TIME_LIMIT);
   const [mazeId, setMazeId] = useState<string>(DEFAULT_MAZE_ID);
   const [difficulty, setDifficulty] = useState<string>(DEFAULT_DIFFICULTY);
   const [started, setStarted] = useState<boolean>(false);
+  const [run, setRun] = useState(0); // bump to restart with the same settings
 
   const [searchParams] = useSearchParams();
   const urlMode = searchParams.get("mode");
@@ -126,33 +150,28 @@ const GamePage: React.FC = () => {
     );
   }
 
-  if (!started)
-    return (
-      <Background>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <RotDev />
-          <GameSettings
-            difficulty={difficulty}
-            timeLimit={timeLimit}
-            mazeId={mazeId}
-            onDifficultyChange={setDifficulty}
-            onTimeLimitChange={setTimeLimit}
-            onMazeIdChange={setMazeId}
-          />
-          <PixelButton variant="filled-green" onClick={() => setStarted(true)}>
-            {t('local_game_start')}
-          </PixelButton>
-        </div>
-      </Background>
-    );
+
+if (!started)
+  return (
+    <GameSetup
+      difficulty={difficulty}
+      mazeId={mazeId}
+      timeLimit={timeLimit}
+      onDifficultyChange={setDifficulty}
+      onMazeIdChange={setMazeId}
+      onTimeLimitChange={setTimeLimit}
+      onStart={() => setStarted(true)}
+    />
+  );
 
   return (
     <GameSession
-      key={gameMode}
+      key={`${gameMode}-${run}`}
       gameMode={gameMode}
       timeLimit={timeLimit}
       mazeId={mazeId}
       difficulty={difficulty}
+      onRestart={() => setRun((r) => r + 1)}
     />
   );
 };

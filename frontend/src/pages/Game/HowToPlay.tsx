@@ -10,7 +10,7 @@ import pinkGhost from "../../assets/icons/gost-pink.png";
 import blueGhost from "../../assets/icons/gost-blue.png";
 import orangeGhost from "../../assets/icons/gost-orange.png";
 
-// Colors chosen to stay readable on both the dark and the light theme
+
 const TITLE = "font-press-start text-sm mb-3 text-[#F32077]";
 const TEXT = "font-vt323 text-xl leading-tight text-[#8B5CF6]";
 
@@ -76,9 +76,6 @@ export default function HowToPlay() {
           </Card>
 
           <div className="flex justify-center gap-4 pb-6">
-            <PixelButton variant="outline-green" onClick={() => navigate(-1)}>
-              {t("howToPlay_back")}
-            </PixelButton>
             <PixelButton variant="filled-magenta" onClick={() => navigate("/choose")}>
               {t("howToPlay_play")}
             </PixelButton>

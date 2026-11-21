@@ -254,7 +254,7 @@ export const handle42Callback = async (
       `${frontendUrl}/login?oauth_ticket=${encodeURIComponent(ticket)}`,
     );
   } catch (err: any) {
-    console.error("Erreur OAuth 42:", err.message);
+    // console.error("Erreur OAuth 42:", err.message);
     res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
   }
 };

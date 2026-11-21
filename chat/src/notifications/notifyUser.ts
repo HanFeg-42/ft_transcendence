@@ -7,6 +7,9 @@ import {
   NotificationPayloadMap,
   NotificationSocketData,
 } from '../../../shared/types/notification-types';
+import { Prisma } from '../generated/prisma/client'; // check the path used in your prisma.ts
+
+
 
 export async function notifyUser<T extends NotificationType>(
   userId: number,
@@ -18,7 +21,7 @@ export async function notifyUser<T extends NotificationType>(
     data: {
       userId,
       type,
-      payload,
+      payload: payload as unknown as Prisma.InputJsonValue,
     },
   });
 
@@ -50,10 +53,7 @@ export async function notifyUser<T extends NotificationType>(
     try {
       socket.send(JSON.stringify(packet));
     } catch (err) {
-      console.warn(
-        '[CHAT-SERVICE] Failed to send notification to socket:',
-        err,
-      );
+      // console.warn('[CHAT-SERVICE] Failed to send notification to socket:', err);
     }
   }
 }

@@ -32,7 +32,6 @@ const forfeitTimers = new Map<string, NodeJS.Timeout>();
 const HEARTBEAT_INTERVAL_MS = 5000;
 let queuedPlayer: { userId: string; ws: WebSocket } | null = null;
 // Send a message to every socket currently in a given room
-// Send a message to every socket currently in a given room
 function broadcast(gameId: string, eventName: string, data: unknown) {
   const sockets = gameRooms.get(gameId);
   if (!sockets) return;
@@ -74,7 +73,7 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
     }
   });
 
-  const hearbeatId = setInterval(() => {
+  const heartbeatId = setInterval(() => {
     if (!isAlive) {
       ws.terminate();
       return;
@@ -85,7 +84,7 @@ function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
 
   // Listen for client disconnects (tab closed, lost connection)
   ws.on("close", (code) => {
-    clearInterval(hearbeatId);
+    clearInterval(heartbeatId);
     try {
       handleClose(ws, code, userId);
     } catch (e) {
@@ -275,7 +274,6 @@ function handleMessage(ws: WebSocket, rawData: RawData, userId: string) {
     }
 
     console.log(`[GAME-SERVICE] Client ${userId} joined room ${gameId}`);
-    // return;
   }
 
   // Check if incoming packet matches the player movement event

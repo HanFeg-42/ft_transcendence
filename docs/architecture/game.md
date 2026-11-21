@@ -5,9 +5,9 @@
 ## The game
 
 - **Remote 1v1:** two Pac-Mans share one maze with **4 ghosts**. They start 4 tiles left and right of the maze's `P` tile.
-- **Points:** pellet **10**, power pellet **50**. A power pellet makes the ghosts **frightened for 10 s**: they flee, and eating one gives **200** (always 200) and sends it back home, where it chases again until the next power pellet.
+- **Points:** pellet **10**, power pellet **50**, fruit (`F` tile in the maze) **100**. Fruits are bonus items: they are not needed to clear the maze. A power pellet makes the ghosts **frightened for 10 s**: they flee, and eating one gives **200** (always 200) and sends it back home, where it chases again until the next power pellet.
 - **Lives:** 3 each. When a player is caught, they lose a life and **everyone** (both players and all ghosts) goes back to their spawn. Frightened mode ends too.
-- **End of the match:** all pellets eaten, a player out of lives, or the timer reaches 0.
+- **End of the match:** all pellets (and power pellets) eaten, a player out of lives, or the timer reaches 0.
 - **Winner:** a player who still has lives beats one who has none. Otherwise the higher score wins, and equal scores are a **draw**.
 
 ### Match settings
@@ -36,7 +36,7 @@ The engine runs at **30 ticks per second**. A player moves one tile every **8 ti
 
 - **Ghosts:** at each new tile, a ghost picks the free direction (no wall, no other ghost there or heading there) that brings it **closest to the nearest player**, or **farthest** when frightened. It never turns back unless it's at a dead end, and ties are broken at random. All four ghosts use the same rule.
 - **Collisions:** a player and a ghost touch when they're on the same tile, or when they're on neighboring tiles moving toward each other. The second case is needed because ghosts move after the check: without it, the two could swap tiles head-on without ever being on the same tile when the check runs. All the collisions of a tick are found first and applied after, so both players are treated the same: both can lose a life in the same tick, and if both touch the same frightened ghost, both get the 200 points.
-- **Frontend copy:** `frontend/src/engine` (plus `bot.ts`) runs the local 2-player game and the bot. It has the same movement, ghost and collision rules, and fixes go into both copies. Only the end differs: the server picks a winner (`finished` + `winnerId`), while the local copy only sets `won` or `lost`.
+- **Frontend copy:** `frontend/src/engine` (plus `bot.ts`) runs the local 2-player game and the bot. It has the same movement, ghost and collision rules, and fixes go into both copies. Two differences: the server picks a winner (`finished` + `winnerId`), while the local copy only sets `won` or `lost` (the local pages work out the winner themselves), and the local copy does not count eaten ghosts (`ghostsEaten`), since local games are never saved.
 - **Online, only the server's copy is trusted.** Clients only send directions and draw the state they receive.
 
 ## Endpoints
@@ -66,7 +66,7 @@ Every message is a JSON envelope `{ event, data }`, typed in `shared/types/game-
 | `joinGame {gameId, mazeId?, timeLimit?, difficulty?, intent?}` | client → server | Create, join or rejoin a room (see below). The settings are only used when the room is created. |
 | `playerInput {gameId, direction}` | client → server | `UP`, `DOWN`, `LEFT` or `RIGHT`. The turn happens at the next tile where it's possible. |
 | `gameState` | server → client | The full state: players, ghosts, pellets, timer, status, winner. Sent when someone joins or leaves the lobby, then on every tick. |
-| `error {message}` | server → client | A refused request (see below) |
+| `error {message}` | server → client | A refused request (see below). For the main errors, `message` is a **translation key** (`online_game_...`) that the frontend translates; the others are plain English. |
 
 - `joinGame` also carries a `username`, but the server ignores it and uses the id from the token.
 - `gameStart` and `gameOver` exist in the types but are never sent. The end of a match is a `gameState` with status `finished`.
@@ -91,15 +91,15 @@ A room is identified by its name, the `gameId`. What `joinGame` does depends on 
 - **Refresh:** the room stays in the URL (`?gameId=`), so a refresh rejoins the same room, in the lobby or mid-match.
 - **Second tab:** a new connection from the same account replaces the old one, which is closed with code `4000` ("Replaced by a new connection").
 
-| `error` message | When |
-|---|---|
-| `Invalid room name` | Blank, or longer than 36 characters |
-| `Room not found` / `Room name is already taken` | See the `intent` table |
-| `This room is full, try another one` | 2 players are in and you're not one of them |
-| `This connection already joined a game` | One socket can only be in one room |
-| `You're already searching for a match` | The same account queued twice |
-| `Game not found` | An input for a room that doesn't exist |
-| `Invalid JSON`, `Invalid message`, `Unknown event`, `Invalid gameId`, `Invalid direction` | Malformed messages, which the official client never sends |
+| `error` message (sent by the server) | Shown to the player (English) | When |
+|---|---|---|
+| `online_game_invalid_room_name` | Invalid room name | Blank, or longer than 36 characters |
+| `online_game_room_not_found` / `online_game_room_taken` | Room not found / Room name is already taken | See the `intent` table |
+| `online_game_room_full` | This room is full, try another one | 2 players are in and you're not one of them |
+| `This connection already joined a game` (plain English) | same | One socket can only be in one room |
+| `online_game_already_searching` | You're already searching for a match | The same account queued twice |
+| `online_game_game_not_found` | Game not found | An input for a room that doesn't exist |
+| `Invalid JSON`, `Invalid message`, `Unknown event`, `Invalid gameId`, `Invalid direction` (plain English) | same | Malformed messages, which the official client never sends |
 
 ## Match lifecycle
 
@@ -178,7 +178,7 @@ flowchart LR
 ```
 
 - **`MatchParticipant.result`:** `WIN`, `LOSS`, `DRAW` or `ABANDONED`.
-- **`reportResult`:** the user service turns it into achievement progress. A failure is only logged, and the match is unaffected. Abandoned matches aren't reported.
+- **`reportResult`:** the user service turns it into achievement progress. A failure is only logged, and the match is unaffected. Once the user service accepted the result, the game service also creates a `match_finished` notification for that player; if the report fails, that player gets no notification. Abandoned matches aren't reported.
 - **Stats:** `matchesPlayed` counts every match, abandoned ones included. `winRate` = wins ÷ (wins + losses + draws), so abandoned matches don't lower it. It's 0 with no finished match, and the totals are 0 with no match at all.
 - **Leaderboard:** the number of `WIN` rows per user.
 

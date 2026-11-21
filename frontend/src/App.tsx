@@ -18,14 +18,20 @@ import NotFound from "./pages/NotFound";
 import BotPage from "./pages/Game/GameBot";
 import OnlineGame from "./pages/OnlineGame";
 import HowToPlay from "./pages/Game/HowToPlay";
+import GuestRoute from "./components/auth/GuestRoute";
 
 /** Renders the application's route configuration. */
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Welcome />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/login" element={<Login />} />
+      <Route element={<GuestRoute />}>
+        <Route path="/" element={<Welcome />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+      </Route>
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="*" element={<NotFound />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
@@ -41,9 +47,6 @@ function App() {
         <Route path="/how-to-play" element={<HowToPlay />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
       </Route>
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

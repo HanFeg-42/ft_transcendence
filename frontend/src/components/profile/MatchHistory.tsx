@@ -86,9 +86,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ userId }) => {
         if (!cancelled) {
           setMatches(list);
         }
-      } catch {
-        // ignore the error
-      } finally {
+      } catch {} 
+      finally {
         if (!cancelled) {
           setLoading(false);
         }
@@ -120,19 +119,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ userId }) => {
         return gostRed;
     }
   };
-
-  // const getTranslatedResult = (result: string) => {
-  //   if (result === "WIN") {
-  //     return t("userProfile_matchWin");
-  //   }
-
-  //   if (result === "LOSS" || result === "LOSE") {
-  //     return t("userProfile_matchLoss");
-  //   }
-
-  //   // Préserve les résultats inconnus au lieu de les masquer.
-  //   return result;
-  // };
 
   return (
     <Card

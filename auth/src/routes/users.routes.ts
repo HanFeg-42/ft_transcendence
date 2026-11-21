@@ -19,14 +19,13 @@ router.get('/', async (_req: Request, res: Response) => {
 
     return res.json(users);
   } catch (err: any) {
-    console.error('[AUTH] getUsers error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
 
 // GET /users/:id — Retourne les infos publiques d'un utilisateur
 router.get('/:id', async (req: Request, res: Response) => {
-  const userId = parseInt(req.params.id, 10);
+  const userId = parseInt(String(req.params.id), 10);
   if (isNaN(userId)) {
     return res.status(400).json({ error: 'Invalid user id' });
   }
@@ -47,7 +46,6 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     return res.json(user);
   } catch (err: any) {
-    console.error('[AUTH] getUserById error:', err);
     return res.status(500).json({ error: err.message });
   }
 });

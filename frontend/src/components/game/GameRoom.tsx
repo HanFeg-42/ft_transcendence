@@ -14,10 +14,16 @@ import {
   FORFEIT_DELAY_MS,
 } from "../../../../shared/data/game-data";
 import MazeUI from "./MazeUI";
-import Result from "./ResultCard";
+import { PauseMenu, ResultModal } from "./GameOverlays";
 import Dots from "./Dots";
 import { getProfileById } from "../../services/userService";
 import { useTranslation } from "react-i18next";
+
+
+// Seconds -> "MM:SS"
+const fmt = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
 
 const KEY_MAP: Record<string, Direction> = {
   w: "UP",
@@ -76,6 +82,7 @@ const GameRoom = ({
   const myId = String(user?.id);
   const opponent = state?.players.find((p) => p.id !== myId);
   const [opponentName, setOpponentName] = useState(t("online_game_opponent"));
+  const [showMenu, setShowMenu] = useState<boolean>(false);
 
   useEffect(() => {
     if (!opponent?.id || !token) return;
@@ -92,16 +99,17 @@ const GameRoom = ({
   }, [opponent?.id]);
 
   useEffect(() => {
+    if (state?.status !== "playing") return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const dir = KEY_MAP[e.key];
       if (dir) {
         e.preventDefault();
         sendPlayerInput(dir);
-      }
+      } else if (e.key === "Escape") setShowMenu((menu) => !menu);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [state?.status]);
 
   useEffect(() => {
     if (error && state?.status !== "finished") {
@@ -190,15 +198,26 @@ const GameRoom = ({
       </span>
     );
 
-  const titleColor = won
-    ? "text-pacova-green drop-shadow-glow-green"
-    : "text-pacova-pink drop-shadow-glow-pink";
+  // const titleColor = won
+  //   ? "text-pacova-green drop-shadow-glow-green"
+  //   : "text-pacova-pink drop-shadow-glow-pink";
 
   return (
     <>
       <RotDev />
       {state.status === "playing" && (
         <MobileControls onInput={sendPlayerInput} />
+      )}
+      {state.status === "playing" && !showMenu && (
+        <div className="fixed top-4 right-4 z-50">
+          <PixelButton
+            variant="outline-green"
+            size="sm"
+            onClick={() => setShowMenu(true)}
+          >
+            {t("online_game_menu")}
+          </PixelButton>
+        </div>
       )}
       <div className={styles.page}>
         <div className={styles.topBar}>
@@ -219,7 +238,7 @@ const GameRoom = ({
         <div className={styles.mazeWrapper}>
           <MazeUI state={state} mazeId={state.mazeId} />
         </div>
-        {state.status === "finished" && (
+        {/* {state.status === "finished" && (
           <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
             <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
               <h1 className={`font-press-start text-3xl ${titleColor}`}>
@@ -262,7 +281,31 @@ const GameRoom = ({
               </div>
             </div>
           </div>
+        )} */}
+          {state.status === "finished" && (
+          <ResultModal
+            title={
+              state.winnerId === undefined
+                ? t("online_game_draw")
+                : won
+                  ? t("online_game_you_won")
+                  : t("online_game_you_lost")
+            }
+            win={won}
+            players={state.players.map((p) => ({
+              name: getName(p.id),
+              score: p.score,
+              lives: p.lives,
+              win: p.id === state.winnerId,
+            }))}
+            onPlayAgain={onPlayAgain}
+            onQuit={onBackToMenu}>
+            <p className="font-vt323 text-xl text-white/70">
+              {t("bot_time", { time: fmt(timeLimit - state.timeRemaining) })}
+            </p>
+            </ResultModal>
         )}
+
         {isOpponentAway && (
           <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
             <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">
@@ -278,6 +321,30 @@ const GameRoom = ({
             </div>
           </div>
         )}
+        {/* {showMenu && state.status === "playing" && (
+          <div className={styles.gameOverLayout}>
+            <div className="flex flex-row gap-6">
+              <PixelButton
+                variant="outline-green"
+                size="lg"
+                onClick={() => setShowMenu(false)}
+              >
+                {t("local_game_resume")}
+              </PixelButton>
+              <PixelButton
+                variant="danger-red"
+                size="lg"
+                onClick={onBackToMenu}
+              >
+                {t("online_game_back_to_menu")}
+              </PixelButton>
+            </div>
+          </div>
+        )} */}
+        {showMenu && state.status === "playing" && (
+          <PauseMenu onResume={() => setShowMenu(false)} onQuit={onBackToMenu} />
+        )}
+
         {!isConnected && state.status === "playing" && (
           <div className="fixed inset-0 z-[99] bg-black/80 flex items-center justify-center">
             <div className="w-[28rem] max-w-[92vw] p-6 flex flex-col items-center gap-5 bg-pacova-surface border-4 border-pacova-pink rounded-2xl shadow-neon-pink">

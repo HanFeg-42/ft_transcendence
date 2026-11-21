@@ -27,10 +27,9 @@ export default function SelectMode() {
   return (
     <Background>
       <Navbar activeTab="HOME" onSelectTab={(tab) => handleSelectTab(tab, navigate)}/>
-
-      <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 gap-6 sm:gap-8">
         <div className="text-center">
-          <h1 className="font-press-start text-3xl text-pacova-pink drop-shadow-glow-pink mb-2 animate-[float_3s_ease-in-out_infinite]">
+          <h1 className="font-press-start text-xl sm:text-2xl md:text-3xl text-pacova-pink drop-shadow-glow-pink mb-2 animate-[float_3s_ease-in-out_infinite]">
             {t('game_mode_select_title')}
           </h1>
           <p className="font-vt323 text-xl text-pacova-green">
@@ -38,7 +37,7 @@ export default function SelectMode() {
           </p>
         </div>
 
-        <div className="flex gap-x-[10px]">
+        <div className="flex flex-col items-center md:flex-row md:flex-wrap justify-center gap-[10px] w-full">          
           <GameModeCard
             title={t('game_mode_local')}
             description={t('game_mode_local_description')}
@@ -46,7 +45,6 @@ export default function SelectMode() {
             selected={selectedMode === 'LOCAL'}
             onClick={() => setSelectedMode('LOCAL')}
           />
-
           <GameModeCard
             title={t('game_mode_remote')}
             description={t('game_mode_remote_description')}

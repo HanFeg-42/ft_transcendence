@@ -16,27 +16,16 @@ export function sendTo(userId: number | string, packet: ChatServerMessage) {
 }
 
 
-// Everyone this user talks to: people they exchanged messages with + their friends.
-export async function getMessagePartners(userId: string): Promise<number[]> {
+
+export async function getFriendIds(userId: string): Promise<number[]> {
   const id = Number(userId);
 
-  const [messages, friendships] = await Promise.all([
-    prisma.message.findMany({
-      where: { OR: [{ senderId: id }, { receiverId: id }] },
-      select: { senderId: true, receiverId: true },
-    }),
-    prisma.friendship.findMany({ where: { OR: [{ userLowId: id }, { userHighId: id }] } }),
-  ]);
-
-  // A Set removes duplicates (same person can appear in many messages)
-  const partners = new Set<number>();
-
-  for (const m of messages) partners.add(m.senderId === id ? m.receiverId : m.senderId);
-  for (const f of friendships) partners.add(f.userLowId === id ? f.userHighId : f.userLowId);
-
-  return [...partners];
+  const friendships = await prisma.friendship.findMany({
+    where: { OR: [{ userLowId: id }, { userHighId: id }] },
+    select: { userLowId: true, userHighId: true }, // only the two columns we need
+  });
+  return friendships.map((f) => (f.userLowId === id ? f.userHighId : f.userLowId));
 }
-
 
 // Tell ONE socket that userId is online/offline.
 export function sendPresence(ws: WebSocket, userId: number, status: 'online' | 'offline') {
@@ -51,4 +40,27 @@ export function sendPresence(ws: WebSocket, userId: number, status: 'online' | '
 export function broadcastPresenceToPartners(partnerIds: number[], userId: number, status: 'online' | 'offline') {
   for (const partnerId of partnerIds)
     sendTo(partnerId, { event: ChatEvents.PRESENCE, data: { user_id: userId, status } });
+}
+
+
+// True if EITHER user blocked the other
+export async function isBlocked(a: number, b: number): Promise<boolean> {
+  const row = await prisma.blockedUser.findFirst({
+    where: { OR: [{ blockerId: a, blockedId: b }, { blockerId: b, blockedId: a }] },
+  });
+  return !!row;
+}
+
+// True if the two users are friends
+export async function areFriends(a: number, b: number): Promise<boolean> {
+  const row = await prisma.friendship.findUnique({
+    where: { userLowId_userHighId: { userLowId: Math.min(a, b), userHighId: Math.max(a, b) } },
+  });
+  return !!row;
+}
+
+// Partners who haven't blocked us (and we haven't blocked): the only ones who may see our status.
+export async function unblockedFriends(userId: string, partners: number[]) {
+  const blocked = await Promise.all(partners.map((p) => isBlocked(p, Number(userId))));
+  return partners.filter((_, i) => !blocked[i]);
 }

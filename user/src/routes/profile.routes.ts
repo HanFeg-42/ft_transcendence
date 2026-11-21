@@ -9,15 +9,6 @@ const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
-// Keep nginx → user service as it is. One thing is worth fixing, though: 
-// your upload code builds the file extension from the name the client sends, and express.
-// static picks the content type from that extension. 
-// Someone could upload a file called x.html and claim the type is image/png.
-//  The server would store it as .
-// html and serve it as HTML,
-//  which can run scripts on your site. Two small changes close that.
-
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
@@ -54,51 +45,46 @@ function getUserIdFromHeader(req: Request): number | null {
 }
 
 
-// Helper : récupère ou crée le Profile
-export async function getOrCreateProfile(userId: number) {
-  let profile = await prisma.profile.findUnique({ where: { userId } });
-
-  if (!profile) {
-    let displayName = `Player${userId}`;
-    try {
-      const authRes = await fetch(`http://auth:3001/users/${userId}`, {
-        // headers: { 'x-user-id': userId.toString() },
-      });
-
-      if (authRes.ok) {
-        const authUser = await authRes.json();
-        displayName = authUser.username;
-      }
-    } catch (err) {
-    }
-
-    profile = await prisma.profile.create({
-      data: {
-        userId,
-        displayName,
-        avatarUrl: '/default-avatar.png',
-        bio: '',
-        statusText: 'Ready to play',
-      },
-    });
-
-    const achievements = await prisma.achievement.findMany();
-    await prisma.userAchievement.createMany({
-      data: achievements.map((a) => ({
-        userId,
-        achievementId: a.id,
-        progress: 0,
-        unlocked: false,
-      })),
-      skipDuplicates: true,
-    });
+export class UserNotFoundError extends Error {
+  constructor() {
+    super('User not found');
   }
+}
+
+export async function getOrCreateProfile(userId: number) {
+  const existing = await prisma.profile.findUnique({ where: { userId } });
+  if (existing) return existing;
+
+  // No profile yet: the user must exist in the auth service first
+  const authRes = await fetch(`http://auth:3001/users/${userId}`);
+  if (authRes.status === 404) throw new UserNotFoundError();
+  if (!authRes.ok) throw new Error('Auth service unavailable');
+  const authUser = await authRes.json();
+
+  const profile = await prisma.profile.create({
+    data: {
+      userId,
+      displayName: authUser.username,
+      avatarUrl: '/default-avatar.png',
+      bio: '',
+      statusText: 'Ready to play',
+    },
+  });
+
+  const achievements = await prisma.achievement.findMany();
+  await prisma.userAchievement.createMany({
+    data: achievements.map((a) => ({
+      userId,
+      achievementId: a.id,
+      progress: 0,
+      unlocked: false,
+    })),
+    skipDuplicates: true,
+  });
 
   return profile;
 }
 
-
-// Achievements of one user, in the shape the frontend expects
 async function getUserAchievements(userId: number) {
   const achievements = await prisma.achievement.findMany({
     include: {
@@ -146,6 +132,7 @@ router.get('/me', async (req: Request, res: Response) => {
 });
 
 
+
 // GET /profile/profiles?ids=1,4,7
 router.get('/profiles', async (req: Request, res: Response) => {
   try {
@@ -158,7 +145,6 @@ router.get('/profiles', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'ids must be a comma-separated list of user ids' });
     }
 
-    // One query for existing profiles, then create only the missing ones
     const existing = await prisma.profile.findMany({ where: { userId: { in: ids } } });
     const known = new Set(existing.map((p) => p.userId));
     const created = await Promise.all(
@@ -196,6 +182,9 @@ router.get('/:id', async (req: Request, res: Response) => {
       statusText: user.statusText || 'Ready to play',
     });
   } catch (err: any) {
+    if (err instanceof UserNotFoundError) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     return res.status(500).json({ error: err.message });
   }
 });
@@ -207,10 +196,17 @@ router.patch('/me', async (req: Request, res: Response) => {
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
   try {
-    const { username, avatar, bio } = req.body;
-
+    const { username, avatar, bio } = req.body ?? {};
+    if (username !== undefined && (typeof username !== 'string' || !/^[\w-]{3,30}$/.test(username.trim()))) {
+      return res.status(400).json({ error: 'Invalid username' });
+    }
+    if (bio !== undefined && (typeof bio !== 'string' || bio.length > 200)) {
+      return res.status(400).json({ error: 'Invalid bio' });
+    }
+    if (avatar && !/^\/(uploads\/avatars\/[\w.-]+|default-avatar\.png)$/.test(avatar)) {
+      return res.status(400).json({ error: 'Invalid avatar' });
+    }
     if (username) {
       const existing = await prisma.profile.findFirst({
         where: { displayName: username, NOT: { userId } },

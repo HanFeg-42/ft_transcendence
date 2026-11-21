@@ -1,10 +1,10 @@
 import { prisma } from "./prisma";
 
 const ACHIEVEMENT_TARGETS = {
-  champion: 2,
-  "ghost-hunter": 50,
-  "cherry-collector": 200,
-  "pac-maniac": 500,
+  champion: 1,
+  "ghost-hunter": 10,
+  "cherry-collector": 20,
+  "pac-maniac": 30,
 } as const;
 
 interface OnlineMatchStats {
@@ -24,7 +24,7 @@ export async function updateUserAchievements(
     "pac-maniac": 1,
   };
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => { //prisma client
     const results = [];
 
     for (const [achievementId, target] of Object.entries(
