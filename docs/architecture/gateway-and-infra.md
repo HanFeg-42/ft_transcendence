@@ -6,13 +6,13 @@ Owner: `machaouk`.
 
 - Built in two stages: Node builds the React app, then NGINX serves `dist/`.
 - Generates a **self-signed TLS certificate** at build time (TLS 1.2 / 1.3).
-- Ports: **443** (HTTPS) and **8080**, which only redirects to HTTPS.
+- Port: **443** (HTTPS only), published by Docker Compose as **8443** on the host. There is no HTTP port and no redirect.
 - Routes:
 
 | Location | Goes to |
 |---|---|
 | `/` | React single-page app (`try_files … /index.html` so refresh and Back/Forward work) |
-| `/api/` | `api-gateway:3000` (prefix removed, WebSocket upgrade headers kept, 1 h timeouts) |
+| `/api/` | `api-gateway:3000` (prefix removed, WebSocket upgrade headers kept, 120 s read / send timeouts: an idle WebSocket is closed after 120 s, so the chat and game sockets rely on their ping / pong heartbeats) |
 | `/uploads/` | `user:3004/uploads/` (avatar files, public) |
 
 - Upload limit: 6 MB (the user service itself accepts avatars up to 2 MB).
@@ -59,7 +59,8 @@ Notifications go to `POST chat:3003/internal/notifications`, protected by the `x
 - Services: `postgres`, `auth`, `user`, `chat`, `game`, `api-gateway`, `frontend`.
 - Network `pacova` (bridge); volumes `postgres_data` (databases) and `uploads_data` (avatars, mounted in `user`).
 - `postgres` has a healthcheck; `auth`, `user`, `chat`, `game` wait for it (`service_healthy`). `api-gateway` waits for the four services to start, `frontend` for the gateway.
-- Each service container runs `prisma migrate deploy` before starting, so the schema is always up to date (`user` also runs its achievements seed).
+- The `auth`, `user`, `chat` and `game` containers run `prisma migrate deploy` before starting, so the schema is always up to date (`user` also runs its achievements seed).
+- Only the `frontend` container publishes a port (`8443:443`); the other services are reachable only inside the `pacova` network.
 - `postgres-db/init.sql` creates the four databases on first start.
 - Secrets come from `.env` (never committed; template in `.env.example`).
 

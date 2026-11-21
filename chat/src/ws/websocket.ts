@@ -5,9 +5,12 @@ import { prisma } from "../prisma";
 import {
   onlineUsers,
   sendTo,
-  getMessagePartners,
+  getFriendIds,
   sendPresence,
   broadcastPresenceToPartners,
+  unblockedFriends,
+  areFriends,
+  isBlocked,
 } from "./presence";
 import { notifyUser } from "../notifications/notifyUser";
 import { NotificationTypes } from "../../../shared/types/notification-types";
@@ -18,21 +21,17 @@ import { NotificationTypes } from "../../../shared/types/notification-types";
 const AUTH_URL = process.env.AUTH_SERVICE_URL || "http://auth:3001";
 const INVITE_TTL_MS = 60_000; // a game invite expires after 60s
 
-// Recent send times per socket (used for rate limiting)
-const hits = new WeakMap<WebSocket, number[]>();        // messages / invites
-const allHits = new WeakMap<WebSocket, number[]>();     // every packet
-const lookupHits = new WeakMap<WebSocket, number[]>();  // calls to the auth service
-
+const known = new Set<number>();                  // user ids we already checked
+const recent = new WeakMap<WebSocket, number[]>(); // send times per socket
 
 // Last time each socket sent a "typing" packet
 const lastTyping = new WeakMap<WebSocket, number>();
 
-// User ids already confirmed to exist (avoids calling the auth service every time)
-const known = new Set<number>();
+
 
 
 /* --------------Helpers-------------- */
-// DB message -> the shape the frontend expects (also used by routes/messages.ts)
+// DB message -> the shape the frontend expects
 export const toIncoming = (m: {
   id: number; senderId: number; receiverId: number; content: string;
   createdAt: Date; readAt: Date | null; kind: string; meta: unknown;
@@ -55,50 +54,38 @@ function sendError(ws: WebSocket, message: string) {
 }
 
 
-// True if this socket did more than `max` things in the last `windowMs`
-function overLimit(store: WeakMap<WebSocket, number[]>, ws: WebSocket, max: number, windowMs: number) {
+// True if this socket sent more than 50 packets in the last 10 seconds
+function tooMany(ws: WebSocket) {
   const now = Date.now();
-  const recent = (store.get(ws) ?? []).filter((t) => now - t < windowMs);
-  recent.push(now);
-  store.set(ws, recent);
-  return recent.length > max;
+  //Throws away any timestamps older than 10 seconds 
+  const times = (recent.get(ws) ?? []).filter((t) => now - t < 10_000); 
+  times.push(now);
+  recent.set(ws, times);
+  return times.length > 50;
 }
 
-// Checks every incoming packet. Returns an error message, or null if it is valid.
+// Returns an error message, or null if the packet is valid
 async function validate(ws: WebSocket, p: any, myId: string): Promise<string | null> {
-  // General limit: max 100 packets per 10s per socket (covers READ, TYPING, everything)
-  if (overLimit(allHits, ws, 100, 10_000)) return "Too many requests, slow down";
+  if (tooMany(ws)) return "Too many requests, slow down";
+  if (!p?.data || typeof p.data !== "object") return "Malformed packet";
 
+  const { event, data } = p;
 
-  if (!p || typeof p.data !== "object" || !p.data) return "Malformed packet";
-
-  const d = p.data;
-  const e = p.event;
-
-  // Rate limit: max 20 messages/invites per 10s per socket
-  if (e === ChatEvents.MESSAGE || e === ChatEvents.GAME_INVITE) {
-    if (overLimit(hits, ws, 20, 10_000)) return "Too many messages, slow down";
+  if (event === ChatEvents.MESSAGE) {
+    if (typeof data.content !== "string" || !data.content.trim()) return "Message cannot be empty";
+    data.content = data.content.trim();
+    if (data.content.length > 1000) return "Message too long (max 1000 characters)";
   }
 
-  // Message content: trimmed, not empty, max 1000 chars (saved trimmed)
-  if (e === ChatEvents.MESSAGE) {
-    if (typeof d.content !== "string" || !d.content.trim()) return "Message cannot be empty";
-    d.content = d.content.trim();
-    if (d.content.length > 1000) return "Message too long (max 1000 characters)";
-  }
-
-  // Target user: valid integer, not myself, and exists (checked with the auth service)
-  if ([ChatEvents.MESSAGE, ChatEvents.TYPING, ChatEvents.GAME_INVITE, ChatEvents.READ].includes(e)) {
-    const id = e === ChatEvents.READ ? d.sender_id : d.receiver_id;
-
+  // Events aimed at another user: check the id, then check the user exists
+  const aimed = [ChatEvents.MESSAGE, ChatEvents.TYPING, ChatEvents.GAME_INVITE, ChatEvents.READ];
+  if (aimed.includes(event)) {
+    const id = event === ChatEvents.READ ? data.sender_id : data.receiver_id;
     if (!Number.isSafeInteger(id) || id <= 0 || id === Number(myId)) return "Invalid user id";
-    if (!known.has(id)) {
-      // Max 20 auth-service lookups per 10s per socket
-      if (overLimit(lookupHits, ws, 20, 10_000)) return "Too many requests, slow down";
 
-      const r = await fetch(`${AUTH_URL}/users/${id}`).catch(() => null);
-      if (!r?.ok)
-        return r?.status === 404 ? "User not found" : "Could not verify user, try again";
+    if (!known.has(id)) {
+      const res = await fetch(`${AUTH_URL}/users/${id}`).catch(() => null);
+      if (!res?.ok) return res?.status === 404 ? "User not found" : "Could not verify user, try again";
       known.add(id);
     }
   }
@@ -107,45 +94,30 @@ async function validate(ws: WebSocket, p: any, myId: string): Promise<string | n
 }
 
 
-// True if EITHER user blocked the other
-async function isBlocked(a: number, b: number): Promise<boolean> {
-  const row = await prisma.blockedUser.findFirst({
-    where: { OR: [{ blockerId: a, blockedId: b }, { blockerId: b, blockedId: a }] },
-  });
-  return !!row;
-}
-
-// True if the two users are friends
-async function areFriends(a: number, b: number): Promise<boolean> {
-  const row = await prisma.friendship.findUnique({
-    where: { userLowId_userHighId: { userLowId: Math.min(a, b), userHighId: Math.max(a, b) } },
-  });
-  return !!row;
-}
-
-// Partners who haven't blocked us (and we haven't blocked): the only ones who may see our status.
-async function visiblePartners(userId: string, partners: number[]) {
-  const blocked = await Promise.all(partners.map((p) => isBlocked(p, Number(userId))));
-  return partners.filter((_, i) => !blocked[i]);
-}
-
 
 // Close a pending invite and tell both users.
 // `byUser` is set when someone answers, so only the invited user can do it.
 async function settleInvite(id: number, status: "accepted" | "declined" | "expired", byUser?: number) {
   const invite = await prisma.message.findUnique({ where: { id } });
-  const meta = invite?.meta as { gameId?: string; status?: string } | null;
+  if (!invite || invite.kind !== "game_invite") return;       // not an invite
 
-  // Ignore if it is not an invite or was already settled
-  if (!invite || invite.kind !== "game_invite" || meta?.status !== "pending") return;
-
-  // Only the invited user can answer
+  // byUser is only set when a real user answers; timers and cleanup leave it empty
   if (byUser !== undefined && invite.receiverId !== byUser) return;
 
-  // A late answer counts as expired
-  const final = status !== "expired" && Date.now() - invite.createdAt.getTime() > INVITE_TTL_MS ? "expired" : status;
+  // answering after the time limit counts as expired
+  const tooLate = Date.now() - invite.createdAt.getTime() > INVITE_TTL_MS;
+  const final = tooLate ? "expired" : status;
 
-  const updated = await prisma.message.update({ where: { id }, data: { meta: { ...meta, status: final } } });
+  // ONE atomic step: change it only if it is still "pending".
+  // If another reply got there first, count is 0 and we stop.
+  const { count } = await prisma.message.updateMany({
+    where: { id, meta: { path: ["status"], equals: "pending" } },
+    data: { meta: { ...(invite.meta as object), status: final } },
+  });
+  if (count === 0) return;                                    // already settled
+
+  const updated = await prisma.message.findUnique({ where: { id } });
+  if (!updated) return;
 
   const packet = { event: ChatEvents.GAME_INVITE_REPLY, data: toIncoming(updated) } as const;
   sendTo(invite.senderId, packet);
@@ -173,18 +145,20 @@ async function handleConnection(ws: WebSocket, req: http.IncomingMessage) {
   ws.on("close", () => handleClose(ws, userId));
   ws.on("error", () => {}); // required: an unhandled socket "error" would crash the process
 
-  const partners = await getMessagePartners(userId);
-  const visible = await visiblePartners(userId, partners);
+  const partners = await getFriendIds(userId);
+  const unblocked = await unblockedFriends(userId, partners);
 
   // Snapshot: tell THIS new client who among their partners is online (blocked ones look offline)
   for (const partnerId of partners) {
-    const online = onlineUsers.has(String(partnerId)) && visible.includes(partnerId);
+    const online = onlineUsers.has(String(partnerId)) && unblocked.includes(partnerId);
     sendPresence(ws, partnerId, online ? "online" : "offline");
   }
 
-  // Only the FIRST socket is a real "came online" transition (a second tab isn't)
-  if (wasOffline) broadcastPresenceToPartners(visible, Number(userId), "online");
+  // Only the FIRST socket is a real "came online" transition
+  if (wasOffline)
+    broadcastPresenceToPartners(unblocked, Number(userId), "online");
 }
+
 
 
 // Routes each incoming packet to the right action, based on its event type.
@@ -313,8 +287,8 @@ async function handleClose(ws: WebSocket, userId: string) {
   if (sockets.size === 0) {
     onlineUsers.delete(userId);
 
-    const partners = await getMessagePartners(userId);
-    broadcastPresenceToPartners(await visiblePartners(userId, partners), Number(userId), "offline");
+    const partners = await getFriendIds(userId);
+    broadcastPresenceToPartners(await unblockedFriends(userId, partners), Number(userId), "offline");
   }
 }
 

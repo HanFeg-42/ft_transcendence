@@ -19,10 +19,10 @@
 **Key features**
 
 - Sign up / login, **42 OAuth**, **2FA** (TOTP)
-- Local game, **vs. AI bot** (3 levels), **online 1v1** with matchmaking and 3 mazes
+- Local game (1 or 2 players on one device), **vs. AI bot** (3 levels), **online 1v1** with matchmaking, private rooms and 3 mazes
 - Real-time chat, friends with online status, notifications
 - Profiles, avatars, achievements, match history, leaderboard
-- English / French / Arabic (RTL), dark / light theme, custom design system, responsive UI
+- English / French / Arabic (RTL), custom design system, responsive UI
 
 More details (diagrams, flows): [`docs/`](docs/README.md).
 
@@ -48,7 +48,7 @@ Open **https://localhost:8443** (self-signed certificate: accept the browser war
 | `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, `TWO_FACTOR_CHALLENGE_SECRET` | Token secrets (`openssl rand -hex 32`) |
 | `INTERNAL_API_KEY` | Shared key for service-to-service calls (`openssl rand -hex 32`) |
 | `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET` | 42 OAuth app credentials (optional: only needed for "Continue with 42") |
-| `FORTYTWO_CALLBACK_URL`, `FRONTEND_URL` | `https://localhost/api/auth/42/callback` and `https://localhost` |
+| `FORTYTWO_CALLBACK_URL`, `FRONTEND_URL` | `https://localhost:8443/api/auth/42/callback` and `https://localhost:8443` |
 
 Databases are created by `postgres-db/init.sql`; Prisma migrations run automatically at start. Make targets: `make` (build + start), `make down`, `make restart`, `make logs`, `make status`, `make migrate`, `make clean` (stops and wipes volumes), `make fclean` (also removes images), `make re` (`fclean` + rebuild + start).
 
@@ -64,9 +64,9 @@ Databases are created by `postgres-db/init.sql`; Prisma migrations run automatic
 
 ## Project Management
 
-- **Organisation:** 1-week Scrum sprints (planning, review, retrospective); each member took or split backlog cards. See [`docs/architecture/team-workflow.md`](docs/architecture/team-workflow.md).
-- **Tools:** Trello (backlog and sprint board), GitHub (Pull Requests, code review, protected `main` and `dev`), Figma (design), Discord.
-- **Git rules:** feature branches, PR + 1 approval, Conventional Commits.
+- **Method:** Agile, using **Scrum** with **1-week sprints**: the work is split into small backlog cards, each sprint starts with a planning, ends with a review (demo of what works) and a retrospective (what to improve). Each member took or split backlog cards. The Product Owner (`hfegrach`) owns the backlog and priorities, the Tech Lead (`machaouk`) the architecture, the Project Manager (`nel-khad`) the tracking. Full explanation (roles, sprint cycle, ceremonies, board, definition of done): [`docs/architecture/team-workflow.md`](docs/architecture/team-workflow.md).
+- **Tools:** Trello (backlog and sprint board), GitHub (Pull Requests, code review, protected `main` and `dev`, automatic CodeRabbit review on PRs to `dev`), Figma (design), Discord.
+- **Git rules:** feature branches from `dev`, PR + 1 teammate approval, Conventional Commits.
 
 ## Technical Stack
 
@@ -76,8 +76,8 @@ Databases are created by `postgres-db/init.sql`; Prisma migrations run automatic
 | Backend | Node.js + Express (TypeScript), `ws` for WebSockets |
 | API Gateway | Express + `http-proxy-middleware` + `express-rate-limit` |
 | Database | PostgreSQL 17 with Prisma 7 |
-| Security | bcrypt, JWT (access + refresh), TOTP 2FA (`otplib`), NGINX TLS |
-| Infra | Docker Compose, NGINX |
+| Security | bcrypt (`bcryptjs`), JWT (access + refresh), TOTP 2FA (`otplib`), NGINX TLS, rate limiting on `/auth` |
+| Infra | Docker Compose, NGINX, Node.js 22 |
 
 **Why these choices**
 
@@ -111,7 +111,7 @@ One PostgreSQL server, **one database per service**; services reference users by
 | Friends | Requests, accept / decline / remove, list with online status | `oelmanso` |
 | Chat | Real-time private chat, history, block, typing, read receipts, game invites | `machaouk` |
 | Notifications | Real-time and persistent, unread counter | `hfegrach` |
-| Local game | Two players on one device | `ynadime` |
+| Local game | One or two players on one device (arrows + WASD) | `ynadime` |
 | Play vs. bot | Pac-Man bot with 3 difficulty levels | `machaouk` |
 | Online 1v1 | Matchmaking, two Pac-Mans on two computers, reconnection | `ynadime` |
 | Game customization | 3 mazes, power pellets, difficulty and time settings | `ynadime`, `machaouk` |
@@ -161,13 +161,34 @@ Each member also made their own pages responsive.
 
 ## Resources
 
+- [React](https://react.dev)
+- [TypeScript](https://www.typescriptlang.org/docs/)
+- [Vite](https://vite.dev)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [PostgreSQL](https://www.postgresql.org/docs/)
 - [Microservices — GeeksforGeeks](https://www.geeksforgeeks.org/system-design/microservices/)
 - [What is WebSocket? — Ably](https://ably.com/topic/websockets)
 - [Breadth First Search — GeeksforGeeks](https://www.geeksforgeeks.org/dsa/breadth-first-search-or-bfs-for-a-graph/) (bot pathfinding)
 - [Depth Limited Search for AI — GeeksforGeeks](https://www.geeksforgeeks.org/artificial-intelligence/depth-limited-search-for-ai/) (bot look-ahead)
+- [Figma Community](https://www.figma.com/community): shared design files and UI kits
+- [Introduction to JSON Web Tokens — jwt.io](https://jwt.io/introduction) (access and refresh tokens)
+- [Password Storage Cheat Sheet — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) (bcrypt hashing)
+- [42 API: web application flow](https://api.intra.42.fr/apidoc/guides/web_application_flow) (42 OAuth)
+- [RFC 6238: TOTP](https://datatracker.ietf.org/doc/html/rfc6238) (2FA codes)
+- [Express](https://expressjs.com)
+- [Prisma documentation](https://www.prisma.io/docs) (schemas, migrations, transactions used for friend requests)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [NGINX as a WebSocket proxy](https://nginx.org/en/docs/http/websocket.html)
+- [WebSockets API — MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) (chat, presence, game sockets)
+- [Client-Server Game Architecture — Gabriel Gambetta](https://www.gabrielgambetta.com/client-server-game-architecture.html) (server-authoritative game)
+- [The Pac-Man Dossier](https://pacman.holenet.info/) (original rules, ghost behavior)
+
+- [i18next](https://www.i18next.com) and [react-i18next](https://react.i18next.com)
+- [CSS logical properties — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values) (layout that mirrors for Arabic)
+
+
 
 **Use of AI:** used to explain concepts (microservices, WebSocket proxying, JWT / 2FA), read error messages, get code-review second opinions, and help with FR / AR translations.
-
 
  
 ## Credits

@@ -2,7 +2,7 @@
 
 **Responsibility:** the public identity of a player — profile, avatar, achievements. Owners: `nel-khad` (profile pages), `oelmanso` (settings).
 
-A profile is **created on first access**: the display name is taken from the auth service, with the default avatar and the status "Ready to play".
+A profile is **created on first access**: the display name is taken from the auth service (`Player<id>` if the auth service does not answer), with the default avatar, the status "Ready to play", and one empty `UserAchievement` row per achievement.
 
 ## Endpoints (via gateway `/api/users/...`, JWT required)
 
@@ -13,7 +13,7 @@ A profile is **created on first access**: the display name is taken from the aut
 | GET | `/profile/profiles?ids=1,4,7` | Several profiles at once (max 100 ids), used by friends list, chat and leaderboard |
 | PATCH | `/profile/me` | Edit `username` (3–20 chars, must be unique), `bio`, `avatar` |
 | POST | `/profile/avatar` | Upload avatar (multipart, field `avatar`) |
-| POST | `/achievements/update-stats` | Called by the game service after a match (see below) |
+| POST | `/achievements/update-stats` | Called by the game service after a match (see below); the player is read from the `x-user-id` header |
 | GET | `/uploads/avatars/<file>` | Avatar files, served through NGINX `/uploads/` (no JWT) |
 
 A successful `PATCH /profile/me` also creates a `profile_updated` notification (through the chat service).
@@ -43,7 +43,7 @@ Four achievements are seeded at start (`prisma/seed.ts`). Each user gets one `Us
 | `cherry-collector` | + fruits eaten |
 | `pac-maniac` | +1 (matches played) |
 
-Progress is capped at a target set in `achievement.service.ts`; the texts shown to the player come from the translations (`i18n.ts`).
+Progress is capped at a target set in `achievement.service.ts` (`ACHIEVEMENT_TARGETS`). Currently `champion` has a target of **1**, and the other three have a target of **0**, so they unlock after the first online match and their progress stays at 0 (placeholder values, to be replaced by real targets). The texts shown to the player come from the translations (`i18n.ts`); the `description` stored in the database is only a placeholder (`--`).
 
 ```mermaid
 flowchart LR

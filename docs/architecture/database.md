@@ -121,7 +121,7 @@ erDiagram
         bigint id PK
         string mode "1v1"
         string status
-        string mazeSeed
+        string mazeSeed "holds the maze id, e.g. circuit"
         int timeLimitSeconds "120, 240 or 360"
         int winnerUserId
         datetime startedAt
