@@ -31,10 +31,10 @@ export async function register(req: Request, res: Response) {
   const normalizedUsername = username.trim();
   const normalizedEmail = email.trim().toLowerCase();
 
-  if (!/^[A-Za-z0-9_-]{3,20}$/.test(normalizedUsername)) {
+  if (!/^[A-Za-z0-9_-]{3,10}$/.test(normalizedUsername)) {
     return res.status(400).json({
       error:
-        "Username must be 3-20 characters and contain only letters, numbers, _ or -",
+        "Username must be 3-10 characters and contain only letters, numbers, _ or -",
     });
   }
 

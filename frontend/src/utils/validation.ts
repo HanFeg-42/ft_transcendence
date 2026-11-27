@@ -11,7 +11,7 @@ export function validateSignUp(data: {
 
   if (!username) {
     errors.username = "signup_errUsernameRequired";
-  } else if (!/^[A-Za-z0-9_-]{3,20}$/.test(username)) {
+  } else if (!/^[A-Za-z0-9_-]{3,10}$/.test(username)) {
     errors.username = "signup_errUsernameFormat";
   }
 

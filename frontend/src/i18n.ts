@@ -362,7 +362,7 @@ const resources = {
       signup_errServer: "Unable to connect to the server",
       signup_errUsernameRequired: "Username is required",
       signup_errUsernameFormat:
-        "Username must be 3-20 characters and contain only letters, numbers, _ or -",
+        "Username must be 3-10 characters and contain only letters, numbers, _ or -",
       signup_errEmailRequired: "Email is required",
       signup_errEmailInvalid: "Invalid email format",
       signup_errPasswordRequired: "Password is required",
@@ -1060,7 +1060,7 @@ const resources = {
       signup_errServer: "Impossible de se connecter au serveur",
       signup_errUsernameRequired: "Le nom d'utilisateur est requis",
       signup_errUsernameFormat:
-        "Le nom d'utilisateur doit contenir 3 à 20 caractères : lettres, chiffres, _ ou -",
+        "Le nom d'utilisateur doit contenir 3 à 10 caractères : lettres, chiffres, _ ou -",
       signup_errEmailRequired: "L'e-mail est requis",
       signup_errEmailInvalid: "Format d'e-mail invalide",
       signup_errPasswordRequired: "Le mot de passe est requis",
@@ -1746,7 +1746,7 @@ const resources = {
       signup_errServer: "تعذر الاتصال بالخادم",
       signup_errUsernameRequired: "اسم المستخدم مطلوب",
       signup_errUsernameFormat:
-        "يجب أن يتكون اسم المستخدم من 3 إلى 20 حرفًا ويحتوي فقط على أحرف وأرقام و _ أو -",
+        "يجب أن يتكون اسم المستخدم من 3 إلى 10 حرفًا ويحتوي فقط على أحرف وأرقام و _ أو -",
       signup_errEmailRequired: "البريد الإلكتروني مطلوب",
       signup_errEmailInvalid: "صيغة البريد الإلكتروني غير صالحة",
       signup_errPasswordRequired: "كلمة المرور مطلوبة",
