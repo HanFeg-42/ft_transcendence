@@ -140,7 +140,7 @@ export default function EditProfileModal({
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={20}
+                maxLength={10}
                 className="w-full bg-black/60 border border-pacova-green/40 rounded px-4 py-2 font-vt323 text-lg text-white focus:outline-none focus:border-pacova-green"
                 placeholder={t('userProfile_namePlaceholder')}
               />

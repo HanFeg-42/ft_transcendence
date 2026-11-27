@@ -254,7 +254,7 @@ export default function Friends() {
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  maxLength={20}
+                  maxLength={10}
                   placeholder={t("friends_searchPlaceholder")}
                   aria-label={t("friends_searchAriaLabel")}
                   className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#171120] px-3 py-2 text-sm text-white outline-none placeholder:text-gray-300 focus:border-pacova-green/30 sm:w-48"

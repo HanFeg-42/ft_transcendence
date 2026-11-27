@@ -74,7 +74,7 @@ erDiagram
 | GET | `/profile/me` | Own profile, **with achievements** |
 | GET | `/profile/:id` | Another player's profile (no achievements) |
 | GET | `/profile/profiles?ids=1,4,7` | Several profiles at once (max 100 ids), used by friends list, chat and leaderboard |
-| PATCH | `/profile/me` | Edit `username` (3–20 chars, must be unique), `bio`, `avatar` |
+| PATCH | `/profile/me` | Edit `username` (3–10 chars, must be unique), `bio`, `avatar` |
 | POST | `/profile/avatar` | Upload avatar (multipart, field `avatar`) |
 | POST | `/achievements/update-stats` | Called by the game service after a match (see below); the player is read from the `x-user-id` header |
 | GET | `/uploads/avatars/<file>` | Avatar files, served through NGINX `/uploads/` (no JWT) |
